@@ -1,5 +1,13 @@
 #pragma once
 
+#include <cstdint>
+#include <cstddef>
+#include <array>
+#include <vector>
+#include <string>
+#include <memory>
+#include <optional>
+
 // Cashew Framework Version
 #define CASHEW_VERSION_MAJOR 0
 #define CASHEW_VERSION_MINOR 1
@@ -8,7 +16,9 @@
 
 // Platform detection
 #if defined(_WIN32) || defined(_WIN64)
-    #define CASHEW_PLATFORM_WINDOWS
+    #ifndef CASHEW_PLATFORM_WINDOWS
+        #define CASHEW_PLATFORM_WINDOWS
+    #endif
 #elif defined(__linux__)
     #define CASHEW_PLATFORM_LINUX
 #elif defined(__APPLE__)
@@ -96,13 +106,6 @@ constexpr uint8_t MAX_ROUTING_HOPS = 8;
 } // namespace cashew
 
 // Core types
-#include <cstdint>
-#include <array>
-#include <vector>
-#include <string>
-#include <memory>
-#include <optional>
-
 namespace cashew {
 
 // Basic types
@@ -126,7 +129,6 @@ struct NodeID {
     
     NodeID() = default;
     explicit NodeID(const Hash256& hash) : id(hash) {}
-    explicit NodeID(const PublicKey& pubkey);
     
     std::string to_string() const;
     static NodeID from_string(const std::string& str);
@@ -180,6 +182,18 @@ struct ContentHash {
 
 // Hash support for std::unordered_map
 namespace std {
+template<>
+struct hash<cashew::Hash256> {
+    size_t operator()(const cashew::Hash256& h) const noexcept {
+        // Hash first 8 bytes
+        size_t result = 0;
+        for (size_t i = 0; i < 8 && i < h.size(); ++i) {
+            result = (result << 8) | h[i];
+        }
+        return result;
+    }
+};
+
 template<>
 struct hash<cashew::NodeID> {
     size_t operator()(const cashew::NodeID& id) const noexcept {

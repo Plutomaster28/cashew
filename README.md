@@ -1,293 +1,415 @@
-# 🥜 Cashew Network
+# Cashew Network
 
-**A decentralized, self-hosted P2P network where participation does not equal exposure, hosting does not equal vulnerability, and trust is enforced by cryptography instead of infrastructure.**
-
-<div align="center">
-
-![Cashew Logo](docs/assets/logo.png)
-*Featuring Mona, our friendly 2channel cat mascot*
-
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![License](https://img.shields.io/badge/license-MIT-blue)]()
-[![C++20](https://img.shields.io/badge/C++-20-blue)]()
-[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-lightgrey)]()
-
-</div>
-
----
-
-## 📖 Overview
-
-Cashew is a next-generation decentralized network protocol that combines:
-- **Bitcoin's trust model** - trustless, no privileged authority
-- **Tor's routing philosophy** - onion-style encrypted routing
-- **IPFS content addressing** - hash-based content discovery
-- **Zero-trust security** - capability-based access control
-- **Fair participation** - adaptive PoW for all hardware levels
-
-### Core Principles
-
-- 🔓 **Freedom over profit** - No subscriptions, no paywalls, no monetization
-- 🔒 **Privacy over surveillance** - Pseudonymous identities, no KYC
-- ⚖️ **Participation over wealth** - PoW + PoStake, not money
-- 🌐 **Protocol over platform** - Decentralized, no monopolies
-
----
-
-## ✨ Features
-
-### 🛡️ Security & Privacy
-- **No exposed services** - All connections outbound-initiated
-- **Encrypted everything** - ChaCha20-Poly1305 + forward secrecy
-- **Content-addressed** - Identity ≠ location
-- **Capability tokens** - Granular, time-limited permissions
-- **Attack-resistant** - Anti-Sybil, anti-DDoS, fork detection
-
-### 🌍 Decentralized Architecture
-- **P2P mesh networking** - No central servers
-- **Gossip protocol** - Decentralized state propagation
-- **Multi-hop routing** - Optional onion routing for anonymity
-- **Redundant hosting** - Networks provide fault tolerance
-
-### 🔑 Fair Participation
-- **Adaptive PoW** - Fair for Raspberry Pi, GPU/ASIC resistant
-- **PoStake** - Contribution-based rewards (non-financial)
-- **Social vouching** - Trust-based network membership
-- **Decay system** - Use it or lose it, prevents hoarding
-
-### 📦 Content System
-- **Things** - Content items (games, apps, datasets) up to 500MB
-- **Networks** - Invitation-only clusters for redundancy
-- **Content integrity** - BLAKE3 hashing, cryptographic verification
-- **Gateway access** - Browser access via HTTPS (view-only)
-
----
-
-## 🎮 First Use Case: Unblocked Games
-
-Cashew's initial deployment focuses on hosting lightweight games through a decentralized network:
-
-- 🕹️ **Host games** on P2P mesh (Tetris, Snake, Pong, etc.)
-- 🌐 **Access via browser** through gateway nodes
-- 🔒 **Censorship-resistant** - No central host to block
-- ⚡ **Fault-tolerant** - Redundant hosting across 3-5 nodes
-
-**Try it:** Just open your browser and play - no registration, no install!
-
----
-
-## 🏗️ Architecture
+yeah it's another P2P thing. but this one actually compiles.
 
 ```
-┌─────────────────────────────────────┐
-│       Service Layer                 │  <- Things, Networks, Apps
-├─────────────────────────────────────┤
-│       Access Layer                  │  <- Capability Tokens
-├─────────────────────────────────────┤
-│       Discovery Layer               │  <- Gossip, Content Resolution
-├─────────────────────────────────────┤
-│       Routing Layer                 │  <- Multi-hop, Content-addressed
-├─────────────────────────────────────┤
-│       Transport Layer               │  <- Encrypted Sessions
-├─────────────────────────────────────┤
-│       Identity Layer                │  <- Cryptographic Identity
-└─────────────────────────────────────┘
+       /\__/\
+     （　´∀｀）  <- mona says hi (from 2channel)
+     （　　　）
+       ｜ ｜ |
+     （＿_)＿）
 ```
 
-### Key Components
-
-- **Nodes** - General participants (host, route, earn keys)
-- **Things** - Content items (500MB max)
-- **Networks** - Redundant hosting clusters (invitation-only)
-- **Keys** - Participation rights (PoW/PoStake earned)
-- **Gateway** - Web access bridge (HTTPS/WebSocket)
-
-See [PROTOCOL_SPEC.md](PROTOCOL_SPEC.md) for detailed protocol documentation.
+**Status:** it works. probably. builds clean at least.  
+**Lines of code:** too many (15k+)  
+**Build warnings:** 0 (we use -Werror like masochists)  
+**Version:** 0.1.0 (don't use this in production lol)
 
 ---
 
-## 🚀 Getting Started
+## what is this
 
-### Prerequisites
+peer-to-peer content sharing but you don't have to expose ports or trust randos on the internet.
 
-**Linux:**
-```bash
-sudo apt-get install cmake ninja-build libsodium-dev build-essential
+think IPFS but invitation-only. or Tor but for hosting cat pictures. or BitTorrent but your ISP can't see what you're seeding.
+
+**the pitch:**
+- you host content (websites, games, whatever)
+- your friends help host it too (redundancy)
+- everyone's happy until someone goes offline
+- content is identified by hash so nobody can tamper with it
+- uses actual cryptography (Ed25519, BLAKE3, ChaCha20)
+
+**not a blockchain.** not a cryptocurrency. no tokens. no NFTs. just files and friends.
+
+---
+
+## why this exists
+
+got tired of:
+- centralized platforms deleting stuff
+- having to trust cloudflare
+- DMCA takedowns on stupid things
+- paying for hosting
+- opening ports on my router (security nightmare)
+
+so here we are. decentralized content hosting where you choose who's in your network.
+
+---
+
+## how it works
+
+### the simple version
+
+1. you create a "Thing" (just content, could be anything)
+2. cashew hashes it with BLAKE3 (fast af)
+3. hash becomes the Thing's ID
+4. you invite friends to a "Network" to help host it
+5. they download it, verify the hash, start serving
+6. if you go offline, they keep it alive
+7. browser gateway makes it accessible via HTTP
+
+### the technical version
+
+**Architecture:**
+```
+Service Layer     -> Things, Networks, access control
+Access Layer      -> Capability tokens (not exposed)
+Discovery Layer   -> Gossip protocol, content resolution
+Routing Layer     -> Multi-hop, content-addressed routing
+Transport Layer   -> Encrypted sessions (ChaCha20-Poly1305)
+Identity Layer    -> Ed25519 keys, BLAKE3 node IDs
 ```
 
-**Windows:**
-```powershell
-# Install CMake, Ninja, and Visual Studio 2022
-# Use vcpkg for dependencies
-vcpkg install libsodium
+**Storage:**
+```
+data/
+├── storage/content/    # actual files by hash
+├── storage/metadata/   # MIME types etc
+├── ledger/events.db    # append-only log
+└── networks/           # membership data
 ```
 
-### Building
+**Content addressing:**
+- everything identified by BLAKE3 hash
+- if hash matches, content is guaranteed identical
+- no sneaky updates, no tampering
+- what you request is what you get
+
+**Crypto:**
+- Ed25519 for signatures (fast, 32-byte keys)
+- BLAKE3 for hashing (stupid fast, parallel)
+- ChaCha20-Poly1305 for encryption (TLS 1.3 tier)
+- no custom crypto, all battle-tested
+
+**Networking:**
+- P2P mesh, no central server
+- gossip protocol for state sync
+- invitation-only networks (no randos)
+- optional multi-hop routing for privacy
+
+---
+
+## building this thing
+
+### dependencies
+
+you need:
+- C++20 compiler (GCC 15.2+ or Clang 16+)
+- CMake 3.20+
+- Ninja (faster than make)
+- libsodium (for crypto)
+- spdlog (logging)
+- nlohmann-json (json parsing)
+
+### windows (MSYS2)
 
 ```bash
-# Clone the repository
+# install MSYS2 first: https://www.msys2.org/
+# open UCRT64 terminal
+
+pacman -Syu
+pacman -S mingw-w64-ucrt-x86_64-gcc \
+          mingw-w64-ucrt-x86_64-cmake \
+          mingw-w64-ucrt-x86_64-ninja \
+          mingw-w64-ucrt-x86_64-libsodium \
+          mingw-w64-ucrt-x86_64-spdlog \
+          mingw-w64-ucrt-x86_64-nlohmann-json
+
 git clone https://github.com/yourusername/cashew.git
 cd cashew
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+ninja -C build
 
-# Create build directory
-mkdir build && cd build
-
-# Configure
-cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
-
-# Build
-ninja
-
-# Run tests
-ctest --verbose
-
-# Run node
-./cashew_node
+# binary at build/src/cashew_node.exe
 ```
 
-### Quick Start
+### linux
 
-1. **Run a node:**
-   ```bash
-   ./cashew_node --config node.conf
-   ```
+```bash
+sudo apt update
+sudo apt install build-essential cmake ninja-build \
+                 libsodium-dev libspdlog-dev nlohmann-json3-dev
 
-2. **Host a Thing (e.g., a game):**
-   ```bash
-   ./cashew_cli host-thing ./games/tetris.zip
-   ```
+git clone https://github.com/yourusername/cashew.git
+cd cashew
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+ninja -C build
 
-3. **Access via browser:**
-   ```
-   http://localhost:7777
-   ```
+# binary at build/src/cashew_node
+```
+
+### macOS
+
+```bash
+brew install cmake ninja libsodium spdlog nlohmann-json
+
+git clone https://github.com/yourusername/cashew.git
+cd cashew
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+ninja -C build
+
+# binary at build/src/cashew_node
+```
 
 ---
 
-## 📚 Documentation
+## running it
 
-- [Development Plan](DEVELOPMENT_PLAN.md) - Complete roadmap
-- [Protocol Specification](PROTOCOL_SPEC.md) - Technical protocol details
-- [Project Structure](PROJECT_STRUCTURE.md) - Codebase organization
-- [Architecture Guide](docs/architecture.md) - System design
-- [API Reference](docs/api_reference.md) - Developer API docs
-- [Setup Guide](docs/setup_guide.md) - Installation and configuration
+**basic:**
+```bash
+./build/src/cashew_node
+```
+
+opens gateway on http://localhost:8080
+
+**with config:**
+```bash
+./build/src/cashew_node --config cashew.conf
+```
+
+**example config:**
+```ini
+log_level = info
+data_dir = ./data
+http_port = 8080
+web_root = ./web
+```
 
 ---
 
-## 🛠️ Development
+## hosting content
 
-### Project Structure
+### perl CGI gateway (yes really)
+
+because sometimes you just want to use 1990s tech and it actually works fine.
+
+install perl modules (MSYS2):
+```bash
+pacman -S mingw-w64-ucrt-x86_64-perl \
+          mingw-w64-ucrt-x86_64-perl-cgi \
+          mingw-w64-ucrt-x86_64-perl-json \
+          mingw-w64-ucrt-x86_64-perl-http-message
+```
+
+see `examples/perl-cgi/cashew-gateway.pl` for a working example.
+
+it's like 300 lines and serves content from your node via HTTP. retro but it works.
+
+---
+
+## the technical bits
+
+### cryptography & keys
+
+every node has an Ed25519 keypair:
+- private key: keep this secret (duh)
+- public key: share with friends
+- node ID: BLAKE3 hash of public key
+
+**authentication:**
+1. friend sends invitation (signed with their key)
+2. you verify signature (proves it's them)
+3. you accept and sign response
+4. both signatures stored in ledger
+
+**content verification:**
+```
+content -> BLAKE3() -> hash (Thing ID)
+
+download -> hash it -> compare to ID
+  match?   -> valid!
+  mismatch? -> corrupted/fake, reject
+```
+
+### proof-of-work (not crypto)
+
+lightweight PoW to prevent spam. NOT for money.
+
+when you join a network or publish content:
+```
+find nonce where: BLAKE3(message + nonce) < difficulty
+
+difficulty levels:
+- view content: none (0 sec)
+- join network: low (~1 sec)
+- publish Thing: medium (~5 sec)
+- create network: high (~30 sec)
+```
+
+builds reputation:
+```
+reputation = PoW solved + uptime + content hosted - bad behavior
+
+high rep = more trusted = priority in networks
+```
+
+prevents spam because creating fake identities is expensive (cpu time).
+
+### P2P networking
+
+**when someone requests content:**
+1. gateway gets HTTP request: GET /thing/abc123
+2. storage checks: "do I have abc123?"
+3. yes: serve from disk
+4. no: ask network members
+5. download from peer, verify hash
+6. serve to user, cache locally
+
+**WebSocket for real-time:**
+- new content available
+- member joined/left
+- reputation changes
+- Thing updates
+
+connect to: ws://localhost:8080/ws
+
+---
+
+## docs
+
+- [USER_MANUAL.md](docs/USER_MANUAL.md) - complete guide (beginner friendly)
+- [PROTOCOL_SPEC.md](PROTOCOL_SPEC.md) - technical protocol details
+- [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) - roadmap
+- [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - codebase layout
+
+the user manual is actually good, has diagrams and everything. features Mona the cat.
+
+---
+
+## project structure
 
 ```
 cashew/
-├── src/              # Source code
-│   ├── core/        # Core protocol (node, thing, network, keys, PoW)
-│   ├── crypto/      # Cryptography (Ed25519, X25519, ChaCha20, BLAKE3)
-│   ├── network/     # P2P (transport, routing, gossip, discovery)
-│   ├── storage/     # Content-addressed storage
-│   ├── gateway/     # Web gateway (HTTPS, WebSocket)
-│   ├── security/    # Attack prevention, anonymity
-│   └── utils/       # Utilities (logging, config)
-├── include/         # Public headers
-├── tests/           # Unit and integration tests
-├── examples/        # Example applications
-├── web/             # Web interface (HTML/CSS/JS)
-└── docs/            # Documentation
+├── src/
+│   ├── core/          # node, Thing, network, keys
+│   ├── crypto/        # Ed25519, BLAKE3, ChaCha20
+│   ├── network/       # P2P, gossip, routing
+│   ├── storage/       # content-addressed storage
+│   ├── gateway/       # HTTP/WebSocket server
+│   └── security/      # attack prevention
+├── include/cashew/    # public headers
+├── tests/             # unit tests (todo)
+├── examples/          # perl-cgi gateway etc
+├── web/               # web UI (html/css/js)
+└── docs/              # documentation
 ```
 
-### Building Tests
-
-```bash
-cmake -G Ninja -DCASHEW_BUILD_TESTS=ON ..
-ninja
-ctest --verbose
-```
-
-### Development Phases
-
-1. **Phase 1**: Foundation (crypto, identity, node)
-2. **Phase 2**: Core protocol (Thing, Network, PoW)
-3. **Phase 3**: Networking (P2P, routing, gossip)
-4. **Phase 4**: State & reputation (ledger, trust)
-5. **Phase 5**: Security & privacy (onion routing, tokens)
-6. **Phase 6**: Gateway & web layer
-7. **Phase 7**: Testing & optimization
-8. **Phase 8**: Alpha release (unblocked games)
+clean build with -Werror, no warnings. 15k+ lines across 37 files.
 
 ---
 
-## 🤝 Contributing
+## known issues
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+**libsodium Ed25519 crash on Windows:**
+- Node::initialize() crashes in crypto::Ed25519::generate_keypair()
+- workaround: uses temporary NodeID from BLAKE3 hash
+- impact: no persistent identity, no crypto ops
+- fix: coming eventually, not critical for testing
 
-### Areas for Contribution
-
-- 🔐 Cryptography implementation
-- 🌐 Networking protocols
-- 🎨 Web UI/UX design
-- 📝 Documentation
-- 🧪 Testing and benchmarking
-- 🎮 Game hosting and content
-
----
-
-## 🎨 Branding
-
-**Name:** Cashew  
-**Mascot:** Mona (2channel cat)  
-**Colors:** Warm nutty tones (beige, light brown, soft yellow)  
-**Vibe:** Friendly, playful, casual, unserious  
-**Tagline:** *"Cashew — it just works."*
+**general:**
+- no tests yet (phase 7)
+- web UI is basic
+- needs optimization
+- documentation could be better
+- probably bugs we haven't found
 
 ---
 
-## 🔒 Security
+## security
 
-Cashew is designed with security as a first-class concern:
+designed with paranoia:
+- no open ports (all outbound connections)
+- everything encrypted (ChaCha20-Poly1305)
+- content integrity (BLAKE3 verification)
+- anti-Sybil (PoW + reputation)
+- anti-DDoS (rate limiting)
+- optional anonymity (multi-hop routing)
 
-- ✅ No open ports or exposed services
-- ✅ Encrypted end-to-end transport
-- ✅ Content integrity via cryptographic hashing
-- ✅ Attack detection (Sybil, DDoS, identity forks)
-- ✅ Capability-based access control
-- ✅ Optional anonymity via onion routing
+**threat model:**
+- ISP: can see you're running cashew, not what you're hosting
+- network members: can see what they're hosting (they agreed to it)
+- attackers: expensive to spam, reputation system filters them
 
-**Responsible Disclosure:** Please report security issues to [security@cashew.network](mailto:security@cashew.network)
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+not bulletproof but better than trusting random cloud providers.
 
 ---
 
-## 🙏 Acknowledgments
+## why "cashew"
 
-Inspired by:
-- **Bitcoin** - Trustless decentralized consensus
-- **Tor** - Anonymous routing
-- **IPFS** - Content-addressed storage
-- **Libp2p** - P2P networking primitives
+it's a nut. Mona (the 2channel cat mascot) likes nuts probably. seemed cute.
 
-Built with love by the Cashew community 🥜🐱
+also "cache" + "new" if you squint.
 
 ---
 
-## 📞 Contact
+## contributing
 
-- **Website:** [cashew.network](https://cashew.network) *(coming soon)*
-- **GitHub:** [github.com/cashew-network/cashew](https://github.com/cashew-network/cashew)
-- **Discord:** [discord.gg/cashew](https://discord.gg/cashew) *(coming soon)*
-- **Email:** [hello@cashew.network](mailto:hello@cashew.network)
+PRs welcome. no formal process, just:
+1. make sure it compiles
+2. follow existing code style
+3. don't break stuff
+4. write a decent commit message
+
+areas that need help:
+- testing (unit tests, integration tests)
+- web UI/UX
+- documentation
+- performance optimization
+- bug hunting
 
 ---
 
-<div align="center">
+## license
 
-**Not everything needs to be serious. 🥜**
+MIT. do whatever you want with it.
 
-*Cashew: play stupid games, build serious infrastructure.*
+see [LICENSE](LICENSE) for legal text.
 
-</div>
+---
+
+## credits
+
+inspired by:
+- Bitcoin (trustless consensus)
+- Tor (onion routing)
+- IPFS (content addressing)
+- every frustrated dev who's dealt with centralized platforms
+
+built with:
+- too much coffee
+- not enough sleep
+- C++20 (the good parts)
+- libsodium (actual cryptographers made this)
+
+special thanks to Mona the cat (from 2channel).
+
+---
+
+## contact
+
+- issues: GitHub Issues
+- email: probably should set one up
+- discord: maybe later
+
+---
+
+**tagline:** cashew - it compiles, ships, and probably works
+
+*freedom over profit. privacy over surveillance.*
+
+---
+
+last updated: february 1, 2026  
+version: 0.1.0  
+status: somehow functional

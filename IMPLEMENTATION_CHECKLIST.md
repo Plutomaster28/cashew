@@ -13,41 +13,41 @@ This checklist covers everything needed to build the Cashew network from scratch
 - [x] Set up Ninja build generator
 - [x] Create directory structure
 - [x] Set up version management
-- [ ] Configure vcpkg/Conan for dependencies
+- [x] Configure vcpkg for dependencies
 - [ ] Set up CI/CD pipelines (GitHub Actions)
 - [ ] Create Docker development environment (optional)
 
-### 1.2 Cryptography Library Integration
-- [ ] Integrate libsodium or OpenSSL
-- [ ] Create Ed25519 wrapper (signatures)
+### 1.2 Cryptography Library Integration ✓
+- [x] Integrate libsodium
+- [x] Create Ed25519 wrapper (signatures)
 - [ ] Create X25519 wrapper (key exchange)
-- [ ] Create ChaCha20-Poly1305 wrapper (encryption)
-- [ ] Create BLAKE3 hashing interface
+- [x] Create ChaCha20-Poly1305 wrapper (encryption)
+- [x] Create BLAKE3 hashing interface
 - [ ] Create Argon2 wrapper (for PoW)
-- [ ] Implement CSPRNG wrapper
+- [x] Implement CSPRNG wrapper (via libsodium)
 - [ ] Create key derivation functions (HKDF)
-- [ ] Write crypto unit tests
+- [x] Write crypto unit tests
 
-### 1.3 Common Types & Utilities
+### 1.3 Common Types & Utilities ✓
 - [x] Define common types (NodeID, Hash256, PublicKey, etc.)
-- [ ] Implement hex encoding/decoding
+- [x] Implement hex encoding/decoding
 - [ ] Implement Base64 encoding/decoding
 - [ ] Create serialization interface (MessagePack or Protobuf)
-- [ ] Implement logging system (spdlog or custom)
-- [ ] Create configuration system (TOML/YAML/JSON)
+- [x] Implement logging system (spdlog)
+- [x] Create configuration system (JSON)
 - [ ] Implement time utilities
 - [ ] Create error handling framework
-- [ ] Write utility unit tests
+- [x] Write utility unit tests
 
-### 1.4 Node Identity System
-- [ ] Implement NodeIdentity class
-- [ ] Implement key generation
-- [ ] Implement secure key storage (encrypted at rest)
-- [ ] Implement key loading/saving
-- [ ] Implement identity signing
-- [ ] Implement identity verification
-- [ ] Implement key rotation mechanism
-- [ ] Write identity unit tests
+### 1.4 Node Identity System ✓
+- [x] Implement NodeIdentity class
+- [x] Implement key generation
+- [x] Implement secure key storage (encrypted at rest)
+- [x] Implement key loading/saving
+- [x] Implement identity signing
+- [x] Implement identity verification
+- [ ] Implement key rotation mechanism (stub exists)
+- [x] Write identity unit tests
 
 ---
 

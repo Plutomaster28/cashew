@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My First Cashew Site</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <pre class="ascii">
+       /\__/\
+     (  ' w ' )  <- mona says hi!
+     (   u   )
+       | | |
+     (__)__)
+            </pre>
+            <h1>it works!</h1>
+        </div>
+        
+        <div class="content">
+            <h2>welcome to my cashew site</h2>
+            <p>this is being served through:</p>
+            <ul>
+                <li>cashew node (localhost:8080) - stores the content</li>
+                <li>perl CGI gateway (localhost:8081) - serves it to your browser</li>
+                <li>content-addressed storage (BLAKE3 hash)</li>
+            </ul>
+            
+            <p>if you're seeing this, the framework works.</p>
+            
+            <div class="tech-details">
+                <h3>how this works:</h3>
+                <ol>
+                    <li>website files uploaded to cashew node</li>
+                    <li>node hashes them with BLAKE3</li>
+                    <li>hash becomes the content ID</li>
+                    <li>gateway requests content by hash</li>
+                    <li>node serves it, gateway renders it</li>
+                    <li>you see this page</li>
+                </ol>
+            </div>
+            
+            <div class="footer">
+                <p>made with cashew - it compiles and probably works</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
