@@ -1,4 +1,4 @@
-# 🥜 Cashew Network - User Manual
+# Cashew Network - User Manual
 
 ```
      _______________________________________________
@@ -57,7 +57,7 @@
 
 Thank you for joining the Cashew network! You're about to embark on a journey where **you** own your content, **you** control who sees it, and **nobody** can take it away from you.
 
-No corporations. No ads. No tracking. Just pure, wholesome content sharing! 🥜
+No corporations. No ads. No tracking. Just pure, wholesome content sharing!
 
 ### What Makes Cashew Special?
 
@@ -70,7 +70,7 @@ No corporations. No ads. No tracking. Just pure, wholesome content sharing! 🥜
 ---
 
 <a name="what-is-cashew"></a>
-## 🤔 What is Cashew?
+##  What is Cashew?
 
 Imagine if you and your friends could create a mini-Internet that only you control. That's Cashew!
 
@@ -99,7 +99,7 @@ Cashew is a **peer-to-peer content distribution network** with:
 ---
 
 <a name="installation"></a>
-## 💿 Installation
+##  Installation
 
 ### Windows (MSYS2/MinGW)
 
@@ -181,7 +181,7 @@ ninja -C build
 ---
 
 <a name="quick-start"></a>
-## 🚀 Quick Start Guide
+##  Quick Start Guide
 
 ### Starting Your Node (5 Minutes!)
 
@@ -273,7 +273,7 @@ Create a folder `my-first-site/` with:
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>🥜 Welcome to My Cashew Site!</h1>
+    <h1> Welcome to My Cashew Site!</h1>
     <p>This is my first website on the Cashew network!</p>
     <p>No corporations. No tracking. Just me and my friends.</p>
 </body>
@@ -413,7 +413,7 @@ sub list_networks {
     </style>
 </head>
 <body>
-    <h1>🥜 Active Networks</h1>
+    <h1> Active Networks</h1>
 HTML
         
         foreach my $net (@{$data->{networks}}) {
@@ -458,7 +458,7 @@ sub show_home {
      （＿_)＿）
 </pre>
     </div>
-    <h1>🥜 Cashew Gateway</h1>
+    <h1> Cashew Gateway</h1>
     <p>Welcome to your personal gateway to the Cashew network!</p>
     
     <h2>Quick Links</h2>
@@ -494,7 +494,7 @@ Open: **http://localhost:8081/cashew-gateway.pl**
 ---
 
 <a name="things"></a>
-## 📦 Understanding Things
+##  Understanding Things
 
 ### What is a Thing?
 
@@ -516,7 +516,7 @@ A **Thing** is any piece of content in Cashew:
                      └─→ 5. Friends can request it by hash
 ```
 
-### Content Addressing is Magic! ✨
+### Content Addressing is Magic! 
 
 ```
     Traditional Web:              Cashew Network:
@@ -533,7 +533,7 @@ A **Thing** is any piece of content in Cashew:
 ---
 
 <a name="networks"></a>
-## 🕸️ Managing Networks
+##  Managing Networks
 
 ### What is a Network?
 
@@ -575,9 +575,9 @@ curl -X POST http://localhost:8080/api/network/create \
 Networks are **invitation-only**! You can't just join - someone must invite you.
 
 **Why?**
-- 🔒 **Privacy** - Only people you trust
-- 🎯 **Purpose** - Everyone knows why they're there
-- 🤝 **Commitment** - Members actually want to help host
+-  **Privacy** - Only people you trust
+-  **Purpose** - Everyone knows why they're there
+-  **Commitment** - Members actually want to help host
 
 ### Member Roles
 
@@ -590,7 +590,7 @@ Networks are **invitation-only**! You can't just join - someone must invite you.
 
 ---
 
-## 🌐 How Hosting Works
+##  How Hosting Works
 
 ### The P2P Architecture
 
@@ -685,7 +685,7 @@ Connect to: `ws://localhost:8080/ws`
 
 ---
 
-## 🔐 Cryptography & Key System
+##  Cryptography & Key System
 
 ### Node Identity
 
@@ -917,7 +917,7 @@ This is a known issue with Ed25519 key generation on some systems.
 ---
 
 <a name="faq"></a>
-## ❓ Frequently Asked Questions
+##  Frequently Asked Questions
 
 ### General Questions
 
@@ -963,25 +963,25 @@ A: Anyone you connect to. It's public, like an IP address.
 
 ---
 
-## 🎓 Next Steps
+##  Next Steps
 
-Congratulations! You now know the basics of Cashew! 🎉
+Congratulations! You now know the basics of Cashew! 
 
 **Ready for more?**
-1. 📚 Read the [Advanced User Guide](ADVANCED.md)
-2. 🔧 Check out the [API Documentation](API.md)
-3. 👥 Join the community (forum link TBD)
-4. 🐛 Report bugs on GitHub
+1.  Read the [Advanced User Guide](ADVANCED.md)
+2.  Check out the [API Documentation](API.md)
+3.  Join the community (forum link TBD)
+4.  Report bugs on GitHub
 
 **Want to contribute?**
-- 💻 Submit a pull request
-- 📝 Improve documentation
-- 🐛 Report issues
-- 💬 Help others in the community
+-  Submit a pull request
+-  Improve documentation
+-  Report issues
+-  Help others in the community
 
 ---
 
-## 📜 Credits
+##  Credits
 
 ```
     Cashew Network was created with love by people who believe
@@ -1006,7 +1006,7 @@ Congratulations! You now know the basics of Cashew! 🎉
 
 ---
 
-**Made with 🥜 and ❤️**
+**Made with C++**
 
 *"Freedom over profit. Privacy over surveillance."*
 
