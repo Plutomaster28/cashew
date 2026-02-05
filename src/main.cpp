@@ -211,7 +211,7 @@ int main(int argc, char** argv) {
         }
         
         CASHEW_LOG_INFO("");
-        CASHEW_LOG_INFO("🥜 Cashew node is running!");
+        CASHEW_LOG_INFO(" Cashew node is running!");
         CASHEW_LOG_INFO("");
         CASHEW_LOG_INFO("  Gateway:    http://localhost:{}", gateway_config.http_port);
         CASHEW_LOG_INFO("  WebSocket:  ws://localhost:{}/ws", gateway_config.http_port);
@@ -263,7 +263,7 @@ int main(int argc, char** argv) {
         // node->shutdown();
         
         CASHEW_LOG_INFO("");
-        CASHEW_LOG_INFO("Node stopped. Goodbye! 🥜");
+        CASHEW_LOG_INFO("Node stopped. Goodbye! ");
         CASHEW_LOG_INFO("");
         
     } catch (const std::exception& e) {
