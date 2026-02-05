@@ -1,6 +1,6 @@
 # Cashew Network - Complete Implementation Checklist
 
-## 📋 Overview
+## Overview
 This checklist covers everything needed to build the Cashew network from scratch, organized by development phase and priority.
 
 ---

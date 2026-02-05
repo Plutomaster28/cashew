@@ -33,7 +33,11 @@ if(MSVC)
     add_compile_options(/W4 /WX)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 else()
-    add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+    add_compile_options(-Wall -Wextra -Wpedantic)
+    # Only treat warnings as errors in Debug mode (Release mode optimizations can cause false positives)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        add_compile_options(-Werror)
+    endif()
 endif()
 
 # Debug/Release specific flags

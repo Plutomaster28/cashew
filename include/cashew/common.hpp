@@ -20,9 +20,13 @@
         #define CASHEW_PLATFORM_WINDOWS
     #endif
 #elif defined(__linux__)
-    #define CASHEW_PLATFORM_LINUX
+    #ifndef CASHEW_PLATFORM_LINUX
+        #define CASHEW_PLATFORM_LINUX
+    #endif
 #elif defined(__APPLE__)
-    #define CASHEW_PLATFORM_MACOS
+    #ifndef CASHEW_PLATFORM_MACOS
+        #define CASHEW_PLATFORM_MACOS
+    #endif
 #endif
 
 // Compiler detection
