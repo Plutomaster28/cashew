@@ -20,12 +20,12 @@ This checklist covers everything needed to build the Cashew network from scratch
 ### 1.2 Cryptography Library Integration ✓
 - [x] Integrate libsodium
 - [x] Create Ed25519 wrapper (signatures)
-- [ ] Create X25519 wrapper (key exchange)
+- [x] Create X25519 wrapper (key exchange)
 - [x] Create ChaCha20-Poly1305 wrapper (encryption)
 - [x] Create BLAKE3 hashing interface
-- [ ] Create Argon2 wrapper (for PoW)
+- [x] Create Argon2 wrapper (for PoW)
 - [x] Implement CSPRNG wrapper (via libsodium)
-- [ ] Create key derivation functions (HKDF)
+- [x] Create key derivation functions (HKDF)
 - [x] Write crypto unit tests
 
 ### 1.3 Common Types & Utilities ✓
@@ -53,59 +53,60 @@ This checklist covers everything needed to build the Cashew network from scratch
 
 ## Phase 2: Core Protocol (Weeks 5-8)
 
-### 2.1 Thing (Content) System
-- [ ] Define Thing metadata structure
-- [ ] Implement Thing creation
-- [ ] Implement content hashing (BLAKE3)
-- [ ] Implement size limit enforcement (500MB)
-- [ ] Implement Thing serialization
-- [ ] Create Thing storage interface
-- [ ] Implement Thing verification
-- [ ] Implement Thing manager
-- [ ] Write Thing unit tests
+### 2.1 Thing (Content) System ✓
+- [x] Define Thing metadata structure
+- [x] Implement Thing creation
+- [x] Implement content hashing (BLAKE3)
+- [x] Implement size limit enforcement (500MB)
+- [x] Implement Thing serialization
+- [x] Create Thing storage interface
+- [x] Implement Thing verification
+- [x] Implement Thing manager
+- [x] Write Thing unit tests
 
-### 2.2 Storage Backend
-- [ ] Choose storage backend (LevelDB/RocksDB/SQLite)
-- [ ] Implement content-addressed storage
-- [ ] Implement metadata storage
-- [ ] Implement chunking for large Things
-- [ ] Implement deduplication
-- [ ] Implement storage quota management
-- [ ] Create storage garbage collection
+### 2.2 Storage Backend ✓
+- [x] Choose storage backend (LevelDB)
+- [x] Implement content-addressed storage
+- [x] Implement metadata storage
+- [x] Implement chunking for large Things
+- [x] Implement deduplication
+- [x] Implement storage quota management
+- [x] Create storage garbage collection
 - [ ] Write storage unit tests
 
-### 2.3 Proof-of-Work System
-- [ ] Design PoW puzzle format
-- [ ] Implement node benchmarking
-- [ ] Implement adaptive difficulty calculator
-- [ ] Implement memory-hard puzzle generator (Argon2-based)
-- [ ] Implement puzzle solver
-- [ ] Implement solution verifier
-- [ ] Implement epoch manager (10-minute cycles)
-- [ ] Implement network entropy collector
-- [ ] Implement reward distribution
-- [ ] Implement anti-spam limiter
+### 2.3 Proof-of-Work System ✓
+- [x] Design PoW puzzle format
+- [x] Implement node benchmarking
+- [x] Implement adaptive difficulty calculator
+- [x] Implement memory-hard puzzle generator (Argon2-based)
+- [x] Implement puzzle solver
+- [x] Implement solution verifier
+- [x] Implement epoch manager (10-minute cycles)
+- [x] Implement network entropy collector
+- [x] Implement reward distribution
+- [x] Implement anti-spam limiter
 - [ ] Write PoW unit tests
 - [ ] Benchmark PoW on Raspberry Pi
 
 ### 2.4 Participation Key System
-- [ ] Define key types (Identity, Node, Network, Service, Routing)
-- [ ] Implement Key class
-- [ ] Implement KeyManager
-- [ ] Implement KeyStore (secure storage)
-- [ ] Implement key issuance tracking
-- [ ] Implement per-epoch limits
-- [ ] Implement key decay scheduler
+- [x] Define key types (Identity, Node, Network, Service, Routing)
+- [x] Implement Key class
+- [x] Implement KeyManager
+- [x] Implement KeyStore (secure storage)
+- [x] Implement key issuance tracking
+- [x] Implement per-epoch limits
+- [x] Implement key decay scheduler
+- [x] Implement active decay enforcement (DecayRunner with 10-min intervals)
 - [ ] Implement transfer/vouching system
 - [ ] Write key system unit tests
 
-### 2.5 Network (Cluster) System
-- [ ] Define Network structure
-- [ ] Implement Network creation
-- [ ] Implement invitation workflow
-- [ ] Implement acceptance workflow
-- [ ] Implement membership tracking
-- [ ] Implement quorum management (min 3, max 20)
+### 2.5 Network (Cluster) System ✓
+- [x] Define Network structure
+- [x] Implement Network creation
+- [x] Implement invitation workflow
+- [x] Implement acceptance workflow
+- [x] Implement membership tracking
+- [x] Implement quorum management (min 3, max 20)
 - [ ] Implement replication coordinator
 - [ ] Implement redundancy adjustment
 - [ ] Write Network unit tests
@@ -114,46 +115,47 @@ This checklist covers everything needed to build the Cashew network from scratch
 
 ## Phase 3: Networking & Routing (Weeks 9-12)
 
-### 3.1 Transport Layer
-- [ ] Design handshake protocol
-- [ ] Implement X25519 key exchange
-- [ ] Implement session key derivation (HKDF)
-- [ ] Implement Session class
-- [ ] Implement encrypted message sending (ChaCha20-Poly1305)
-- [ ] Implement encrypted message receiving
-- [ ] Implement session timeout (30 minutes)
-- [ ] Implement session rekeying (1 hour or 1GB)
-- [ ] Implement connection pooling
+### 3.1 Transport Layer ✓
+- [x] Design handshake protocol
+- [x] Implement X25519 key exchange
+- [x] Implement session key derivation (HKDF)
+- [x] Implement Session class
+- [x] Implement encrypted message sending (ChaCha20-Poly1305)
+- [x] Implement encrypted message receiving
+- [x] Implement session timeout (30 minutes)
+- [x] Implement session rekeying (1 hour or 1GB)
+- [x] Implement connection pooling
 - [ ] Write transport unit tests
 
 ### 3.2 Peer Discovery
-- [ ] Define bootstrap node format
+- [x] Define bootstrap node format (in peer.hpp)
 - [ ] Implement bootstrap connection
 - [ ] Implement peer announcement messages
 - [ ] Implement peer request/response
 - [ ] Create peer database
 - [ ] Implement random peer selection
 - [ ] Implement peer diversity requirements
+- [ ] Implement NAT traversal (STUN-like)
 - [ ] Write discovery unit tests
 
-### 3.3 Gossip Protocol
-- [ ] Define gossip message types
-- [ ] Implement message signing
-- [ ] Implement message verification
-- [ ] Implement deduplication (seen messages cache)
-- [ ] Implement propagation algorithm (fanout = 3)
-- [ ] Implement periodic peer announcements (5 minutes)
-- [ ] Implement network state broadcasts (10 minutes)
+### 3.3 Gossip Protocol ✓
+- [x] Define gossip message types
+- [x] Implement message signing
+- [x] Implement message verification
+- [x] Implement deduplication (seen messages cache)
+- [x] Implement propagation algorithm (fanout = 3)
+- [x] Implement periodic peer announcements (5 minutes)
+- [x] Implement network state broadcasts (10 minutes)
 - [ ] Write gossip unit tests
 
-### 3.4 Routing System
-- [ ] Implement RoutingTable
-- [ ] Implement content-addressed routing
-- [ ] Implement multi-hop routing
-- [ ] Implement hop limit enforcement (max 8)
-- [ ] Implement route caching
-- [ ] Implement route discovery
-- [ ] Implement onion routing (optional, for anonymity)
+### 3.4 Routing System ✓
+- [x] Implement RoutingTable
+- [x] Implement content-addressed routing
+- [x] Implement multi-hop routing
+- [x] Implement hop limit enforcement (max 8)
+- [x] Implement route caching
+- [x] Implement route discovery
+- [x] Implement onion routing (for anonymity)
 - [ ] Write routing unit tests
 
 ### 3.5 P2P Mesh Integration
@@ -168,54 +170,57 @@ This checklist covers everything needed to build the Cashew network from scratch
 
 ## Phase 4: State & Reputation (Weeks 13-16)
 
-### 4.1 Ledger & State Management
-- [ ] Design event log structure
-- [ ] Implement append-only event log
-- [ ] Implement event types (identity, key issuance, network formation, etc.)
-- [ ] Implement gossip-based log replication
-- [ ] Implement state query interface
-- [ ] Implement conflict detection
-- [ ] Implement fork detection
-- [ ] Implement lightweight consensus
+### 4.1 Ledger & State Management ✓
+- [x] Design event log structure
+- [x] Implement append-only event log
+- [x] Implement event types (identity, key issuance, network formation, etc.)
+- [x] Implement gossip-based log replication (ledger_sync.cpp)
+- [x] Implement state query interface (StateManager)
+- [x] Implement conflict detection
+- [x] Implement fork detection
+- [x] Implement state reconciliation (StateReconciliation with merge strategies)
 - [ ] Write ledger unit tests
 
 ### 4.2 Proof-of-Stake System
-- [ ] Implement uptime tracker
-- [ ] Implement bandwidth contribution tracker
-- [ ] Implement hosting contribution tracker
-- [ ] Implement routing participation tracker
-- [ ] Implement contribution score calculator
-- [ ] Implement PoStake reward distributor
+- [x] Implement PoStake structure (postake.cpp)
+- [x] Implement contribution score calculator
+- [x] Implement PoStake reward distributor
+- [x] Implement ContributionTracker class (uptime/bandwidth/storage/routing/epoch tracking)
+- [ ] Wire ContributionTracker into active monitoring (record_node_online, record_bytes_routed)
 - [ ] Implement hybrid PoW/PoStake coordinator
 - [ ] Write PoStake unit tests
 
 ### 4.3 Trust & Reputation System
-- [ ] Define reputation scoring algorithm
+- [x] Define reputation scoring algorithm
+- [x] Implement reputation structure
+- [x] Implement reputation calculation
+- [x] Implement reputation decay
 - [ ] Implement Attestation structure
 - [ ] Implement attestation signing
 - [ ] Implement attestation verification
 - [ ] Implement trust graph data structure
 - [ ] Implement trust graph traversal
 - [ ] Implement vouching workflow
-- [ ] Implement reputation decay for inactivity
 - [ ] Write reputation unit tests
 
-### 4.4 Decay System
-- [ ] Implement activity monitor
-- [ ] Implement key decay scheduler
-- [ ] Implement Thing decay tracking
-- [ ] Implement network redundancy adjustment
-- [ ] Implement epoch-based decay checks
-- [ ] Implement decay thresholds (configurable)
+### 4.4 Decay System ✓
+- [x] Implement activity monitor
+- [x] Implement key decay scheduler
+- [x] Implement Thing decay tracking
+- [x] Implement network redundancy adjustment
+- [x] Implement epoch-based decay checks
+- [x] Implement decay thresholds (configurable)
+- [x] Implement DecayRunner (active enforcement)
 - [ ] Write decay unit tests
 
-### 4.5 Human Identity (Pseudonymous)
-- [ ] Implement HumanIdentity class
-- [ ] Implement human identity key generation
-- [ ] Implement reputation linking
-- [ ] Implement attestation management
-- [ ] Implement continuity verification
-- [ ] Implement anti-impersonation detection
+### 4.5 Human Identity (Pseudonymous) ✓
+- [x] Implement HumanIdentity class
+- [x] Implement human identity key generation
+- [x] Implement reputation linking
+- [x] Implement attestation management
+- [x] Implement continuity verification
+- [x] Implement anti-impersonation detection
+- [x] Implement HumanIdentityManager with trust graph
 - [ ] Write human identity unit tests
 
 ---
@@ -223,38 +228,38 @@ This checklist covers everything needed to build the Cashew network from scratch
 ## Phase 5: Security & Privacy (Weeks 17-20)
 
 ### 5.1 Capability Tokens
-- [ ] Define CapabilityToken structure
-- [ ] Implement token issuance
-- [ ] Implement token signing
-- [ ] Implement token verification
-- [ ] Implement permission checking
-- [ ] Implement token expiration
-- [ ] Implement max-use enforcement
+- [x] Define CapabilityToken structure
+- [x] Implement token issuance
+- [x] Implement token signing
+- [x] Implement token verification
+- [x] Implement permission checking
+- [x] Implement token expiration
+- [x] Implement max-use enforcement
 - [ ] Implement token revocation
 - [ ] Implement revocation list gossip
 - [ ] Write capability token unit tests
 
-### 5.2 Attack Prevention
-- [ ] Implement rate limiter (per-peer, per-operation)
-- [ ] Implement Sybil attack detection
-- [ ] Implement DDoS mitigation
-- [ ] Implement identity fork detection
-- [ ] Implement behavioral fingerprinting
-- [ ] Implement quorum verification
+### 5.2 Attack Prevention ✓
+- [x] Implement rate limiter (per-peer, per-operation)
+- [x] Implement Sybil attack detection
+- [x] Implement DDoS mitigation
+- [x] Implement identity fork detection
+- [x] Implement behavioral fingerprinting
+- [x] Implement quorum verification
 - [ ] Write attack prevention unit tests
 
-### 5.3 Anonymity Features
-- [ ] Implement onion routing (multi-layer encryption)
-- [ ] Implement traffic mixing
-- [ ] Implement dynamic peer rotation
-- [ ] Implement ephemeral addressing
-- [ ] Implement metadata minimization
+### 5.3 Anonymity Features ✓
+- [x] Implement onion routing (multi-layer encryption)
+- [x] Implement traffic mixing
+- [x] Implement dynamic peer rotation
+- [x] Implement ephemeral addressing
+- [x] Implement metadata minimization
 - [ ] Write anonymity unit tests
 
 ### 5.4 Key Security
-- [ ] Implement encrypted key storage (AES-256)
+- [x] Implement encrypted key storage (AES-256)
 - [ ] Implement hardware-backed key storage (TPM, optional)
-- [ ] Implement challenge-response authentication
+- [x] Implement challenge-response authentication
 - [ ] Implement key rotation certificates
 - [ ] Implement key revocation broadcast
 - [ ] Write key security unit tests
@@ -263,39 +268,43 @@ This checklist covers everything needed to build the Cashew network from scratch
 
 ## Phase 6: Gateway & Web Layer (Weeks 21-24)
 
-### 6.1 HTTP/HTTPS Gateway
-- [ ] Choose HTTP library (cpp-httplib, Boost.Beast, or Drogon)
-- [ ] Implement HTTP server
-- [ ] Implement HTTPS (TLS) support
-- [ ] Implement gateway API endpoints
-- [ ] Implement session management
-- [ ] Implement API authentication (for posting)
-- [ ] Implement content streaming
+### 6.1 HTTP/HTTPS Gateway ✓
+- [x] Choose HTTP library (cpp-httplib)
+- [x] Implement HTTP server
+- [x] Implement HTTPS (TLS) support
+- [x] Implement gateway API endpoints
+- [x] Implement session management
+- [x] Implement API authentication (for posting)
+- [x] Implement content streaming
+- [x] Wire to actual storage backend
 - [ ] Write gateway unit tests
 
-### 6.2 WebSocket Support
-- [ ] Implement WebSocket server
-- [ ] Implement real-time updates
-- [ ] Implement bidirectional messaging
-- [ ] Implement WebSocket authentication
+### 6.2 WebSocket Support ✓
+- [x] Implement WebSocket server
+- [x] Implement real-time updates
+- [x] Implement bidirectional messaging
+- [x] Implement WebSocket authentication
+- [x] Wire to ledger events
 - [ ] Write WebSocket tests
 
 ### 6.3 Web UI (HTML/CSS/JS)
-- [ ] Design web interface
-- [ ] Implement main page (index.html)
-- [ ] Implement CSS styling
-- [ ] Implement Cashew Gateway API client (JavaScript)
+- [x] Design web interface
+- [x] Implement main page (index.html)
+- [x] Implement CSS styling
+- [x] Implement Cashew Gateway API client (JavaScript)
 - [ ] Implement game renderer
 - [ ] Implement Mona mascot animations
 - [ ] Create sample games (Tetris, Snake, Pong)
 - [ ] Test browser compatibility
 
 ### 6.4 Gateway Security
-- [ ] Implement Content Security Policy (CSP)
-- [ ] Implement CORS configuration
-- [ ] Implement request sandboxing
-- [ ] Implement web-specific rate limiting
-- [ ] Implement XSS prevention
+- [x] Implement Content Security Policy (CSP)
+- [x] Implement CORS configuration
+- [x] Implement request sandboxing
+- [x] Implement web-specific rate limiting
+- [x] Implement content integrity verification (ContentIntegrityChecker with Merkle trees)
+- [ ] Wire ContentIntegrityChecker into gateway content serving
+- [ ] Implement XSS prevention (HTML sanitization in place)
 - [ ] Write gateway security tests
 
 ---

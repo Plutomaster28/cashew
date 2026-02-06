@@ -153,6 +153,7 @@ struct HumanID {
     
     bool operator==(const HumanID& other) const { return id == other.id; }
     bool operator!=(const HumanID& other) const { return id != other.id; }
+    bool operator<(const HumanID& other) const { return id < other.id; }
 };
 
 struct NetworkID {
@@ -181,6 +182,10 @@ struct ContentHash {
     bool operator!=(const ContentHash& other) const { return hash != other.hash; }
     bool operator<(const ContentHash& other) const { return hash < other.hash; }
 };
+
+// Utility functions
+std::string hash_to_hex(const Hash256& hash);
+Hash256 hex_to_hash(const std::string& hex);
 
 } // namespace cashew
 

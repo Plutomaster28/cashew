@@ -28,7 +28,14 @@ set(CASHEW_SOURCES
     core/reputation/reputation.cpp
     core/postake/postake.cpp
     core/decay/decay.cpp
+    core/decay/decay_runner.cpp
+    
+    # Identity
+    identity/human_identity.cpp
+    
+    # Security
     security/access.cpp
+    security/content_integrity.cpp
     
     # Network
     network/network.cpp
@@ -37,6 +44,7 @@ set(CASHEW_SOURCES
     network/router.cpp
     network/peer.cpp
     network/ledger_sync.cpp
+    network/state_reconciliation.cpp
     security/onion_routing.cpp
     security/ip_protection.cpp
     security/attack_prevention.cpp

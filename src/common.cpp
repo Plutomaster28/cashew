@@ -5,26 +5,25 @@
 
 namespace cashew {
 
-namespace {
-    std::string hash_to_hex(const Hash256& hash) {
-        std::ostringstream oss;
-        oss << std::hex << std::setfill('0');
-        for (auto b : hash) {
-            oss << std::setw(2) << static_cast<int>(b);
-        }
-        return oss.str();
+// Utility functions
+std::string hash_to_hex(const Hash256& hash) {
+    std::ostringstream oss;
+    oss << std::hex << std::setfill('0');
+    for (auto b : hash) {
+        oss << std::setw(2) << static_cast<int>(b);
     }
-    
-    Hash256 hex_to_hash(const std::string& hex) {
-        Hash256 hash;
-        if (hex.length() != hash.size() * 2) {
-            throw std::runtime_error("Invalid hex string length");
-        }
-        for (size_t i = 0; i < hash.size(); ++i) {
-            hash[i] = static_cast<byte>(std::stoul(hex.substr(i * 2, 2), nullptr, 16));
-        }
-        return hash;
+    return oss.str();
+}
+
+Hash256 hex_to_hash(const std::string& hex) {
+    Hash256 hash;
+    if (hex.length() != hash.size() * 2) {
+        throw std::runtime_error("Invalid hex string length");
     }
+    for (size_t i = 0; i < hash.size(); ++i) {
+        hash[i] = static_cast<byte>(std::stoul(hex.substr(i * 2, 2), nullptr, 16));
+    }
+    return hash;
 }
 
 // NodeID implementation
