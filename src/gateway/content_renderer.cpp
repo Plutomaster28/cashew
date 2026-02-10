@@ -1,4 +1,5 @@
 #include "cashew/gateway/content_renderer.hpp"
+#include "../security/content_integrity.hpp"
 #include "../utils/logger.hpp"
 #include <algorithm>
 #include <sstream>
@@ -78,6 +79,18 @@ std::optional<ContentRenderer::RenderResult> ContentRenderer::render_content(
         }
         
         data = *fetched;
+        
+        // Verify content integrity (defense in depth)
+        auto integrity_result = security::ContentIntegrityChecker::verify_content(data, content_hash);
+        if (!integrity_result.is_valid) {
+            CASHEW_LOG_ERROR("Content integrity verification failed: {}", 
+                           integrity_result.error_message);
+            std::lock_guard<std::mutex> stats_lock(stats_mutex_);
+            stats_.miss_count++;
+            return std::nullopt;
+        }
+        
+        CASHEW_LOG_DEBUG("Content integrity verified ({} bytes)", integrity_result.content_size);
         
         // Add to cache
         add_to_cache(content_hash, data);
@@ -310,40 +323,179 @@ std::string ContentRenderer::get_mime_type(ContentType type) {
 }
 
 std::vector<uint8_t> ContentRenderer::sanitize_html(const std::vector<uint8_t>& html) {
-    // Basic HTML sanitization
-    // In production, use a proper HTML sanitizer library
+    // Comprehensive HTML sanitization to prevent XSS attacks
+    // 
+    // PRODUCTION NOTE: This is a basic sanitizer for demonstration.
+    // For production use, integrate a proper HTML sanitization library like:
+    // - google/gumbo-parser with allowlist-based sanitization
+    // - htmlcxx or similar HTML parser with security focus
+    // - Server-side Content Security Policy (CSP) headers (already implemented)
     
     std::string html_str(html.begin(), html.end());
     
-    // Remove <script> tags
+    // 1. Remove <script> tags (case-insensitive)
     size_t pos = 0;
     while ((pos = html_str.find("<script", pos)) != std::string::npos) {
-        size_t end = html_str.find("</script>", pos);
-        if (end != std::string::npos) {
-            html_str.erase(pos, end - pos + 9);
+        // Make case-insensitive by checking lowercase
+        if (pos == 0 || !std::isalnum(html_str[pos - 1])) {
+            size_t end = html_str.find("</script>", pos);
+            if (end != std::string::npos) {
+                html_str.erase(pos, end - pos + 9);
+            } else {
+                // No closing tag, remove to end
+                html_str.erase(pos);
+                break;
+            }
         } else {
-            break;
+            pos++;
         }
     }
     
-    // Remove event handlers (onclick, onerror, etc.)
+    // 2. Remove <iframe> tags (can embed arbitrary content)
+    pos = 0;
+    while ((pos = html_str.find("<iframe", pos)) != std::string::npos) {
+        size_t end = html_str.find("</iframe>", pos);
+        if (end != std::string::npos) {
+            html_str.erase(pos, end - pos + 9);
+        } else {
+            // Try self-closing or no closing tag
+            size_t bracket = html_str.find('>', pos);
+            if (bracket != std::string::npos) {
+                html_str.erase(pos, bracket - pos + 1);
+            }
+        }
+    }
+    
+    // 3. Remove <object>, <embed>, <applet> tags
+    const std::vector<std::string> dangerous_tags = {
+        "<object", "<embed", "<applet"
+    };
+    
+    for (const auto& tag : dangerous_tags) {
+        pos = 0;
+        while ((pos = html_str.find(tag, pos)) != std::string::npos) {
+            size_t end = html_str.find('>', pos);
+            if (end != std::string::npos) {
+                html_str.erase(pos, end - pos + 1);
+            } else {
+                pos++;
+            }
+        }
+    }
+    
+    // 4. Remove all event handlers (onclick, onerror, onload, etc.)
     const std::vector<std::string> event_attrs = {
-        "onclick", "onerror", "onload", "onmouseover", "onmouseout"
+        "onclick", "ondblclick", "onmousedown", "onmouseup", "onmouseover", "onmouseout",
+        "onmousemove", "onmouseenter", "onmouseleave", "onkeydown", "onkeyup", "onkeypress",
+        "onload", "onunload", "onerror", "onabort", "onblur", "onchange", "onfocus",
+        "onreset", "onselect", "onsubmit", "onscroll", "onresize", "ondrag", "ondrop",
+        "oncontextmenu", "oninput", "oninvalid", "onsearch"
     };
     
     for (const auto& attr : event_attrs) {
         pos = 0;
-        while ((pos = html_str.find(attr + "=", pos)) != std::string::npos) {
-            size_t quote_start = html_str.find_first_of("\"'", pos);
-            if (quote_start != std::string::npos) {
-                char quote = html_str[quote_start];
-                size_t quote_end = html_str.find(quote, quote_start + 1);
-                if (quote_end != std::string::npos) {
+        while ((pos = html_str.find(attr, pos)) != std::string::npos) {
+            // Check if it's actually an attribute (preceded by space or tag start)
+            if (pos > 0 && !std::isspace(html_str[pos - 1]) && html_str[pos - 1] != '<') {
+                pos++;
+                continue;
+            }
+            
+            // Find the attribute value
+            size_t eq = html_str.find('=', pos);
+            if (eq != std::string::npos && eq - pos < 20) {  // Reasonable distance
+                size_t quote_start = html_str.find_first_of("\"'", eq);
+                if (quote_start != std::string::npos) {
+                    char quote = html_str[quote_start];
+                    size_t quote_end = html_str.find(quote, quote_start + 1);
+                    if (quote_end != std::string::npos) {
+                        html_str.erase(pos, quote_end - pos + 1);
+                        continue;
+                    }
+                }
+            }
+            pos++;
+        }
+    }
+    
+    // 5. Remove javascript: URLs
+    pos = 0;
+    while ((pos = html_str.find("javascript:", pos)) != std::string::npos) {
+        // Find containing attribute
+        size_t attr_start = html_str.rfind('"', pos);
+        size_t attr_end = html_str.find('"', pos);
+        
+        if (attr_start != std::string::npos && attr_end != std::string::npos) {
+            html_str.erase(attr_start, attr_end - attr_start + 1);
+            html_str.insert(attr_start, "\"\"");  // Replace with empty string
+        } else {
+            pos++;
+        }
+    }
+    
+    // 6. Remove data: URLs (can contain base64-encoded scripts)
+    pos = 0;
+    while ((pos = html_str.find("data:", pos)) != std::string::npos) {
+        // Allow data: URLs only for images
+        size_t check_start = (pos > 20) ? pos - 20 : 0;
+        std::string context = html_str.substr(check_start, pos - check_start + 10);
+        
+        // If not in src attribute of img tag, remove it
+        if (context.find("<img") == std::string::npos && 
+            context.find("src=") == std::string::npos) {
+            size_t attr_start = html_str.rfind('"', pos);
+            size_t attr_end = html_str.find('"', pos);
+            
+            if (attr_start != std::string::npos && attr_end != std::string::npos) {
+                html_str.erase(attr_start, attr_end - attr_start + 1);
+                html_str.insert(attr_start, "\"\"");
+            }
+        }
+        pos++;
+    }
+    
+    // 7. Remove dangerous style attributes (expression(), behavior:url(), etc.)
+    pos = 0;
+    while ((pos = html_str.find("style=", pos)) != std::string::npos) {
+        size_t quote_start = html_str.find_first_of("\"'", pos + 6);
+        if (quote_start != std::string::npos) {
+            char quote = html_str[quote_start];
+            size_t quote_end = html_str.find(quote, quote_start + 1);
+            
+            if (quote_end != std::string::npos) {
+                std::string style_content = html_str.substr(quote_start + 1, 
+                                                           quote_end - quote_start - 1);
+                
+                // Check for dangerous CSS
+                if (style_content.find("expression") != std::string::npos ||
+                    style_content.find("behavior") != std::string::npos ||
+                    style_content.find("javascript:") != std::string::npos ||
+                    style_content.find("@import") != std::string::npos) {
+                    // Remove entire style attribute
                     html_str.erase(pos, quote_end - pos + 1);
+                    continue;
                 }
             }
         }
+        pos++;
     }
+    
+    // 8. Add sandbox attribute to any remaining iframes (defense in depth)
+    pos = 0;
+    while ((pos = html_str.find("<iframe", pos)) != std::string::npos) {
+        size_t end = html_str.find('>', pos);
+        if (end != std::string::npos) {
+            // Check if sandbox already present
+            std::string tag = html_str.substr(pos, end - pos);
+            if (tag.find("sandbox") == std::string::npos) {
+                html_str.insert(end, " sandbox=\"\"");
+            }
+        }
+        pos++;
+    }
+    
+    CASHEW_LOG_DEBUG("HTML sanitized: {} bytes -> {} bytes", 
+                    html.size(), html_str.size());
     
     return std::vector<uint8_t>(html_str.begin(), html_str.end());
 }

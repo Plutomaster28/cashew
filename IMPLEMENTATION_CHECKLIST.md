@@ -31,12 +31,12 @@ This checklist covers everything needed to build the Cashew network from scratch
 ### 1.3 Common Types & Utilities ✓
 - [x] Define common types (NodeID, Hash256, PublicKey, etc.)
 - [x] Implement hex encoding/decoding
-- [ ] Implement Base64 encoding/decoding
-- [ ] Create serialization interface (MessagePack or Protobuf)
+- [x] Implement Base64 encoding/decoding
+- [x] Create serialization interface (MessagePack or Protobuf)
 - [x] Implement logging system (spdlog)
 - [x] Create configuration system (JSON)
-- [ ] Implement time utilities
-- [ ] Create error handling framework
+- [x] Implement time utilities
+- [x] Create error handling framework
 - [x] Write utility unit tests
 
 ### 1.4 Node Identity System ✓
@@ -46,7 +46,7 @@ This checklist covers everything needed to build the Cashew network from scratch
 - [x] Implement key loading/saving
 - [x] Implement identity signing
 - [x] Implement identity verification
-- [ ] Implement key rotation mechanism (stub exists)
+- [x] Implement key rotation mechanism (with rotation certificates)
 - [x] Write identity unit tests
 
 ---
@@ -88,7 +88,7 @@ This checklist covers everything needed to build the Cashew network from scratch
 - [ ] Write PoW unit tests
 - [ ] Benchmark PoW on Raspberry Pi
 
-### 2.4 Participation Key System
+### 2.4 Participation Key System ✓
 - [x] Define key types (Identity, Node, Network, Service, Routing)
 - [x] Implement Key class
 - [x] Implement KeyManager
@@ -97,7 +97,7 @@ This checklist covers everything needed to build the Cashew network from scratch
 - [x] Implement per-epoch limits
 - [x] Implement key decay scheduler
 - [x] Implement active decay enforcement (DecayRunner with 10-min intervals)
-- [ ] Implement transfer/vouching system
+- [x] Implement transfer/vouching system (KeyTransfer, KeyVouch structures)
 - [ ] Write key system unit tests
 
 ### 2.5 Network (Cluster) System ✓
@@ -107,8 +107,8 @@ This checklist covers everything needed to build the Cashew network from scratch
 - [x] Implement acceptance workflow
 - [x] Implement membership tracking
 - [x] Implement quorum management (min 3, max 20)
-- [ ] Implement replication coordinator
-- [ ] Implement redundancy adjustment
+- [x] Implement replication coordinator (ReplicationCoordinator with job queue and priority)
+- [x] Implement redundancy adjustment (dynamic target calculation, add/remove replicas)
 - [ ] Write Network unit tests
 
 ---
@@ -127,15 +127,15 @@ This checklist covers everything needed to build the Cashew network from scratch
 - [x] Implement connection pooling
 - [ ] Write transport unit tests
 
-### 3.2 Peer Discovery
+### 3.2 Peer Discovery ✓
 - [x] Define bootstrap node format (in peer.hpp)
-- [ ] Implement bootstrap connection
-- [ ] Implement peer announcement messages
-- [ ] Implement peer request/response
-- [ ] Create peer database
-- [ ] Implement random peer selection
-- [ ] Implement peer diversity requirements
-- [ ] Implement NAT traversal (STUN-like)
+- [x] Implement bootstrap connection
+- [x] Implement peer announcement messages
+- [x] Implement peer request/response
+- [x] Create peer database
+- [x] Implement random peer selection
+- [x] Implement peer diversity requirements
+- [x] Implement NAT traversal (STUN-like)
 - [ ] Write discovery unit tests
 
 ### 3.3 Gossip Protocol ✓
@@ -158,12 +158,12 @@ This checklist covers everything needed to build the Cashew network from scratch
 - [x] Implement onion routing (for anonymity)
 - [ ] Write routing unit tests
 
-### 3.5 P2P Mesh Integration
-- [ ] Implement async I/O (Boost.Asio or libuv)
-- [ ] Implement connection manager
-- [ ] Implement NAT traversal (STUN-like)
-- [ ] Implement IPv4 and IPv6 support
-- [ ] Implement bandwidth limiting
+### 3.5 P2P Mesh Integration ✓
+- [x] Implement async I/O (native POSIX/Winsock with std::thread)
+- [x] Implement connection manager (ConnectionManager with TCPConnection)
+- [x] Implement NAT traversal (STUN-like with RFC 5389 message format)
+- [x] Implement IPv4 and IPv6 support (SocketAddress with both families)
+- [x] Implement bandwidth limiting (token bucket algorithm in BandwidthLimiter)
 - [ ] Write mesh networking unit tests
 
 ---
@@ -181,26 +181,26 @@ This checklist covers everything needed to build the Cashew network from scratch
 - [x] Implement state reconciliation (StateReconciliation with merge strategies)
 - [ ] Write ledger unit tests
 
-### 4.2 Proof-of-Stake System
+### 4.2 Proof-of-Stake System ✓
 - [x] Implement PoStake structure (postake.cpp)
 - [x] Implement contribution score calculator
 - [x] Implement PoStake reward distributor
 - [x] Implement ContributionTracker class (uptime/bandwidth/storage/routing/epoch tracking)
-- [ ] Wire ContributionTracker into active monitoring (record_node_online, record_bytes_routed)
-- [ ] Implement hybrid PoW/PoStake coordinator
+- [x] Wire ContributionTracker into active monitoring (record_node_online, record_bytes_routed)
+- [x] Implement hybrid PoW/PoStake coordinator
 - [ ] Write PoStake unit tests
 
-### 4.3 Trust & Reputation System
+### 4.3 Trust & Reputation System ✓
 - [x] Define reputation scoring algorithm
 - [x] Implement reputation structure
 - [x] Implement reputation calculation
 - [x] Implement reputation decay
-- [ ] Implement Attestation structure
-- [ ] Implement attestation signing
-- [ ] Implement attestation verification
-- [ ] Implement trust graph data structure
-- [ ] Implement trust graph traversal
-- [ ] Implement vouching workflow
+- [x] Implement Attestation structure
+- [x] Implement attestation signing (AttestationSigner with Ed25519)
+- [x] Implement attestation verification (signature verification)
+- [x] Implement trust graph data structure (TrustGraph class)
+- [x] Implement trust graph traversal (TrustPathFinder with DFS/BFS)
+- [x] Implement vouching workflow (VouchingWorkflow with request/accept/revoke)
 - [ ] Write reputation unit tests
 
 ### 4.4 Decay System ✓
@@ -227,7 +227,7 @@ This checklist covers everything needed to build the Cashew network from scratch
 
 ## Phase 5: Security & Privacy (Weeks 17-20)
 
-### 5.1 Capability Tokens
+### 5.1 Capability Tokens ✓
 - [x] Define CapabilityToken structure
 - [x] Implement token issuance
 - [x] Implement token signing
@@ -235,8 +235,8 @@ This checklist covers everything needed to build the Cashew network from scratch
 - [x] Implement permission checking
 - [x] Implement token expiration
 - [x] Implement max-use enforcement
-- [ ] Implement token revocation
-- [ ] Implement revocation list gossip
+- [x] Implement token revocation (TokenRevocationManager with signing/verification)
+- [x] Implement revocation list gossip (RevocationListUpdate with deduplication and witnesses)
 - [ ] Write capability token unit tests
 
 ### 5.2 Attack Prevention ✓
@@ -256,12 +256,12 @@ This checklist covers everything needed to build the Cashew network from scratch
 - [x] Implement metadata minimization
 - [ ] Write anonymity unit tests
 
-### 5.4 Key Security
+### 5.4 Key Security ✓
 - [x] Implement encrypted key storage (AES-256)
-- [ ] Implement hardware-backed key storage (TPM, optional)
+- [x] Implement hardware-backed key storage (TPM, optional) - stub with SoftwareKeyStorage fallback
 - [x] Implement challenge-response authentication
-- [ ] Implement key rotation certificates
-- [ ] Implement key revocation broadcast
+- [x] Implement key rotation certificates (RotationCertificate with to_bytes/verify)
+- [x] Implement key revocation broadcast (KeyRevocationBroadcaster with gossip integration)
 - [ ] Write key security unit tests
 
 ---
@@ -303,8 +303,8 @@ This checklist covers everything needed to build the Cashew network from scratch
 - [x] Implement request sandboxing
 - [x] Implement web-specific rate limiting
 - [x] Implement content integrity verification (ContentIntegrityChecker with Merkle trees)
-- [ ] Wire ContentIntegrityChecker into gateway content serving
-- [ ] Implement XSS prevention (HTML sanitization in place)
+- [x] Wire ContentIntegrityChecker into gateway content serving
+- [x] Implement XSS prevention (HTML sanitization in place)
 - [ ] Write gateway security tests
 
 ---

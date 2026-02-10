@@ -5,6 +5,7 @@
 #include "../crypto/random.hpp"
 #include "../crypto/blake3.hpp"
 #include "../crypto/ed25519.hpp"
+#include "../security/content_integrity.hpp"
 #include "../utils/logger.hpp"
 
 #define CPPHTTPLIB_OPENSSL_SUPPORT
@@ -834,6 +835,23 @@ HttpResponse GatewayServer::handle_thing_content(const HttpRequest& req, Gateway
         response.set_json_body(R"({"error": "Content not found"})");
         return response;
     }
+    
+    // Verify content integrity before serving
+    auto integrity_result = security::ContentIntegrityChecker::verify_content(
+        render_result->data,
+        content_hash
+    );
+    
+    if (!integrity_result.is_valid) {
+        CASHEW_LOG_ERROR("Content integrity verification failed for {}: {}", 
+                        hash_str, integrity_result.error_message);
+        HttpResponse response;
+        response.status = HttpStatus::INTERNAL_ERROR;
+        response.set_json_body(R"({"error": "Content integrity verification failed"})");
+        return response;
+    }
+    
+    CASHEW_LOG_DEBUG("Content integrity verified: {} ({} bytes)", hash_str, integrity_result.content_size);
     
     // Build HTTP response from render result
     HttpResponse response;

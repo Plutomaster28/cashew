@@ -20,6 +20,14 @@ target_link_libraries(test_identity
         GTest::gtest_main
 )
 
+# Test for utilities
+add_executable(test_utils test_utils.cpp)
+target_link_libraries(test_utils
+    PRIVATE
+        cashew_core
+)
+
 # Add tests
 add_test(NAME CryptoTests COMMAND test_crypto)
 add_test(NAME IdentityTests COMMAND test_identity)
+add_test(NAME UtilsTests COMMAND test_utils)

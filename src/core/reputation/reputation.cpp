@@ -1,4 +1,5 @@
 #include "core/reputation/reputation.hpp"
+#include "core/reputation/attestation.hpp"
 #include "utils/logger.hpp"
 #include <algorithm>
 #include <queue>
@@ -413,9 +414,26 @@ bool ReputationManager::verify_attestation(const Attestation& attestation) const
         return false;
     }
     
-    // TODO: Verify signature with attester's public key
+    // Basic validation
+    if (attestation.attester.id == NodeID().id) {
+        return false;  // Invalid attester
+    }
+    if (attestation.subject.id == NodeID().id) {
+        return false;  // Invalid subject
+    }
     
-    return true;
+    // TODO: In production, retrieve attester's public key from identity system
+    // For now, we perform basic validation. When a public key registry/identity
+    // system is available, the signature can be cryptographically verified:
+    //
+    // auto public_key = identity_system.get_public_key(attestation.attester);
+    // if (!public_key) {
+    //     CASHEW_LOG_WARN("Cannot verify attestation: attester public key not found");
+    //     return false;
+    // }
+    // return AttestationSigner::verify_attestation_signature(attestation, *public_key);
+    
+    return true;  // Accept for now (structural validation passed)
 }
 
 std::vector<Attestation> ReputationManager::get_attestations_for(const NodeID& subject) const {

@@ -164,6 +164,13 @@ public:
     std::vector<NodeID> get_replication_candidates() const;
     NodeID select_best_source_for_replication() const;
     
+    // Redundancy adjustment
+    bool adjust_redundancy();  // Returns true if changes were made
+    size_t calculate_target_redundancy() const;  // Dynamic redundancy calculation
+    bool should_add_replicas() const;
+    bool should_remove_replicas() const;
+    std::vector<NodeID> select_nodes_for_removal() const;  // Select lowest reliability nodes
+    
     // Network lifecycle
     bool should_dissolve() const;  // Too few members, dissolve network
     
@@ -229,6 +236,108 @@ private:
     
     // Next network ID (incremental for this node)
     uint64_t next_network_counter_ = 0;
+};
+
+/**
+ * ReplicationRequest - Request to replicate Thing data
+ */
+struct ReplicationRequest {
+    NetworkID network_id;
+    ContentHash thing_hash;
+    NodeID source_node;    // Node to replicate from
+    NodeID target_node;    // Node to replicate to
+    uint64_t request_timestamp;
+    uint32_t priority;     // 0=low, 5=normal, 10=urgent
+    
+    bool operator<(const ReplicationRequest& other) const {
+        return priority < other.priority;  // Lower priority = less urgent
+    }
+};
+
+/**
+ * ReplicationStatus - Status of an ongoing replication
+ */
+enum class ReplicationStatus : uint8_t {
+    PENDING = 0,      // Request created, not started
+    IN_PROGRESS = 1,  // Data transfer in progress
+    VERIFYING = 2,    // Verifying hash integrity
+    COMPLETED = 3,    // Successfully replicated
+    FAILED = 4,       // Failed to replicate
+    CANCELLED = 5     // Request cancelled
+};
+
+/**
+ * ReplicationJob - Tracks a replication operation
+ */
+struct ReplicationJob {
+    ReplicationRequest request;
+    ReplicationStatus status;
+    uint64_t started_timestamp;
+    uint64_t completed_timestamp;
+    size_t bytes_transferred;
+    std::string error_message;
+    uint32_t retry_count;
+};
+
+/**
+ * ReplicationCoordinator - Manages Thing replication across networks
+ * 
+ * Responsibilities:
+ * - Coordinate replication of Things to maintain redundancy
+ * - Prioritize urgent replication needs (critical networks)
+ * - Track replication progress and retry failures
+ * - Verify integrity of replicated data
+ * - Balance replication load across nodes
+ */
+class ReplicationCoordinator {
+public:
+    ReplicationCoordinator() = default;
+    ~ReplicationCoordinator() = default;
+    
+    // Request management
+    void request_replication(const ReplicationRequest& request);
+    void cancel_replication(const NetworkID& network_id, const NodeID& target_node);
+    
+    // Scheduling
+    std::optional<ReplicationJob> get_next_job();
+    void mark_job_started(const ReplicationRequest& request);
+    void mark_job_completed(const ReplicationRequest& request, bool success, const std::string& error = "");
+    
+    // Status queries
+    std::vector<ReplicationJob> get_active_jobs() const;
+    std::vector<ReplicationJob> get_pending_jobs() const;
+    std::vector<ReplicationJob> get_failed_jobs() const;
+    size_t pending_job_count() const;
+    size_t active_job_count() const;
+    
+    // Job management
+    void retry_failed_jobs(uint32_t max_retries = 3);
+    void cleanup_old_jobs(uint64_t max_age_seconds = 86400);  // 24 hours
+    
+    // Statistics
+    struct ReplicationStats {
+        size_t total_requests;
+        size_t completed_successfully;
+        size_t failed;
+        size_t in_progress;
+        size_t pending;
+        uint64_t total_bytes_transferred;
+        float average_completion_time_seconds;
+    };
+    
+    ReplicationStats get_stats() const;
+    
+    // Constants
+    static constexpr uint32_t MAX_CONCURRENT_JOBS = 5;
+    static constexpr uint32_t DEFAULT_PRIORITY = 5;
+    static constexpr uint32_t MAX_RETRIES = 3;
+    static constexpr uint64_t JOB_TIMEOUT_SECONDS = 3600;  // 1 hour
+
+private:
+    std::vector<ReplicationJob> jobs_;
+    
+    void prioritize_jobs();  // Sort jobs by priority
+    bool can_start_new_job() const;
 };
 
 } // namespace cashew::network

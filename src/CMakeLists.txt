@@ -13,6 +13,9 @@ set(CASHEW_SOURCES
     # Utils
     utils/logger.cpp
     utils/config.cpp
+    utils/serialization.cpp
+    utils/time_utils.cpp
+    utils/error.cpp
     
     # Storage
     storage/storage.cpp
@@ -26,7 +29,9 @@ set(CASHEW_SOURCES
     core/ledger/ledger.cpp
     core/ledger/state.cpp
     core/reputation/reputation.cpp
+    core/reputation/attestation.cpp
     core/postake/postake.cpp
+    core/postake/hybrid_coordinator.cpp
     core/decay/decay.cpp
     core/decay/decay_runner.cpp
     
@@ -40,6 +45,9 @@ set(CASHEW_SOURCES
     # Network
     network/network.cpp
     network/session.cpp
+    network/connection.cpp
+    network/nat_traversal.cpp
+    network/activity_monitor.cpp
     network/gossip.cpp
     network/router.cpp
     network/peer.cpp
@@ -48,6 +56,9 @@ set(CASHEW_SOURCES
     security/onion_routing.cpp
     security/ip_protection.cpp
     security/attack_prevention.cpp
+    security/token_revocation.cpp
+    security/hardware_key_storage.cpp
+    security/key_revocation.cpp
     gateway/gateway_server.cpp
     gateway/websocket_handler.cpp
     gateway/content_renderer.cpp

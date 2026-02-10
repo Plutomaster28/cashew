@@ -90,7 +90,7 @@ constexpr uint32_t SESSION_TIMEOUT_SECONDS = 1800; // 30 minutes
 
 // Cryptography constants
 constexpr size_t ED25519_PUBLIC_KEY_SIZE = 32;
-constexpr size_t ED25519_SECRET_KEY_SIZE = 32;
+constexpr size_t ED25519_SECRET_KEY_SIZE = 64;  // libsodium uses 64 bytes (32-byte seed + 32-byte public key)
 constexpr size_t ED25519_SIGNATURE_SIZE = 64;
 constexpr size_t X25519_PUBLIC_KEY_SIZE = 32;
 constexpr size_t X25519_SECRET_KEY_SIZE = 32;
@@ -122,7 +122,7 @@ using fixed_bytes = std::array<byte, N>;
 
 using Hash256 = fixed_bytes<32>;
 using PublicKey = fixed_bytes<32>;
-using SecretKey = fixed_bytes<32>;
+using SecretKey = fixed_bytes<64>;  // Ed25519 secret key is 64 bytes in libsodium
 using Signature = fixed_bytes<64>;
 using Nonce = fixed_bytes<12>;
 using SessionKey = fixed_bytes<32>;
@@ -186,6 +186,11 @@ struct ContentHash {
 // Utility functions
 std::string hash_to_hex(const Hash256& hash);
 Hash256 hex_to_hash(const std::string& hex);
+
+// Base64 encoding/decoding
+std::string base64_encode(const bytes& data);
+std::string base64_encode(const void* data, size_t len);
+bytes base64_decode(const std::string& encoded);
 
 } // namespace cashew
 

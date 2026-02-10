@@ -94,6 +94,91 @@ struct BootstrapNode {
 };
 
 /**
+ * PeerAnnouncementMessage - Announce this node to the network
+ */
+struct PeerAnnouncementMessage {
+    NodeID node_id;
+    std::string listen_address;  // Empty for outbound-only nodes
+    NodeCapabilities capabilities;
+    uint64_t timestamp;
+    Signature signature;  // Signed by node_id
+    
+    std::vector<uint8_t> to_bytes() const;
+    static std::optional<PeerAnnouncementMessage> from_bytes(const std::vector<uint8_t>& data);
+    bool verify_signature(const PublicKey& public_key) const;
+};
+
+/**
+ * PeerRequestMessage - Request list of known peers
+ */
+struct PeerRequestMessage {
+    NodeID requester_id;
+    uint32_t max_peers;  // Maximum peers to return
+    uint64_t timestamp;
+    Signature signature;
+    
+    std::vector<uint8_t> to_bytes() const;
+    static std::optional<PeerRequestMessage> from_bytes(const std::vector<uint8_t>& data);
+};
+
+/**
+ * PeerResponseMessage - Response with list of known peers
+ */
+struct PeerResponseMessage {
+    struct PeerEntry {
+        NodeID node_id;
+        std::string address;
+        NodeCapabilities capabilities;
+        uint64_t last_seen;
+    };
+    
+    NodeID responder_id;
+    std::vector<PeerEntry> peers;
+    uint64_t timestamp;
+    Signature signature;
+    
+    std::vector<uint8_t> to_bytes() const;
+    static std::optional<PeerResponseMessage> from_bytes(const std::vector<uint8_t>& data);
+};
+
+/**
+ * NATTraversalRequest - STUN-like NAT traversal
+ */
+struct NATTraversalRequest {
+    NodeID requester_id;
+    uint64_t nonce;  // Random nonce for this request
+    uint64_t timestamp;
+    
+    std::vector<uint8_t> to_bytes() const;
+    static std::optional<NATTraversalRequest> from_bytes(const std::vector<uint8_t>& data);
+};
+
+/**
+ * NATTraversalResponse - Response with public address info
+ */
+struct NATTraversalResponse {
+    std::string public_address;  // What requester's address looks like from our perspective
+    uint16_t public_port;
+    uint64_t timestamp;
+    
+    std::vector<uint8_t> to_bytes() const;
+    static std::optional<NATTraversalResponse> from_bytes(const std::vector<uint8_t>& data);
+};
+
+/**
+ * PeerDiversity - Tracks peer diversity for resilience
+ */
+struct PeerDiversity {
+    std::set<std::string> subnets;  // /24 subnets represented
+    std::set<std::string> unique_addresses;  // Unique IP addresses
+    size_t estimated_geographic_regions;  // Estimated number of geographic regions
+    
+    PeerDiversity() : estimated_geographic_regions(0) {}
+    
+    bool is_diverse() const;
+};
+
+/**
  * PeerDiscovery - Mechanism for finding new peers
  */
 class PeerDiscovery {
@@ -119,6 +204,24 @@ public:
         const std::set<NodeID>& exclude
     ) const;
     
+    std::vector<NodeID> select_random_peers(
+        size_t count,
+        const std::set<NodeID>& exclude
+    ) const;
+    
+    std::vector<NodeID> select_diverse_peers(
+        size_t count,
+        const std::set<NodeID>& exclude,
+        const PeerDiversity& current_diversity
+    ) const;
+    
+    // Diversity
+    PeerDiversity calculate_diversity(const std::vector<NodeID>& connected_peers) const;
+    
+    // Peer database persistence
+    bool save_to_disk(const std::string& filepath) const;
+    bool load_from_disk(const std::string& filepath);
+    
     // Cleanup
     void cleanup_stale_peers();
     size_t peer_count() const { return discovered_peers_.size(); }
@@ -128,6 +231,8 @@ private:
     std::map<NodeID, PeerInfo> discovered_peers_;
     
     static constexpr uint64_t PEER_STALE_TIMEOUT = 3600;  // 1 hour
+    
+    std::string extract_subnet(const std::string& address) const;
 };
 
 /**
@@ -206,6 +311,16 @@ public:
     uint64_t total_connection_failures() const { return total_connection_failures_; }
     uint64_t total_bytes_sent() const;
     uint64_t total_bytes_received() const;
+    
+    // Message handlers
+    void handle_peer_announcement(const PeerAnnouncementMessage& msg);
+    void handle_peer_request(const NodeID& requesting_peer, const PeerRequestMessage& msg);
+    void handle_peer_response(const PeerResponseMessage& msg);
+    void handle_nat_traversal_request(const NodeID& requesting_peer, const NATTraversalRequest& req);
+    
+    // Peer database
+    bool save_peer_database(const std::string& filepath) const;
+    bool load_peer_database(const std::string& filepath);
 
 private:
     NodeID local_node_id_;

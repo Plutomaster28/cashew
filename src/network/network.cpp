@@ -472,4 +472,376 @@ bool NetworkRegistry::load_from_disk(const std::string& directory) {
     return false;
 }
 
+// ============================================================================
+// Network - Redundancy Adjustment Implementation
+// ============================================================================
+
+bool Network::adjust_redundancy() {
+    bool changes_made = false;
+    size_t current_replicas = active_replica_count();
+    size_t target = calculate_target_redundancy();
+    
+    CASHEW_LOG_DEBUG("Network {} redundancy check: {} current, {} target",
+                    crypto::Blake3::hash_to_hex(network_id_.id).substr(0, 8),
+                    current_replicas, target);
+    
+    // Update quorum target based on calculation
+    if (quorum_.target_replicas != target) {
+        quorum_.target_replicas = target;
+        changes_made = true;
+        CASHEW_LOG_INFO("Updated network {} target redundancy to {}",
+                       crypto::Blake3::hash_to_hex(network_id_.id).substr(0, 8),
+                       target);
+    }
+    
+    // Check if we need to add replicas (network is under-replicated)
+    if (should_add_replicas()) {
+        CASHEW_LOG_WARN("Network {} needs {} more replicas (current: {}, target: {})",
+                       crypto::Blake3::hash_to_hex(network_id_.id).substr(0, 8),
+                       target - current_replicas, current_replicas, target);
+        changes_made = true;
+        // Note: Actual replication is handled by ReplicationCoordinator
+    }
+    
+    // Check if we should remove replicas (over-replicated with unreliable nodes)
+    if (should_remove_replicas()) {
+        auto nodes_to_remove = select_nodes_for_removal();
+        for (const auto& node_id : nodes_to_remove) {
+            // Mark replica as incomplete (candidate for removal)
+            mark_replica_complete(node_id, false);
+            CASHEW_LOG_INFO("Marked node {} for replica removal (low reliability)",
+                           crypto::Blake3::hash_to_hex(node_id.id).substr(0, 8));
+            changes_made = true;
+        }
+    }
+    
+    return changes_made;
+}
+
+size_t Network::calculate_target_redundancy() const {
+    size_t member_count = members_.size();
+    
+    // Dynamic redundancy based on network size and health
+    if (member_count <= 3) {
+        // Small network: high redundancy ratio
+        return std::min(member_count, NetworkQuorum::DEFAULT_TARGET);
+    } else if (member_count <= 10) {
+        // Medium network: maintain target
+        return NetworkQuorum::DEFAULT_TARGET;
+    } else {
+        // Large network: can scale up redundancy
+        size_t target = NetworkQuorum::DEFAULT_TARGET + (member_count - 10) / 5;
+        return std::min(target, NetworkQuorum::DEFAULT_MAX);
+    }
+}
+
+bool Network::should_add_replicas() const {
+    size_t current = active_replica_count();
+    size_t target = quorum_.target_replicas;
+    
+    // Add replicas if below target
+    return current < target && !quorum_.at_capacity(members_.size());
+}
+
+bool Network::should_remove_replicas() const {
+    size_t current = active_replica_count();
+    size_t target = quorum_.target_replicas;
+    
+    // Only consider removal if we're over target and have unreliable nodes
+    if (current <= target) {
+        return false;
+    }
+    
+    // Check if we have unreliable nodes
+    for (const auto& member : members_) {
+        if (member.has_complete_replica && 
+            member.reliability_score < MIN_RELIABILITY_SCORE) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+std::vector<NodeID> Network::select_nodes_for_removal() const {
+    std::vector<NodeID> candidates;
+    size_t current = active_replica_count();
+    size_t target = quorum_.target_replicas;
+    
+    if (current <= target) {
+        return candidates;  // Don't remove if at or below target
+    }
+    
+    // Build list of members with replicas, sorted by reliability
+    std::vector<std::pair<NodeID, float>> replica_nodes;
+    for (const auto& member : members_) {
+        if (member.has_complete_replica) {
+            replica_nodes.push_back({member.node_id, member.reliability_score});
+        }
+    }
+    
+    // Sort by reliability (lowest first)
+    std::sort(replica_nodes.begin(), replica_nodes.end(),
+        [](const auto& a, const auto& b) {
+            return a.second < b.second;
+        });
+    
+    // Select lowest reliability nodes for removal (but keep above minimum)
+    size_t to_remove = current - target;
+    size_t can_remove = std::min(to_remove, 
+                                  current - quorum_.min_replicas);
+    
+    for (size_t i = 0; i < can_remove && i < replica_nodes.size(); ++i) {
+        if (replica_nodes[i].second < MIN_RELIABILITY_SCORE) {
+            candidates.push_back(replica_nodes[i].first);
+        }
+    }
+    
+    return candidates;
+}
+
+// ============================================================================
+// ReplicationCoordinator Implementation
+// ============================================================================
+
+void ReplicationCoordinator::request_replication(const ReplicationRequest& request) {
+    // Check if already exists
+    for (const auto& job : jobs_) {
+        if (job.request.network_id == request.network_id &&
+            job.request.target_node == request.target_node &&
+            (job.status == ReplicationStatus::PENDING ||
+             job.status == ReplicationStatus::IN_PROGRESS)) {
+            CASHEW_LOG_DEBUG("Replication already queued for network {} to node {}",
+                           crypto::Blake3::hash_to_hex(request.network_id.id).substr(0, 8),
+                           crypto::Blake3::hash_to_hex(request.target_node.id).substr(0, 8));
+            return;
+        }
+    }
+    
+    // Create new job
+    ReplicationJob job;
+    job.request = request;
+    job.status = ReplicationStatus::PENDING;
+    job.started_timestamp = 0;
+    job.completed_timestamp = 0;
+    job.bytes_transferred = 0;
+    job.retry_count = 0;
+    
+    jobs_.push_back(job);
+    prioritize_jobs();
+    
+    CASHEW_LOG_INFO("Queued replication for network {} to node {} (priority: {})",
+                   crypto::Blake3::hash_to_hex(request.network_id.id).substr(0, 8),
+                   crypto::Blake3::hash_to_hex(request.target_node.id).substr(0, 8),
+                   request.priority);
+}
+
+void ReplicationCoordinator::cancel_replication(const NetworkID& network_id, 
+                                                const NodeID& target_node) {
+    for (auto& job : jobs_) {
+        if (job.request.network_id == network_id &&
+            job.request.target_node == target_node &&
+            (job.status == ReplicationStatus::PENDING ||
+             job.status == ReplicationStatus::IN_PROGRESS)) {
+            job.status = ReplicationStatus::CANCELLED;
+            CASHEW_LOG_INFO("Cancelled replication for network {} to node {}",
+                           crypto::Blake3::hash_to_hex(network_id.id).substr(0, 8),
+                           crypto::Blake3::hash_to_hex(target_node.id).substr(0, 8));
+        }
+    }
+}
+
+std::optional<ReplicationJob> ReplicationCoordinator::get_next_job() {
+    if (!can_start_new_job()) {
+        return std::nullopt;
+    }
+    
+    // Find highest priority pending job
+    for (const auto& job : jobs_) {
+        if (job.status == ReplicationStatus::PENDING) {
+            return job;
+        }
+    }
+    
+    return std::nullopt;
+}
+
+void ReplicationCoordinator::mark_job_started(const ReplicationRequest& request) {
+    for (auto& job : jobs_) {
+        if (job.request.network_id == request.network_id &&
+            job.request.target_node == request.target_node &&
+            job.status == ReplicationStatus::PENDING) {
+            job.status = ReplicationStatus::IN_PROGRESS;
+            job.started_timestamp = std::chrono::system_clock::now().time_since_epoch().count();
+            CASHEW_LOG_INFO("Started replication job for network {} to node {}",
+                           crypto::Blake3::hash_to_hex(request.network_id.id).substr(0, 8),
+                           crypto::Blake3::hash_to_hex(request.target_node.id).substr(0, 8));
+            return;
+        }
+    }
+}
+
+void ReplicationCoordinator::mark_job_completed(const ReplicationRequest& request,
+                                                bool success,
+                                                const std::string& error) {
+    for (auto& job : jobs_) {
+        if (job.request.network_id == request.network_id &&
+            job.request.target_node == request.target_node &&
+            job.status == ReplicationStatus::IN_PROGRESS) {
+            job.status = success ? ReplicationStatus::COMPLETED : ReplicationStatus::FAILED;
+            job.completed_timestamp = std::chrono::system_clock::now().time_since_epoch().count();
+            job.error_message = error;
+            
+            if (success) {
+                CASHEW_LOG_INFO("Completed replication for network {} to node {}",
+                               crypto::Blake3::hash_to_hex(request.network_id.id).substr(0, 8),
+                               crypto::Blake3::hash_to_hex(request.target_node.id).substr(0, 8));
+            } else {
+                CASHEW_LOG_ERROR("Failed replication for network {} to node {}: {}",
+                                crypto::Blake3::hash_to_hex(request.network_id.id).substr(0, 8),
+                                crypto::Blake3::hash_to_hex(request.target_node.id).substr(0, 8),
+                                error);
+            }
+            return;
+        }
+    }
+}
+
+std::vector<ReplicationJob> ReplicationCoordinator::get_active_jobs() const {
+    std::vector<ReplicationJob> result;
+    for (const auto& job : jobs_) {
+        if (job.status == ReplicationStatus::IN_PROGRESS) {
+            result.push_back(job);
+        }
+    }
+    return result;
+}
+
+std::vector<ReplicationJob> ReplicationCoordinator::get_pending_jobs() const {
+    std::vector<ReplicationJob> result;
+    for (const auto& job : jobs_) {
+        if (job.status == ReplicationStatus::PENDING) {
+            result.push_back(job);
+        }
+    }
+    return result;
+}
+
+std::vector<ReplicationJob> ReplicationCoordinator::get_failed_jobs() const {
+    std::vector<ReplicationJob> result;
+    for (const auto& job : jobs_) {
+        if (job.status == ReplicationStatus::FAILED) {
+            result.push_back(job);
+        }
+    }
+    return result;
+}
+
+size_t ReplicationCoordinator::pending_job_count() const {
+    return get_pending_jobs().size();
+}
+
+size_t ReplicationCoordinator::active_job_count() const {
+    return get_active_jobs().size();
+}
+
+void ReplicationCoordinator::retry_failed_jobs(uint32_t max_retries) {
+    for (auto& job : jobs_) {
+        if (job.status == ReplicationStatus::FAILED && 
+            job.retry_count < max_retries) {
+            job.status = ReplicationStatus::PENDING;
+            job.retry_count++;
+            job.error_message.clear();
+            CASHEW_LOG_INFO("Retrying replication for network {} to node {} (attempt {}/{})",
+                           crypto::Blake3::hash_to_hex(job.request.network_id.id).substr(0, 8),
+                           crypto::Blake3::hash_to_hex(job.request.target_node.id).substr(0, 8),
+                           job.retry_count, max_retries);
+        }
+    }
+    prioritize_jobs();
+}
+
+void ReplicationCoordinator::cleanup_old_jobs(uint64_t max_age_seconds) {
+    auto now = std::chrono::system_clock::now().time_since_epoch().count();
+    
+    auto it = std::remove_if(jobs_.begin(), jobs_.end(),
+        [now, max_age_seconds](const ReplicationJob& job) {
+            if (job.status == ReplicationStatus::PENDING ||
+                job.status == ReplicationStatus::IN_PROGRESS) {
+                return false;  // Keep active jobs
+            }
+            
+            uint64_t job_age = now - job.completed_timestamp;
+            return job_age > max_age_seconds;
+        });
+    
+    size_t removed = std::distance(it, jobs_.end());
+    jobs_.erase(it, jobs_.end());
+    
+    if (removed > 0) {
+        CASHEW_LOG_INFO("Cleaned up {} old replication jobs", removed);
+    }
+}
+
+ReplicationCoordinator::ReplicationStats ReplicationCoordinator::get_stats() const {
+    ReplicationStats stats{};
+    uint64_t total_completion_time = 0;
+    size_t completed_count = 0;
+    
+    for (const auto& job : jobs_) {
+        stats.total_requests++;
+        
+        switch (job.status) {
+            case ReplicationStatus::COMPLETED:
+                stats.completed_successfully++;
+                completed_count++;
+                if (job.completed_timestamp > job.started_timestamp) {
+                    total_completion_time += (job.completed_timestamp - job.started_timestamp);
+                }
+                stats.total_bytes_transferred += job.bytes_transferred;
+                break;
+            case ReplicationStatus::FAILED:
+            case ReplicationStatus::CANCELLED:
+                stats.failed++;
+                break;
+            case ReplicationStatus::IN_PROGRESS:
+            case ReplicationStatus::VERIFYING:
+                stats.in_progress++;
+                break;
+            case ReplicationStatus::PENDING:
+                stats.pending++;
+                break;
+        }
+    }
+    
+    if (completed_count > 0) {
+        stats.average_completion_time_seconds = 
+            static_cast<float>(total_completion_time) / completed_count / 1000000000.0f;  // Convert ns to seconds
+    }
+    
+    return stats;
+}
+
+void ReplicationCoordinator::prioritize_jobs() {
+    // Sort jobs by priority (highest first)
+    std::stable_sort(jobs_.begin(), jobs_.end(),
+        [](const ReplicationJob& a, const ReplicationJob& b) {
+            // Prioritize pending jobs first
+            if (a.status == ReplicationStatus::PENDING && 
+                b.status != ReplicationStatus::PENDING) {
+                return true;
+            }
+            if (b.status == ReplicationStatus::PENDING && 
+                a.status != ReplicationStatus::PENDING) {
+                return false;
+            }
+            // Then by priority value
+            return a.request.priority > b.request.priority;
+        });
+}
+
+bool ReplicationCoordinator::can_start_new_job() const {
+    return active_job_count() < MAX_CONCURRENT_JOBS;
+}
+
 } // namespace cashew::network

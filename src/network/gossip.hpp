@@ -18,7 +18,8 @@ enum class GossipMessageType : uint8_t {
     CONTENT_ANNOUNCEMENT = 2,   // Node announcing hosted content
     NETWORK_STATE_UPDATE = 3,   // Network-wide state update
     KEY_REVOCATION = 4,         // Revoked key announcement
-    NODE_CAPABILITY = 5         // Node capability advertisement
+    NODE_CAPABILITY = 5,        // Node capability advertisement
+    TOKEN_REVOCATION = 6        // Capability token revocation list
 };
 
 /**

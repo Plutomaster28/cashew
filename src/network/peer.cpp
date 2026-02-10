@@ -1,9 +1,13 @@
 #include "network/peer.hpp"
 #include "network/router.hpp"
 #include "crypto/random.hpp"
+#include "crypto/ed25519.hpp"
+#include "crypto/blake3.hpp"
 #include "utils/logger.hpp"
 #include <algorithm>
 #include <sstream>
+#include <fstream>
+#include <nlohmann/json.hpp>
 
 namespace cashew::network {
 
@@ -183,6 +187,259 @@ std::vector<NodeID> PeerDiscovery::select_peers_to_connect(
     return result;
 }
 
+std::vector<NodeID> PeerDiscovery::select_random_peers(
+    size_t count,
+    const std::set<NodeID>& exclude
+) const {
+    // Collect all available peers
+    std::vector<NodeID> available_peers;
+    available_peers.reserve(discovered_peers_.size());
+    
+    for (const auto& [node_id, info] : discovered_peers_) {
+        // Skip excluded peers
+        if (exclude.find(node_id) != exclude.end()) {
+            continue;
+        }
+        
+        // Skip stale peers
+        if (info.is_stale()) {
+            continue;
+        }
+        
+        available_peers.push_back(node_id);
+    }
+    
+    // Shuffle using Fisher-Yates with crypto::Random
+    for (size_t i = available_peers.size() - 1; i > 0; --i) {
+        uint64_t j = crypto::Random::generate_uint64() % (i + 1);
+        std::swap(available_peers[i], available_peers[j]);
+    }
+    
+    // Return first N
+    std::vector<NodeID> result;
+    size_t num_results = std::min(count, available_peers.size());
+    result.reserve(num_results);
+    
+    for (size_t i = 0; i < num_results; ++i) {
+        result.push_back(available_peers[i]);
+    }
+    
+    return result;
+}
+
+std::vector<NodeID> PeerDiscovery::select_diverse_peers(
+    size_t count,
+    const std::set<NodeID>& exclude,
+    const PeerDiversity& current_diversity
+) const {
+    struct DiversityScore {
+        NodeID node_id;
+        float score;
+        std::string subnet;
+    };
+    
+    std::vector<DiversityScore> scored_peers;
+    scored_peers.reserve(discovered_peers_.size());
+    
+    for (const auto& [node_id, info] : discovered_peers_) {
+        // Skip excluded peers
+        if (exclude.find(node_id) != exclude.end()) {
+            continue;
+        }
+        
+        // Skip stale peers
+        if (info.is_stale()) {
+            continue;
+        }
+        
+        // Extract subnet
+        std::string subnet = extract_subnet(info.address);
+        
+        // Calculate diversity score
+        float score = 1.0f;
+        
+        // Penalize if subnet is already represented
+        if (current_diversity.subnets.find(subnet) != current_diversity.subnets.end()) {
+            score *= 0.3f;  // Strong penalty for same subnet
+        }
+        
+        // Add reliability component
+        score *= info.reliability_score();
+        
+        scored_peers.push_back({node_id, score, subnet});
+    }
+    
+    // Sort by diversity score (descending)
+    std::sort(scored_peers.begin(), scored_peers.end(),
+        [](const DiversityScore& a, const DiversityScore& b) {
+            return a.score > b.score;
+        });
+    
+    // Select peers, tracking subnets
+    std::vector<NodeID> result;
+    std::set<std::string> selected_subnets = current_diversity.subnets;
+    result.reserve(count);
+    
+    for (const auto& scored : scored_peers) {
+        if (result.size() >= count) {
+            break;
+        }
+        
+        result.push_back(scored.node_id);
+        selected_subnets.insert(scored.subnet);
+    }
+    
+    return result;
+}
+
+PeerDiversity PeerDiscovery::calculate_diversity(const std::vector<NodeID>& connected_peers) const {
+    PeerDiversity diversity;
+    
+    for (const auto& node_id : connected_peers) {
+        auto peer_opt = get_peer_info(node_id);
+        if (!peer_opt) {
+            continue;
+        }
+        
+        const auto& info = *peer_opt;
+        
+        // Extract subnet
+        std::string subnet = extract_subnet(info.address);
+        diversity.subnets.insert(subnet);
+        
+        // Track unique addresses
+        diversity.unique_addresses.insert(info.address);
+        
+        // Estimate geographic distribution (simplified)
+        // In production, would use GeoIP database
+        diversity.estimated_geographic_regions++;
+    }
+    
+    return diversity;
+}
+
+bool PeerDiscovery::save_to_disk(const std::string& filepath) const {
+    try {
+        nlohmann::json j;
+        
+        // Save bootstrap nodes
+        nlohmann::json bootstrap_array = nlohmann::json::array();
+        for (const auto& node : bootstrap_nodes_) {
+            nlohmann::json node_obj;
+            node_obj["address"] = node.address;
+            node_obj["public_key"] = hash_to_hex(Hash256(node.public_key));
+            node_obj["description"] = node.description;
+            bootstrap_array.push_back(node_obj);
+        }
+        j["bootstrap_nodes"] = bootstrap_array;
+        
+        // Save discovered peers
+        nlohmann::json peers_array = nlohmann::json::array();
+        for (const auto& [node_id, info] : discovered_peers_) {
+            nlohmann::json peer_obj;
+            peer_obj["node_id"] = node_id.to_string();
+            peer_obj["address"] = info.address;
+            peer_obj["first_seen"] = info.first_seen;
+            peer_obj["last_seen"] = info.last_seen;
+            peer_obj["connection_attempts"] = info.connection_attempts;
+            peer_obj["successful_connections"] = info.successful_connections;
+            peer_obj["is_bootstrap"] = info.is_bootstrap;
+            peers_array.push_back(peer_obj);
+        }
+        j["discovered_peers"] = peers_array;
+        
+        // Write to file
+        std::ofstream file(filepath);
+        if (!file.is_open()) {
+            CASHEW_LOG_ERROR("Failed to open peer database file for writing: {}", filepath);
+            return false;
+        }
+        
+        file << j.dump(2);
+        file.close();
+        
+        CASHEW_LOG_INFO("Saved peer database to {}", filepath);
+        return true;
+    } catch (const std::exception& e) {
+        CASHEW_LOG_ERROR("Failed to save peer database: {}", e.what());
+        return false;
+    }
+}
+
+bool PeerDiscovery::load_from_disk(const std::string& filepath) {
+    try {
+        std::ifstream file(filepath);
+        if (!file.is_open()) {
+            CASHEW_LOG_WARN("Peer database file not found: {}", filepath);
+            return false;
+        }
+        
+        nlohmann::json j;
+        file >> j;
+        file.close();
+        
+        // Load bootstrap nodes
+        if (j.contains("bootstrap_nodes")) {
+            for (const auto& node_obj : j["bootstrap_nodes"]) {
+                BootstrapNode node;
+                node.address = node_obj["address"];
+                auto pubkey_hash = hex_to_hash(node_obj["public_key"]);
+                std::copy(pubkey_hash.begin(), pubkey_hash.end(), node.public_key.begin());
+                node.description = node_obj["description"];
+                bootstrap_nodes_.push_back(node);
+            }
+        }
+        
+        // Load discovered peers
+        if (j.contains("discovered_peers")) {
+            for (const auto& peer_obj : j["discovered_peers"]) {
+                PeerInfo info;
+                info.node_id = NodeID::from_string(peer_obj["node_id"]);
+                info.address = peer_obj["address"];
+                info.first_seen = peer_obj["first_seen"];
+                info.last_seen = peer_obj["last_seen"];
+                info.connection_attempts = peer_obj["connection_attempts"];
+                info.successful_connections = peer_obj["successful_connections"];
+                info.is_bootstrap = peer_obj["is_bootstrap"];
+                
+                discovered_peers_[info.node_id] = info;
+            }
+        }
+        
+        CASHEW_LOG_INFO("Loaded peer database from {}", filepath);
+        return true;
+    } catch (const std::exception& e) {
+        CASHEW_LOG_ERROR("Failed to load peer database: {}", e.what());
+        return false;
+    }
+}
+
+std::string PeerDiscovery::extract_subnet(const std::string& address) const {
+    // Extract IP from address (format: "ip:port")
+    size_t colon_pos = address.find(':');
+    std::string ip = (colon_pos != std::string::npos) ? 
+                     address.substr(0, colon_pos) : address;
+    
+    // Extract /24 subnet for IPv4
+    size_t last_dot = ip.rfind('.');
+    if (last_dot != std::string::npos) {
+        return ip.substr(0, last_dot) + ".0/24";
+    }
+    
+    // For IPv6, extract /48 prefix (simplified)
+    size_t colons_found = 0;
+    for (size_t i = 0; i < ip.length(); ++i) {
+        if (ip[i] == ':') {
+            colons_found++;
+            if (colons_found == 3) {
+                return ip.substr(0, i) + "::/48";
+            }
+        }
+    }
+    
+    return ip;  // Fallback
+}
+
 void PeerDiscovery::cleanup_stale_peers() {
     std::vector<NodeID> to_remove;
     
@@ -228,6 +485,11 @@ void PeerManager::add_bootstrap_node(const BootstrapNode& node) {
 void PeerManager::connect_to_bootstrap_nodes() {
     auto bootstrap_nodes = discovery_.get_bootstrap_nodes();
     
+    if (bootstrap_nodes.empty()) {
+        CASHEW_LOG_WARN("No bootstrap nodes configured");
+        return;
+    }
+    
     size_t connected = 0;
     size_t max_bootstrap = policy_.max_bootstrap_peers;
     
@@ -236,16 +498,23 @@ void PeerManager::connect_to_bootstrap_nodes() {
             break;
         }
         
-        // TODO: Derive NodeID from public key
-        // For now, we'll need to connect and get NodeID from handshake
         CASHEW_LOG_INFO("Connecting to bootstrap: {}", node.description);
         
-        // Add to discovery
-        NodeID bootstrap_id{};  // Placeholder - will be filled during handshake
-        discovery_.add_discovered_peer(bootstrap_id, node.address);
+        // Derive NodeID from public key (BLAKE3 hash)
+        std::vector<uint8_t> pubkey_bytes(node.public_key.begin(), node.public_key.end());
+        auto node_id_hash = crypto::Blake3::hash(pubkey_bytes);
+        NodeID bootstrap_id(node_id_hash);
         
-        // TODO: Implement actual connection
-        // connect_to_peer(bootstrap_id, node.address);
+        // Add to discovery as bootstrap peer
+        discovery_.add_discovered_peer(bootstrap_id, node.address);
+        auto peer_info_opt = discovery_.get_peer_info(bootstrap_id);
+        if (peer_info_opt) {
+            auto& peer_info = const_cast<PeerInfo&>(*peer_info_opt);
+            peer_info.is_bootstrap = true;
+        }
+        
+        // Initiate connection
+        connect_to_peer(bootstrap_id, node.address);
         
         connected++;
     }
@@ -611,6 +880,174 @@ uint64_t PeerManager::current_timestamp() const {
     return static_cast<uint64_t>(now_time_t);
 }
 
+void PeerManager::handle_peer_announcement(const PeerAnnouncementMessage& msg) {
+    // TODO: Get public key from message or session for verification
+    // For now, skip signature verification
+    
+    // Check timestamp (reject if too old or in the future)
+    uint64_t current_time = current_timestamp();
+    uint64_t time_diff = (msg.timestamp > current_time) ? 
+                        (msg.timestamp - current_time) : 
+                        (current_time - msg.timestamp);
+    
+    if (time_diff > 300) {  // 5 minutes
+        CASHEW_LOG_DEBUG("Received peer announcement with stale timestamp");
+        return;
+    }
+    
+    // Don't add ourselves
+    if (msg.node_id == local_node_id_) {
+        return;
+    }
+    
+    // Add to discovered peers (use listen_address if provided, otherwise skip)
+    if (!msg.listen_address.empty()) {
+        discovery_.add_discovered_peer(msg.node_id, msg.listen_address);
+        discovery_.update_peer_capabilities(msg.node_id, msg.capabilities);
+        CASHEW_LOG_INFO("Received peer announcement from {}", msg.listen_address);
+    }
+}
+
+void PeerManager::handle_peer_request(const NodeID& requesting_peer, const PeerRequestMessage& msg) {
+    // Verify requester ID matches
+    if (msg.requester_id != requesting_peer) {
+        CASHEW_LOG_WARN("Peer request requester ID mismatch");
+        return;
+    }
+    
+    // Check timestamp
+    uint64_t current_time = current_timestamp();
+    uint64_t time_diff = (msg.timestamp > current_time) ? 
+                        (msg.timestamp - current_time) : 
+                        (current_time - msg.timestamp);
+    
+    if (time_diff > 300) {  // 5 minutes
+        CASHEW_LOG_DEBUG("Received peer request with stale timestamp");
+        return;
+    }
+    
+    // Select peers to respond with
+    std::set<NodeID> exclude;
+    exclude.insert(requesting_peer);  // Don't send the requester back to themselves
+    exclude.insert(local_node_id_);   // Don't send ourselves
+    
+    auto selected_peers = discovery_.select_random_peers(
+        std::min(static_cast<size_t>(msg.max_peers), size_t(20)),  // Max 20 peers per response
+        exclude
+    );
+    
+    // Build response
+    PeerResponseMessage response;
+    response.responder_id = local_node_id_;
+    response.timestamp = current_time;
+    
+    for (const auto& peer_id : selected_peers) {
+        auto info_opt = discovery_.get_peer_info(peer_id);
+        if (info_opt) {
+            PeerResponseMessage::PeerEntry entry;
+            entry.node_id = peer_id;
+            entry.address = info_opt->address;
+            entry.capabilities = info_opt->capabilities;
+            entry.last_seen = info_opt->last_seen;
+            response.peers.push_back(entry);
+        }
+    }
+    
+    // Send response (would integrate with session/router)
+    auto response_bytes = response.to_bytes();
+    send_to_peer(requesting_peer, response_bytes);
+    
+    CASHEW_LOG_DEBUG("Sent peer response with {} peers", response.peers.size());
+}
+
+void PeerManager::handle_peer_response(const PeerResponseMessage& msg) {
+    // Verify responder ID (would need public key from responding peer)
+    // For now, assume valid if we have an active connection
+    
+    if (!is_connected(msg.responder_id)) {
+        CASHEW_LOG_DEBUG("Received peer response from non-connected peer");
+        return;
+    }
+    
+    // Check timestamp
+    uint64_t current_time = current_timestamp();
+    uint64_t time_diff = (msg.timestamp > current_time) ? 
+                        (msg.timestamp - current_time) : 
+                        (current_time - msg.timestamp);
+    
+    if (time_diff > 300) {  // 5 minutes
+        CASHEW_LOG_DEBUG("Received peer response with stale timestamp");
+        return;
+    }
+    
+    // Add discovered peers
+    size_t new_peers = 0;
+    for (const auto& entry : msg.peers) {
+        // Don't add ourselves
+        if (entry.node_id == local_node_id_) {
+            continue;
+        }
+        
+        // Check if already known
+        auto existing = discovery_.get_peer_info(entry.node_id);
+        if (!existing) {
+            new_peers++;
+        }
+        
+        discovery_.add_discovered_peer(entry.node_id, entry.address);
+        discovery_.update_peer_capabilities(entry.node_id, entry.capabilities);
+    }
+    
+    CASHEW_LOG_INFO("Received peer response with {} peers ({} new)", 
+                   msg.peers.size(), new_peers);
+}
+
+void PeerManager::handle_nat_traversal_request(const NodeID& requesting_peer, const NATTraversalRequest& req) {
+    // Get the connection info to determine observed address
+    auto conn_opt = get_connection(requesting_peer);
+    if (!conn_opt) {
+        CASHEW_LOG_DEBUG("NAT traversal request from non-connected peer");
+        return;
+    }
+    
+    // Verify requester ID matches
+    if (req.requester_id != requesting_peer) {
+        CASHEW_LOG_WARN("NAT traversal request requester ID mismatch");
+        return;
+    }
+    
+    // Extract observed address from connection
+    // In a real implementation, would get this from the socket/session
+    std::string observed_addr = conn_opt->address;
+    
+    // Extract IP and port
+    size_t colon_pos = observed_addr.find(':');
+    std::string ip = (colon_pos != std::string::npos) ? 
+                     observed_addr.substr(0, colon_pos) : observed_addr;
+    uint16_t port = (colon_pos != std::string::npos) ? 
+                    static_cast<uint16_t>(std::stoi(observed_addr.substr(colon_pos + 1))) : 0;
+    
+    // Build response
+    NATTraversalResponse response;
+    response.public_address = ip;
+    response.public_port = port;
+    response.timestamp = current_timestamp();
+    
+    // Send response
+    auto response_bytes = response.to_bytes();
+    send_to_peer(requesting_peer, response_bytes);
+    
+    CASHEW_LOG_DEBUG("Sent NAT traversal response to peer");
+}
+
+bool PeerManager::save_peer_database(const std::string& filepath) const {
+    return discovery_.save_to_disk(filepath);
+}
+
+bool PeerManager::load_peer_database(const std::string& filepath) {
+    return const_cast<PeerDiscovery&>(discovery_).load_from_disk(filepath);
+}
+
 // PeerStatistics methods
 
 std::string PeerStatistics::to_string() const {
@@ -626,6 +1063,456 @@ std::string PeerStatistics::to_string() const {
     oss << "  Total bytes received: " << total_bytes_received << "\n";
     oss << "  Average connection duration: " << average_connection_duration.count() << "s";
     return oss.str();
+}
+
+// PeerAnnouncementMessage methods
+
+std::vector<uint8_t> PeerAnnouncementMessage::to_bytes() const {
+    std::vector<uint8_t> data;
+    
+    // Message type (1 byte)
+    data.push_back(0x01);  // PEER_ANNOUNCEMENT
+    
+    // Node ID (32 bytes)
+    data.insert(data.end(), node_id.id.begin(), node_id.id.end());
+    
+    // Listen address length (2 bytes)
+    uint16_t addr_len = static_cast<uint16_t>(listen_address.length());
+    data.push_back((addr_len >> 8) & 0xFF);
+    data.push_back(addr_len & 0xFF);
+    
+    // Listen address
+    data.insert(data.end(), listen_address.begin(), listen_address.end());
+    
+    // Timestamp (8 bytes)
+    for (int i = 7; i >= 0; --i) {
+        data.push_back((timestamp >> (i * 8)) & 0xFF);
+    }
+    
+    // Capabilities - serialize as JSON
+    nlohmann::json caps_json;
+    caps_json["can_host_things"] = capabilities.can_host_things;
+    caps_json["can_route_content"] = capabilities.can_route_content;
+    caps_json["can_provide_storage"] = capabilities.can_provide_storage;
+    std::string caps_str = caps_json.dump();
+    
+    // Capabilities length (2 bytes)
+    uint16_t caps_len = static_cast<uint16_t>(caps_str.length());
+    data.push_back((caps_len >> 8) & 0xFF);
+    data.push_back(caps_len & 0xFF);
+    
+    // Capabilities data
+    data.insert(data.end(), caps_str.begin(), caps_str.end());
+    
+    // Signature (64 bytes)
+    data.insert(data.end(), signature.begin(), signature.end());
+    
+    return data;
+}
+
+std::optional<PeerAnnouncementMessage> PeerAnnouncementMessage::from_bytes(const std::vector<uint8_t>& data) {
+    if (data.size() < 140) {  // Minimum size
+        return std::nullopt;
+    }
+    
+    size_t offset = 0;
+    
+    // Message type
+    if (data[offset++] != 0x01) {
+        return std::nullopt;
+    }
+    
+    PeerAnnouncementMessage msg;
+    
+    // Node ID
+    std::copy(data.begin() + offset, data.begin() + offset + 32, msg.node_id.id.begin());
+    offset += 32;
+    
+    // Address length
+    uint16_t addr_len = (static_cast<uint16_t>(data[offset]) << 8) | data[offset + 1];
+    offset += 2;
+    
+    if (offset + addr_len > data.size()) {
+        return std::nullopt;
+    }
+    
+    // Address
+    msg.listen_address = std::string(data.begin() + offset, data.begin() + offset + addr_len);
+    offset += addr_len;
+    
+    // Timestamp
+    msg.timestamp = 0;
+    for (int i = 0; i < 8; ++i) {
+        msg.timestamp = (msg.timestamp << 8) | data[offset++];
+    }
+    
+    // Capabilities length
+    uint16_t caps_len = (static_cast<uint16_t>(data[offset]) << 8) | data[offset + 1];
+    offset += 2;
+    
+    if (offset + caps_len + 64 > data.size()) {
+        return std::nullopt;
+    }
+    
+    // Capabilities
+    std::string caps_str(data.begin() + offset, data.begin() + offset + caps_len);
+    offset += caps_len;
+    
+    try {
+        nlohmann::json caps_json = nlohmann::json::parse(caps_str);
+        msg.capabilities.can_host_things = caps_json["can_host_things"];
+        msg.capabilities.can_route_content = caps_json["can_route_content"];
+        msg.capabilities.can_provide_storage = caps_json["can_provide_storage"];
+    } catch (...) {
+        return std::nullopt;
+    }
+    
+    // Signature
+    std::copy(data.begin() + offset, data.begin() + offset + 64, msg.signature.begin());
+    
+    return msg;
+}
+
+bool PeerAnnouncementMessage::verify_signature(const PublicKey& public_key) const {
+    // Create data to verify (everything except signature)
+    std::vector<uint8_t> data;
+    
+    // Node ID
+    data.insert(data.end(), node_id.id.begin(), node_id.id.end());
+    
+    // Address
+    data.insert(data.end(), listen_address.begin(), listen_address.end());
+    
+    // Timestamp
+    for (int i = 7; i >= 0; --i) {
+        data.push_back((timestamp >> (i * 8)) & 0xFF);
+    }
+    
+    // Verify signature
+    return crypto::Ed25519::verify(data, signature, public_key);
+}
+
+// PeerRequestMessage methods
+
+std::vector<uint8_t> PeerRequestMessage::to_bytes() const {
+    std::vector<uint8_t> data;
+    
+    // Message type (1 byte)
+    data.push_back(0x02);  // PEER_REQUEST
+    
+    // Requester node ID (32 bytes)
+    data.insert(data.end(), requester_id.id.begin(), requester_id.id.end());
+    
+    // Max peers (4 bytes)
+    for (int i = 3; i >= 0; --i) {
+        data.push_back((max_peers >> (i * 8)) & 0xFF);
+    }
+    
+    // Timestamp (8 bytes)
+    for (int i = 7; i >= 0; --i) {
+        data.push_back((timestamp >> (i * 8)) & 0xFF);
+    }
+    
+    // Signature (64 bytes)
+    data.insert(data.end(), signature.begin(), signature.end());
+    
+    return data;
+}
+
+std::optional<PeerRequestMessage> PeerRequestMessage::from_bytes(const std::vector<uint8_t>& data) {
+    if (data.size() != 109) {  // Fixed size
+        return std::nullopt;
+    }
+    
+    size_t offset = 0;
+    
+    // Message type
+    if (data[offset++] != 0x02) {
+        return std::nullopt;
+    }
+    
+    PeerRequestMessage msg;
+    
+    // Requester node ID
+    std::copy(data.begin() + offset, data.begin() + offset + 32, msg.requester_id.id.begin());
+    offset += 32;
+    
+    // Max peers
+    msg.max_peers = 0;
+    for (int i = 0; i < 4; ++i) {
+        msg.max_peers = (msg.max_peers << 8) | data[offset++];
+    }
+    
+    // Timestamp
+    msg.timestamp = 0;
+    for (int i = 0; i < 8; ++i) {
+        msg.timestamp = (msg.timestamp << 8) | data[offset++];
+    }
+    
+    // Signature
+    std::copy(data.begin() + offset, data.begin() + offset + 64, msg.signature.begin());
+    
+    return msg;
+}
+
+// PeerResponseMessage methods
+
+std::vector<uint8_t> PeerResponseMessage::to_bytes() const {
+    std::vector<uint8_t> data;
+    
+    // Message type (1 byte)
+    data.push_back(0x03);  // PEER_RESPONSE
+    
+    // Responder node ID (32 bytes)
+    data.insert(data.end(), responder_id.id.begin(), responder_id.id.end());
+    
+    // Peer count (2 bytes)
+    uint16_t peer_count = static_cast<uint16_t>(peers.size());
+    data.push_back((peer_count >> 8) & 0xFF);
+    data.push_back(peer_count & 0xFF);
+    
+    // Peers
+    for (const auto& peer : peers) {
+        // Node ID (32 bytes)
+        data.insert(data.end(), peer.node_id.id.begin(), peer.node_id.id.end());
+        
+        // Address length (2 bytes)
+        uint16_t addr_len = static_cast<uint16_t>(peer.address.length());
+        data.push_back((addr_len >> 8) & 0xFF);
+        data.push_back(addr_len & 0xFF);
+        
+        // Address
+        data.insert(data.end(), peer.address.begin(), peer.address.end());
+        
+        // Last seen (8 bytes)
+        for (int i = 7; i >= 0; --i) {
+            data.push_back((peer.last_seen >> (i * 8)) & 0xFF);
+        }
+    }
+    
+    // Timestamp (8 bytes)
+    for (int i = 7; i >= 0; --i) {
+        data.push_back((timestamp >> (i * 8)) & 0xFF);
+    }
+    
+    // Signature (64 bytes)
+    data.insert(data.end(), signature.begin(), signature.end());
+    
+    return data;
+}
+
+std::optional<PeerResponseMessage> PeerResponseMessage::from_bytes(const std::vector<uint8_t>& data) {
+    if (data.size() < 107) {  // Minimum size
+        return std::nullopt;
+    }
+    
+    size_t offset = 0;
+    
+    // Message type
+    if (data[offset++] != 0x03) {
+        return std::nullopt;
+    }
+    
+    PeerResponseMessage msg;
+    
+    // Responder node ID
+    std::copy(data.begin() + offset, data.begin() + offset + 32, msg.responder_id.id.begin());
+    offset += 32;
+    
+    // Peer count
+    uint16_t peer_count = (static_cast<uint16_t>(data[offset]) << 8) | data[offset + 1];
+    offset += 2;
+    
+    // Peers
+    for (uint16_t i = 0; i < peer_count; ++i) {
+        if (offset + 42 > data.size()) {  // Minimum per peer
+            return std::nullopt;
+        }
+        
+        PeerResponseMessage::PeerEntry entry;
+        
+        // Node ID
+        std::copy(data.begin() + offset, data.begin() + offset + 32, entry.node_id.id.begin());
+        offset += 32;
+        
+        // Address length
+        uint16_t addr_len = (static_cast<uint16_t>(data[offset]) << 8) | data[offset + 1];
+        offset += 2;
+        
+        if (offset + addr_len > data.size()) {
+            return std::nullopt;
+        }
+        
+        // Address
+        entry.address = std::string(data.begin() + offset, data.begin() + offset + addr_len);
+        offset += addr_len;
+        
+        // Last seen
+        entry.last_seen = 0;
+        for (int j = 0; j < 8; ++j) {
+            entry.last_seen = (entry.last_seen << 8) | data[offset++];
+        }
+        
+        msg.peers.push_back(entry);
+    }
+    
+    if (offset + 72 > data.size()) {
+        return std::nullopt;
+    }
+    
+    // Timestamp
+    msg.timestamp = 0;
+    for (int i = 0; i < 8; ++i) {
+        msg.timestamp = (msg.timestamp << 8) | data[offset++];
+    }
+    
+    // Signature
+    std::copy(data.begin() + offset, data.begin() + offset + 64, msg.signature.begin());
+    
+    return msg;
+}
+
+// NAT Traversal methods
+
+std::vector<uint8_t> NATTraversalRequest::to_bytes() const {
+    std::vector<uint8_t> data;
+    
+    // Message type (1 byte)
+    data.push_back(0x04);  // NAT_TRAVERSAL_REQUEST
+    
+    // Requester node ID (32 bytes)
+    data.insert(data.end(), requester_id.id.begin(), requester_id.id.end());
+    
+    // Nonce (8 bytes)
+    for (int i = 7; i >= 0; --i) {
+        data.push_back((nonce >> (i * 8)) & 0xFF);
+    }
+    
+    // Timestamp (8 bytes)
+    for (int i = 7; i >= 0; --i) {
+        data.push_back((timestamp >> (i * 8)) & 0xFF);
+    }
+    
+    return data;
+}
+
+std::optional<NATTraversalRequest> NATTraversalRequest::from_bytes(const std::vector<uint8_t>& data) {
+    if (data.size() != 49) {  // Fixed size
+        return std::nullopt;
+    }
+    
+    size_t offset = 0;
+    
+    // Message type
+    if (data[offset++] != 0x04) {
+        return std::nullopt;
+    }
+    
+    NATTraversalRequest req;
+    
+    // Requester node ID
+    std::copy(data.begin() + offset, data.begin() + offset + 32, req.requester_id.id.begin());
+    offset += 32;
+    
+    // Nonce
+    req.nonce = 0;
+    for (int i = 0; i < 8; ++i) {
+        req.nonce = (req.nonce << 8) | data[offset++];
+    }
+    
+    // Timestamp
+    req.timestamp = 0;
+    for (int i = 0; i < 8; ++i) {
+        req.timestamp = (req.timestamp << 8) | data[offset++];
+    }
+    
+    return req;
+}
+
+std::vector<uint8_t> NATTraversalResponse::to_bytes() const {
+    std::vector<uint8_t> data;
+    
+    // Message type (1 byte)
+    data.push_back(0x05);  // NAT_TRAVERSAL_RESPONSE
+    
+    // Public address length (2 bytes)
+    uint16_t addr_len = static_cast<uint16_t>(public_address.length());
+    data.push_back((addr_len >> 8) & 0xFF);
+    data.push_back(addr_len & 0xFF);
+    
+    // Public address
+    data.insert(data.end(), public_address.begin(), public_address.end());
+    
+    // Public port (2 bytes)
+    data.push_back((public_port >> 8) & 0xFF);
+    data.push_back(public_port & 0xFF);
+    
+    // Timestamp (8 bytes)
+    for (int i = 7; i >= 0; --i) {
+        data.push_back((timestamp >> (i * 8)) & 0xFF);
+    }
+    
+    return data;
+}
+
+std::optional<NATTraversalResponse> NATTraversalResponse::from_bytes(const std::vector<uint8_t>& data) {
+    if (data.size() < 13) {  // Minimum size
+        return std::nullopt;
+    }
+    
+    size_t offset = 0;
+    
+    // Message type
+    if (data[offset++] != 0x05) {
+        return std::nullopt;
+    }
+    
+    NATTraversalResponse resp;
+    
+    // Public address length
+    uint16_t addr_len = (static_cast<uint16_t>(data[offset]) << 8) | data[offset + 1];
+    offset += 2;
+    
+    if (offset + addr_len + 10 > data.size()) {
+        return std::nullopt;
+    }
+    
+    // Public address
+    resp.public_address = std::string(data.begin() + offset, data.begin() + offset + addr_len);
+    offset += addr_len;
+    
+    // Public port
+    resp.public_port = (static_cast<uint16_t>(data[offset]) << 8) | data[offset + 1];
+    offset += 2;
+    
+    // Timestamp
+    resp.timestamp = 0;
+    for (int i = 0; i < 8; ++i) {
+        resp.timestamp = (resp.timestamp << 8) | data[offset++];
+    }
+    
+    return resp;
+}
+
+// PeerDiversity methods
+
+bool PeerDiversity::is_diverse() const {
+    // Check subnet diversity (should have at least 3 different subnets)
+    if (subnets.size() < 3) {
+        return false;
+    }
+    
+    // Check address diversity (should have at least 5 unique addresses)
+    if (unique_addresses.size() < 5) {
+        return false;
+    }
+    
+    // Check geographic diversity (simplified check)
+    if (estimated_geographic_regions < 2) {
+        return false;
+    }
+    
+    return true;
 }
 
 } // namespace cashew::network
