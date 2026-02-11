@@ -55,7 +55,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
-        sudo apt-get install -y cmake ninja-build libsodium-dev libspdlog-dev nlohmann-json3-dev libssl-dev gcc-11 g++-11
+        sudo apt-get install -y cmake ninja-build pkg-config libsodium-dev libspdlog-dev nlohmann-json3-dev libssl-dev gcc-11 g++-11
     
     - name: Install dependencies (macOS)
       if: matrix.os == 'macos-latest'
@@ -76,13 +76,14 @@ jobs:
           mingw-w64-ucrt-x86_64-spdlog
           mingw-w64-ucrt-x86_64-nlohmann-json
           mingw-w64-ucrt-x86_64-openssl
+          mingw-w64-ucrt-x86_64-pkgconf
           zip
     
     - name: Build (Linux/macOS)
       if: matrix.os != 'windows-latest'
       run: |
         mkdir -p build && cd build
-        cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+        cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCASHEW_BUILD_TESTS=OFF ..
         ninja
     
     - name: Build (Windows)
@@ -90,7 +91,7 @@ jobs:
       shell: msys2 {0}
       run: |
         mkdir -p build && cd build
-        cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+        cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCASHEW_BUILD_TESTS=OFF ..
         ninja
     
     - name: Package binary (Linux/macOS)
