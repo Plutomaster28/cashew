@@ -11,7 +11,7 @@ yeah it's another P2P thing. but this one actually compiles.
 ```
 
 **Status:** it works. probably. builds clean at least.  
-**Lines of code:** too many (15k+)  
+**Lines of code:** too many (38k+)  
 **Build warnings:** 0 (we use -Werror like masochists)  
 **Version:** 0.1.0 (don't use this in production lol)
 
