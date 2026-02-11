@@ -85,7 +85,7 @@ The scripts use `sudo` automatically on Linux. On Windows (MSYS2), you shouldn't
 
 ---
 
-**🥜 After setup, run:**
+**After setup, run:**
 ```bash
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build

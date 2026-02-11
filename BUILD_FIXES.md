@@ -76,7 +76,7 @@ Since both `Hash256` and `PublicKey` are type aliases for `fixed_bytes<32>`, the
 
 ### Build Result
 
-✅ **Successful Build**
+**Successful Build**
 - All 17 targets compiled successfully
 - Blake3 bundled library linked correctly
 - cashew_core library built

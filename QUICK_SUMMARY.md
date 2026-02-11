@@ -3,10 +3,10 @@
 ## What is Cashew?
 
 Cashew is a **decentralized P2P network** where:
-- 🔓 **Hosting ≠ Vulnerability** - Run a node without becoming an attack surface
-- 🔒 **Participation ≠ Exposure** - Join the network while preserving privacy
-- ⚖️ **Access ≠ Control** - View content freely, earn keys to contribute
-- 🌐 **Protocol > Platform** - No monopolies, no subscriptions, no SaaS
+-  **Hosting ≠ Vulnerability** - Run a node without becoming an attack surface
+-  **Participation ≠ Exposure** - Join the network while preserving privacy
+-  **Access ≠ Control** - View content freely, earn keys to contribute
+-  **Protocol > Platform** - No monopolies, no subscriptions, no SaaS
 
 ## Core Components
 
@@ -113,17 +113,17 @@ PoStake (Contribution):
 
 ## Security Features
 
-- ✅ **No exposed services** - All connections outbound
-- ✅ **Encrypted transport** - ChaCha20-Poly1305 + forward secrecy
-- ✅ **Content integrity** - BLAKE3 verification
-- ✅ **Anti-Sybil** - PoW + PoStake + reputation
-- ✅ **Anti-DDoS** - Rate limiting + redundancy
-- ✅ **Key security** - Encrypted storage + rotation
-- ✅ **Fork detection** - Gossip-based monitoring
+-  **No exposed services** - All connections outbound
+-  **Encrypted transport** - ChaCha20-Poly1305 + forward secrecy
+-  **Content integrity** - BLAKE3 verification
+-  **Anti-Sybil** - PoW + PoStake + reputation
+-  **Anti-DDoS** - Rate limiting + redundancy
+-  **Key security** - Encrypted storage + rotation
+-  **Fork detection** - Gossip-based monitoring
 
 ## Development Status
 
-### Phase 1: Foundation ✅ COMPLETE
+### Phase 1: Foundation  COMPLETE
 - [x] Project structure (CMake + Ninja)
 - [x] Core type definitions
 - [x] Crypto library integration (BLAKE3, Ed25519)
@@ -131,21 +131,21 @@ PoStake (Contribution):
 - [x] Thing creation and storage
 - [x] Key system and PoW
 
-### Phase 2: Core Protocol ✅ COMPLETE
+### Phase 2: Core Protocol  COMPLETE
 - [x] Thing system implementation
 - [x] Storage backend  
 - [x] Adaptive PoW with benchmarking
 - [x] Key issuance system
 - [x] Network cluster formation
 
-### Phase 3: Networking & Routing ✅ COMPLETE
+### Phase 3: Networking & Routing  COMPLETE
 - [x] Session management with encryption
 - [x] Gossip protocol for state propagation
 - [x] Multi-hop routing
 - [x] Peer management
 - [x] Content-addressed routing
 
-### Phase 4: State & Reputation ✅ COMPLETE
+### Phase 4: State & Reputation  COMPLETE
 - [x] Event ledger (13 types)
 - [x] StateManager query interface
 - [x] Access control with capabilities
@@ -154,7 +154,7 @@ PoStake (Contribution):
 - [x] Decay scheduler
 - [x] Ledger-gossip integration
 
-### Phase 5: Security & Privacy 🔄 IN PROGRESS
+### Phase 5: Security & Privacy  IN PROGRESS
 - [ ] Onion routing implementation
 - [ ] IP protection mechanisms
 - [ ] Attack prevention (Sybil, DDoS)
@@ -226,26 +226,26 @@ http://localhost:7777
 
 ## Mascot & Branding
 
-**Name:** Cashew 🥜  
-**Mascot:** Mona 🐱 (2channel cat)  
+**Name:** Cashew   
+**Mascot:** Mona  (2channel cat)  
 **Vibe:** Friendly, playful, casual  
 **Tagline:** *"Cashew — it just works."*
 
 ## Next Steps
 
-1. ✅ Read all documentation
-2. ⬜ Set up development environment
-3. ⬜ Integrate crypto libraries
-4. ⬜ Implement Node and Identity
-5. ⬜ Build PoW system
-6. ⬜ Create Thing and Network systems
-7. ⬜ Develop P2P networking
-8. ⬜ Build gateway for web access
-9. ⬜ Test on Raspberry Pi
-10. ⬜ Deploy alpha network
+1.  Read all documentation
+2.  Set up development environment
+3.  Integrate crypto libraries
+4.  Implement Node and Identity
+5.  Build PoW system
+6.  Create Thing and Network systems
+7.  Develop P2P networking
+8.  Build gateway for web access
+9.  Test on Raspberry Pi
+10.  Deploy alpha network
 
 ---
 
-**🥜 Welcome to Cashew! Let's build decentralized infrastructure. 🐱**
+** Welcome to Cashew! Let's build decentralized infrastructure. **
 
 *"Not everything needs to be serious."*
