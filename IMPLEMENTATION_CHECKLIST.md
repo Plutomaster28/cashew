@@ -14,7 +14,7 @@ This checklist covers everything needed to build the Cashew network from scratch
 - [x] Create directory structure
 - [x] Set up version management
 - [x] Configure vcpkg for dependencies
-- [ ] Set up CI/CD pipelines (GitHub Actions)
+- [x] Set up CI/CD pipelines (GitHub Actions)
 - [ ] Create Docker development environment (optional)
 
 ### 1.2 Cryptography Library Integration ✓

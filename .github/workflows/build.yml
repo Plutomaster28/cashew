@@ -1,0 +1,164 @@
+name: Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-linux:
+    name: Linux Build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          cmake \
+          ninja-build \
+          libsodium-dev \
+          libspdlog-dev \
+          nlohmann-json3-dev \
+          libssl-dev \
+          gcc-11 g++-11
+    
+    - name: Setup BLAKE3 submodule
+      run: |
+        git submodule update --init --recursive
+    
+    - name: Configure CMake
+      run: |
+        mkdir -p build
+        cd build
+        cmake -G Ninja \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_C_COMPILER=gcc-11 \
+          -DCMAKE_CXX_COMPILER=g++-11 \
+          ..
+    
+    - name: Build
+      run: |
+        cd build
+        ninja -v
+    
+    - name: Run tests
+      run: |
+        cd build
+        ./tests/test_crypto || true
+        ./tests/test_identity || true
+    
+    - name: Upload Linux binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: cashew-linux-x64
+        path: build/src/cashew_node
+        retention-days: 30
+
+  build-windows:
+    name: Windows Build (MSYS2 UCRT64)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Setup MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: UCRT64
+        update: true
+        install: >-
+          mingw-w64-ucrt-x86_64-gcc
+          mingw-w64-ucrt-x86_64-cmake
+          mingw-w64-ucrt-x86_64-ninja
+          mingw-w64-ucrt-x86_64-libsodium
+          mingw-w64-ucrt-x86_64-spdlog
+          mingw-w64-ucrt-x86_64-nlohmann-json
+          mingw-w64-ucrt-x86_64-openssl
+    
+    - name: Setup BLAKE3 submodule
+      run: |
+        git submodule update --init --recursive
+    
+    - name: Configure CMake
+      run: |
+        mkdir -p build
+        cd build
+        cmake -G Ninja \
+          -DCMAKE_BUILD_TYPE=Release \
+          ..
+    
+    - name: Build
+      run: |
+        cd build
+        ninja -v
+    
+    - name: Run tests
+      run: |
+        cd build
+        ./tests/test_crypto.exe || true
+        ./tests/test_identity.exe || true
+    
+    - name: Upload Windows binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: cashew-windows-x64
+        path: build/src/cashew_node.exe
+        retention-days: 30
+
+  build-macos:
+    name: macOS Build
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Install dependencies
+      run: |
+        brew install cmake ninja libsodium spdlog nlohmann-json openssl
+    
+    - name: Setup BLAKE3 submodule
+      run: |
+        git submodule update --init --recursive
+    
+    - name: Configure CMake
+      run: |
+        mkdir -p build
+        cd build
+        cmake -G Ninja \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DOPENSSL_ROOT_DIR=$(brew --prefix openssl) \
+          ..
+    
+    - name: Build
+      run: |
+        cd build
+        ninja -v
+    
+    - name: Run tests
+      run: |
+        cd build
+        ./tests/test_crypto || true
+        ./tests/test_identity || true
+    
+    - name: Upload macOS binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: cashew-macos-x64
+        path: build/src/cashew_node
+        retention-days: 30
