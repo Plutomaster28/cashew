@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cashew Network - Full Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            overflow-x: auto;
+        }
+        
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 1em;
+            font-weight: 500;
+            color: #495057;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        
+        .tab:hover {
+            background: #e9ecef;
+        }
+        
+        .tab.active {
+            background: white;
+            color: #2a5298;
+            border-bottom: 3px solid #2a5298;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .section h2 {
+            color: #2a5298;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        input[type="file"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #2a5298;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .error {
+            border-left-color: #dc3545;
+        }
+        
+        .result pre {
+            background: #f1f3f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h3 {
+            color: #2a5298;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card p {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        
+        .list-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .list-item:hover {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2a5298;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .feature-card h3 {
+            color: #2a5298;
+            margin-bottom: 10px;
+        }
+        
+        .feature-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .feature-card li {
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .feature-card li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🥜 Cashew Network</h1>
+            <p>Complete Decentralized Framework Demo - Version 1.0</p>
+        </header>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('overview')">Overview</button>
+            <button class="tab" onclick="switchTab('thing')">Things (Content)</button>
+            <button class="tab" onclick="switchTab('identity')">Identity</button>
+            <button class="tab" onclick="switchTab('keys')">Keys</button>
+            <button class="tab" onclick="switchTab('pow')">Proof-of-Work</button>
+            <button class="tab" onclick="switchTab('reputation')">Reputation</button>
+            <button class="tab" onclick="switchTab('ledger')">Ledger</button>
+            <button class="tab" onclick="switchTab('network')">Network</button>
+            <button class="tab" onclick="switchTab('stats')">Statistics</button>
+        </div>
+        
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="section">
+                <h2>Welcome to Cashew Network v1.0</h2>
+                <p style="margin-bottom: 20px;">
+                    Cashew is a complete decentralized framework featuring content publishing, 
+                    identity management, adaptive proof-of-work, reputation systems, and more.
+                </p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h3>🗂️ Content System</h3>
+                        <ul>
+                            <li>Publish up to 500MB content</li>
+                            <li>Content-addressed storage</li>
+                            <li>BLAKE3 hashing</li>
+                            <li>Deduplication</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <h3>🔐 Identity & Keys</h3>
+                        <ul>
+                            <li>Ed25519 signatures</li>
+                            <li>Key rotation support</li>
+                            <li>5 key types (Identity, Node, Network, Service, Routing)</li>
+                            <li>Decay system</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <h3>⚡ Proof-of-Work</h3>
+                        <ul>
+                            <li>Argon2id memory-hard puzzles</li>
+                            <li>Adaptive difficulty</li>
+                            <li>10-minute epochs</li>
+                            <li>Anti-spam protection</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <h3>⭐ Reputation System</h3>
+                        <ul>
+                            <li>Trust attestations</li>
+                            <li>Vouching workflow</li>
+                            <li>Trust path finding</li>
+                            <li>Reputation scoring</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <h3>📊 Ledger & State</h3>
+                        <ul>
+                            <li>Blockchain-based ledger</li>
+                            <li>State reconciliation</li>
+                            <li>Gossip protocol sync</li>
+                            <li>Consensus mechanisms</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <h3>🌐 Network Features</h3>
+                        <ul>
+                            <li>P2P connectivity</li>
+                            <li>NAT traversal</li>
+                            <li>Onion routing</li>
+                            <li>Activity monitoring</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Thing Tab -->
+        <div id="thing" class="tab-content">
+            <div class="section">
+                <h2>Publish Thing (Content)</h2>
+                <div class="form-group">
+                    <label>Content Text:</label>
+                    <textarea id="thingContent" placeholder="Enter content or upload a file..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Or Upload File (max 500MB):</label>
+                    <input type="file" id="thingFile">
+                </div>
+                <div class="form-group">
+                    <label>Metadata (JSON):</label>
+                    <textarea id="thingMetadata" placeholder='{"title": "My Content", "author": "Alice"}'></textarea>
+                </div>
+                <button onclick="publishThing()">Publish Thing</button>
+                <div id="thingResult"></div>
+            </div>
+            
+            <div class="section">
+                <h2>Browse Things</h2>
+                <button onclick="listThings()">List All Things</button>
+                <div id="thingList"></div>
+            </div>
+        </div>
+        
+        <!-- Identity Tab -->
+        <div id="identity" class="tab-content">
+            <div class="section">
+                <h2>Create Identity</h2>
+                <div class="form-group">
+                    <label>Identity Type:</label>
+                    <select id="identityType">
+                        <option value="node">Node Identity</option>
+                        <option value="human">Human Identity</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Name:</label>
+                    <input type="text" id="identityName" placeholder="Enter name">
+                </div>
+                <button onclick="createIdentity()">Create Identity</button>
+                <div id="identityResult"></div>
+            </div>
+            
+            <div class="section">
+                <h2>Manage Identities</h2>
+                <button onclick="listIdentities()">List All Identities</button>
+                <div id="identityList"></div>
+            </div>
+        </div>
+        
+        <!-- Keys Tab -->
+        <div id="keys" class="tab-content">
+            <div class="section">
+                <h2>Request Participation Key</h2>
+                <div class="form-group">
+                    <label>Node ID:</label>
+                    <input type="text" id="keyNodeId" placeholder="Enter your node ID">
+                </div>
+                <div class="form-group">
+                    <label>Key Type:</label>
+                    <select id="keyType">
+                        <option value="Identity">Identity Key</option>
+                        <option value="Node">Node Key</option>
+                        <option value="Network">Network Key</option>
+                        <option value="Service">Service Key</option>
+                        <option value="Routing">Routing Key</option>
+                    </select>
+                </div>
+                <button onclick="requestKey()">Request Key (requires PoW)</button>
+                <div id="keyResult"></div>
+            </div>
+            
+            <div class="section">
+                <h2>View Keys</h2>
+                <button onclick="listKeys()">List All Keys</button>
+                <div id="keyList"></div>
+            </div>
+        </div>
+        
+        <!-- PoW Tab -->
+        <div id="pow" class="tab-content">
+            <div class="section">
+                <h2>Proof-of-Work System</h2>
+                <button onclick="getCurrentPuzzle()">Get Current PoW Puzzle</button>
+                <div id="powPuzzle"></div>
+            </div>
+            
+            <div class="section">
+                <h2>Submit Solution</h2>
+                <div class="form-group">
+                    <label>Node ID:</label>
+                    <input type="text" id="powNodeId" placeholder="Your node ID">
+                </div>
+                <div class="form-group">
+                    <label>Solution Hash:</label>
+                    <input type="text" id="powSolution" placeholder="Solution hash">
+                </div>
+                <div class="form-group">
+                    <label>Nonce:</label>
+                    <input type="text" id="powNonce" placeholder="Nonce value">
+                </div>
+                <button onclick="submitPoW()">Submit PoW Solution</button>
+                <div id="powResult"></div>
+            </div>
+        </div>
+        
+        <!-- Reputation Tab -->
+        <div id="reputation" class="tab-content">
+            <div class="section">
+                <h2>Submit Attestation</h2>
+                <div class="form-group">
+                    <label>Your Node ID (Attester):</label>
+                    <input type="text" id="attester" placeholder="Your node ID">
+                </div>
+                <div class="form-group">
+                    <label>Target Node ID (Attestee):</label>
+                    <input type="text" id="attestee" placeholder="Node to attest">
+                </div>
+                <div class="form-group">
+                    <label>Rating (0-10):</label>
+                    <input type="number" id="rating" min="0" max="10" value="5">
+                </div>
+                <div class="form-group">
+                    <label>Comment:</label>
+                    <textarea id="attestComment" placeholder="Optional comment"></textarea>
+                </div>
+                <button onclick="submitAttestation()">Submit Attestation</button>
+                <div id="attestResult"></div>
+            </div>
+            
+            <div class="section">
+                <h2>Top Reputation Nodes</h2>
+                <button onclick="getTopReputation()">View Top Nodes</button>
+                <div id="reputationList"></div>
+            </div>
+        </div>
+        
+        <!-- Ledger Tab -->
+        <div id="ledger" class="tab-content">
+            <div class="section">
+                <h2>Ledger State</h2>
+                <button onclick="getLedgerState()">Get Latest Ledger</button>
+                <div id="ledgerState"></div>
+            </div>
+            
+            <div class="section">
+                <h2>Add Ledger Entry</h2>
+                <div class="form-group">
+                    <label>Entry Type:</label>
+                    <select id="ledgerType">
+                        <option value="thing_publish">Thing Publish</option>
+                        <option value="key_issue">Key Issue</option>
+                        <option value="attestation">Attestation</option>
+                        <option value="transfer">Transfer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Entry Data (JSON):</label>
+                    <textarea id="ledgerData" placeholder='{"hash": "abc123...", "node": "xyz789..."}'></textarea>
+                </div>
+                <button onclick="addLedgerEntry()">Add Entry</button>
+                <div id="ledgerResult"></div>
+            </div>
+        </div>
+        
+        <!-- Network Tab -->
+        <div id="network" class="tab-content">
+            <div class="section">
+                <h2>Network Status</h2>
+                <button onclick="getNetworkStatus()">Refresh Status</button>
+                <div id="networkStatus"></div>
+            </div>
+            
+            <div class="section">
+                <h2>Connected Peers</h2>
+                <button onclick="getPeers()">View Peers</button>
+                <div id="peerList"></div>
+            </div>
+        </div>
+        
+        <!-- Stats Tab -->
+        <div id="stats" class="tab-content">
+            <div class="section">
+                <h2>Network Statistics</h2>
+                <button onclick="refreshStats()">Refresh Statistics</button>
+                <div id="statsDisplay"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'cashew-api.pl';
+        
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        async function apiCall(endpoint, method = 'GET', data = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                };
+                
+                if (data && method !== 'GET') {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const url = data && method === 'GET' 
+                    ? `${API_BASE}${endpoint}?${new URLSearchParams(data)}`
+                    : `${API_BASE}${endpoint}`;
+                    
+                const response = await fetch(url, options);
+                return await response.json();
+            } catch (error) {
+                return { error: { message: error.message } };
+            }
+        }
+        
+        function showResult(elementId, data, isError = false) {
+            const el = document.getElementById(elementId);
+            el.innerHTML = `
+                <div class="result ${isError ? 'error' : ''}">
+                    <strong>${isError ? '❌ Error' : '✅ Success'}</strong>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+        }
+        
+        // Thing functions
+        async function publishThing() {
+            const content = document.getElementById('thingContent').value;
+            const metadata = document.getElementById('thingMetadata').value || '{}';
+            
+            const result = await apiCall('/api/thing', 'POST', {
+                content: content,
+                metadata: metadata
+            });
+            
+            showResult('thingResult', result, !!result.error);
+        }
+        
+        async function listThings() {
+            const result = await apiCall('/api/thing', 'GET');
+            const el = document.getElementById('thingList');
+            
+            if (result.things) {
+                el.innerHTML = result.things.map(id => `
+                    <div class="list-item">
+                        <span><strong>Thing:</strong> ${id.substring(0, 16)}...</span>
+                        <span class="badge badge-info">Active</span>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        // Identity functions
+        async function createIdentity() {
+            const type = document.getElementById('identityType').value;
+            const name = document.getElementById('identityName').value;
+            
+            const result = await apiCall('/api/identity', 'POST', {
+                type: type,
+                name: name
+            });
+            
+            showResult('identityResult', result, !!result.error);
+        }
+        
+        async function listIdentities() {
+            const result = await apiCall('/api/identity', 'GET');
+            const el = document.getElementById('identityList');
+            
+            if (result.identities) {
+                el.innerHTML = result.identities.map(id => `
+                    <div class="list-item">
+                        <div>
+                            <strong>${id.name}</strong><br>
+                            <small>ID: ${id.node_id.substring(0, 20)}...</small>
+                        </div>
+                        <span class="badge badge-success">${id.type}</span>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        // Key functions
+        async function requestKey() {
+            const nodeId = document.getElementById('keyNodeId').value;
+            const keyType = document.getElementById('keyType').value;
+            
+            const result = await apiCall('/api/keys', 'POST', {
+                node_id: nodeId,
+                type: keyType,
+                pow_solution: 'dummy_solution_' + Date.now()
+            });
+            
+            showResult('keyResult', result, !!result.error);
+        }
+        
+        async function listKeys() {
+            const result = await apiCall('/api/keys', 'GET');
+            const el = document.getElementById('keyList');
+            
+            if (result.keys) {
+                el.innerHTML = result.keys.map(key => `
+                    <div class="list-item">
+                        <div>
+                            <strong>${key.type} Key</strong><br>
+                            <small>Epoch: ${key.epoch} | Power: ${key.current_power.toFixed(2)}</small>
+                        </div>
+                        <span class="badge badge-warning">Epoch ${key.epoch}</span>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        // PoW functions
+        async function getCurrentPuzzle() {
+            const result = await apiCall('/api/pow', 'GET');
+            showResult('powPuzzle', result, !!result.error);
+        }
+        
+        async function submitPoW() {
+            const nodeId = document.getElementById('powNodeId').value;
+            const solution = document.getElementById('powSolution').value;
+            const nonce = document.getElementById('powNonce').value;
+            
+            const result = await apiCall('/api/pow', 'POST', {
+                node_id: nodeId,
+                solution: solution,
+                nonce: nonce
+            });
+            
+            showResult('powResult', result, !!result.error);
+        }
+        
+        // Reputation functions
+        async function submitAttestation() {
+            const attester = document.getElementById('attester').value;
+            const attestee = document.getElementById('attestee').value;
+            const rating = document.getElementById('rating').value;
+            const comment = document.getElementById('attestComment').value;
+            
+            const result = await apiCall('/api/reputation', 'POST', {
+                attester: attester,
+                attestee: attestee,
+                rating: rating,
+                comment: comment
+            });
+            
+            showResult('attestResult', result, !!result.error);
+        }
+        
+        async function getTopReputation() {
+            const result = await apiCall('/api/reputation', 'GET');
+            const el = document.getElementById('reputationList');
+            
+            if (result.top_nodes) {
+                el.innerHTML = result.top_nodes.map((node, i) => `
+                    <div class="list-item">
+                        <div>
+                            <strong>#${i+1} ${node.name}</strong><br>
+                            <small>Score: ${node.reputation.toFixed(2)}</small>
+                        </div>
+                        <span class="badge badge-success">⭐ ${node.reputation.toFixed(2)}</span>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        // Ledger functions
+        async function getLedgerState() {
+            const result = await apiCall('/api/ledger', 'GET', { action: 'latest' });
+            showResult('ledgerState', result, !!result.error);
+        }
+        
+        async function addLedgerEntry() {
+            const type = document.getElementById('ledgerType').value;
+            const data = document.getElementById('ledgerData').value;
+            
+            const result = await apiCall('/api/ledger', 'POST', {
+                type: type,
+                data: data
+            });
+            
+            showResult('ledgerResult', result, !!result.error);
+        }
+        
+        // Network functions
+        async function getNetworkStatus() {
+            const result = await apiCall('/api/network', 'GET', { action: 'status' });
+            const el = document.getElementById('networkStatus');
+            
+            if (result.network) {
+                el.innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>${result.network.connected_peers}</h3>
+                            <p>Connected Peers</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>${result.network.total_nodes}</h3>
+                            <p>Total Nodes</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>${result.network.avg_latency}ms</h3>
+                            <p>Avg Latency</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>${result.network.version}</h3>
+                            <p>Version</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        async function getPeers() {
+            const result = await apiCall('/api/network', 'GET', { action: 'peers' });
+            const el = document.getElementById('peerList');
+            
+            if (result.peers) {
+                el.innerHTML = result.peers.map(peer => `
+                    <div class="list-item">
+                        <div>
+                            <strong>${peer.ip}</strong><br>
+                            <small>ID: ${peer.id.substring(0, 20)}...</small>
+                        </div>
+                        <span class="badge badge-success">Rep: ${peer.reputation.toFixed(2)}</span>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        // Stats functions
+        async function refreshStats() {
+            const result = await apiCall('/api/stats', 'GET');
+            const el = document.getElementById('statsDisplay');
+            
+            if (result.stats) {
+                el.innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>${result.stats.things}</h3>
+                            <p>Total Things</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>${result.stats.identities}</h3>
+                            <p>Identities</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>${result.stats.keys}</h3>
+                            <p>Active Keys</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>${result.stats.attestations}</h3>
+                            <p>Attestations</p>
+                        </div>
+                    </div>
+                    <div class="result" style="margin-top: 20px;">
+                        <pre>${JSON.stringify(result.stats, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

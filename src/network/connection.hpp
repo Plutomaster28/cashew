@@ -20,7 +20,7 @@ enum class ConnectionState {
     CONNECTING,
     CONNECTED,
     DISCONNECTING,
-    ERROR
+    CONN_ERROR  // Renamed from ERROR to avoid Windows macro conflict
 };
 
 /**

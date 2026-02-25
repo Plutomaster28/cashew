@@ -8,7 +8,7 @@ using namespace cashew::crypto;
 TEST(Ed25519Test, KeypairGeneration) {
     auto [pk, sk] = Ed25519::generate_keypair();
     EXPECT_EQ(pk.size(), 32);
-    EXPECT_EQ(sk.size(), 32);
+    EXPECT_EQ(sk.size(), 64);  // libsodium Ed25519 secret keys are 64 bytes (32-byte seed + 32-byte public key)
 }
 
 TEST(Ed25519Test, SignAndVerify) {

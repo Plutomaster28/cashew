@@ -4,6 +4,25 @@
 #include <ctime>
 #include <thread>
 
+#ifdef _WIN32
+// Windows doesn't have timegm, provide a replacement
+static time_t timegm_portable(struct tm* tm) {
+    time_t ret;
+    char* tz = getenv("TZ");
+    _putenv_s("TZ", "UTC");
+    _tzset();
+    ret = mktime(tm);
+    if (tz) {
+        _putenv_s("TZ", tz);
+    } else {
+        _putenv_s("TZ", "");
+    }
+    _tzset();
+    return ret;
+}
+#define timegm timegm_portable
+#endif
+
 namespace cashew {
 namespace time {
 

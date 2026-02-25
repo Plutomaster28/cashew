@@ -98,16 +98,16 @@ if(UNIX AND NOT APPLE)
     target_link_libraries(cashew_core PUBLIC OpenSSL::SSL OpenSSL::Crypto)
 endif()
 
-# Executable - Cashew Node
-add_executable(cashew_node main.cpp)
+# Executable - Cashew Framework (v1.0)
+add_executable(cashew main.cpp)
 
-target_link_libraries(cashew_node
+target_link_libraries(cashew
     PRIVATE
         cashew_core
 )
 
 # Installation
-install(TARGETS cashew_core cashew_node
+install(TARGETS cashew_core cashew
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin

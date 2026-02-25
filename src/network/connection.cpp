@@ -238,7 +238,7 @@ bool TCPConnection::connect(const SocketAddress& addr) {
     // Create socket
     AddressFamily family = addr.is_ipv6() ? AddressFamily::IPv6 : AddressFamily::IPv4;
     if (!create_socket(family)) {
-        state_ = ConnectionState::ERROR;
+        state_ = ConnectionState::CONN_ERROR;
         return false;
     }
     
@@ -253,7 +253,7 @@ bool TCPConnection::connect(const SocketAddress& addr) {
     if (ret != 0) {
         CASHEW_LOG_ERROR("Failed to resolve address {}: {}", addr.to_string(), gai_strerror(ret));
         close_socket();
-        state_ = ConnectionState::ERROR;
+        state_ = ConnectionState::CONN_ERROR;
         return false;
     }
     
@@ -272,7 +272,7 @@ bool TCPConnection::connect(const SocketAddress& addr) {
     if (!connected) {
         CASHEW_LOG_ERROR("Failed to connect to {}: {}", addr.to_string(), strerror(errno));
         close_socket();
-        state_ = ConnectionState::ERROR;
+        state_ = ConnectionState::CONN_ERROR;
         return false;
     }
     
