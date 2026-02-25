@@ -1,4 +1,4 @@
-# Cashew Network - Quick Summary
+﻿# Cashew Network - Quick Summary
 
 ## What is Cashew?
 
@@ -227,7 +227,7 @@ http://localhost:7777
 ## Mascot & Branding
 
 **Name:** Cashew   
-**Mascot:** Mona  (2channel cat)  
+**Mascot:** Cashew  (2channel cat)  
 **Vibe:** Friendly, playful, casual  
 **Tagline:** *"Cashew — it just works."*
 
@@ -249,3 +249,4 @@ http://localhost:7777
 ** Welcome to Cashew! Let's build decentralized infrastructure. **
 
 *"Not everything needs to be serious."*
+

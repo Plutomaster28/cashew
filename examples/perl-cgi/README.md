@@ -2,12 +2,6 @@
 
 A nostalgic, lightweight gateway to the Cashew network using classic Perl + CGI!
 
-```
-     /\_/\
-    ( o.o )  <- Mona says: "Welcome to the 90s web!"
-     > ^ <
-```
-
 ## What Is This?
 
 This is a **Perl CGI script** that acts as a gateway to your local Cashew node. It's perfect for:
@@ -80,7 +74,6 @@ sudo systemctl restart nginx
 ### Home Page
 - Beautiful retro design
 - Quick navigation
-- Mona ASCII art!
 
 ### View Networks
 - List all networks
@@ -235,17 +228,5 @@ Made with ❤️ by the Cashew team
 
 Special thanks to:
 - Larry Wall (creator of Perl)
-- Mona the Squirrel (our beloved mascot)
 - The 90s web (for the inspiration)
 - You (for using this!)
-
----
-
-```
-    Mona says: "May your code be bug-free
-                and your uploads be swift!"
-    
-         /\_/\
-        ( ^.^ )
-         > ^ <
-```

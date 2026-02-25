@@ -99,14 +99,6 @@ sub show_home {
             font-style: italic;
         }
         
-        .mona {
-            font-family: monospace;
-            white-space: pre;
-            color: #8B4513;
-            font-size: 12px;
-            margin: 20px 0;
-        }
-        
         .content {
             padding: 40px;
         }
@@ -173,17 +165,9 @@ sub show_home {
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">🥜</div>
+            <div class="logo">[Cashew]</div>
             <h1>Cashew Gateway</h1>
             <p class="tagline">Freedom over profit. Privacy over surveillance.</p>
-            
-            <div class="mona">
-     /\_/\
-    ( o.o )  <- Mona welcomes you!
-     > ^ <
-    /|   |\
-   (_|   |_)
-            </div>
         </div>
         
         <div class="content">
@@ -591,7 +575,7 @@ sub show_404 {
 <body style="font-family: Arial; max-width: 600px; margin: 100px auto; text-align: center;">
     <h1 style="font-size: 5em;">Peanut</h1>
     <h2>404 - Page Not Found</h2>
-    <p>Mona couldn't find what you're looking for!</p>
+    <p>Couldn't find what you're looking for!</p>
     <a href="/" style="color: #667eea;">← Back to Home</a>
 </body>
 </html>

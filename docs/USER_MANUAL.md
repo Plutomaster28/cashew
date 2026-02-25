@@ -1,4 +1,4 @@
-# Cashew Network - User Manual
+﻿# Cashew Network - User Manual
 
 ```
      _______________________________________________
@@ -47,7 +47,7 @@
 
 ```
        /\__/\
-     （　´∀｀）  <- This is Mona, your friendly Cashew guide!
+     （　´∀｀）  <- This is Cashew, your friendly Cashew guide!
      （　　　）      (from 2channel, the OG Japanese forum)
        ｜ ｜ |
      （＿_)＿）
@@ -120,7 +120,7 @@ pacman -S mingw-w64-ucrt-x86_64-gcc \
 **Step 2: Build Cashew**
 ```powershell
 # Clone the repository
-git clone https://github.com/yourusername/cashew.git
+git clone https://github.com/Plutomaster28/cashew.git
 cd cashew
 
 # Build
@@ -152,7 +152,7 @@ sudo apt install build-essential cmake ninja-build \
                  libsodium-dev libspdlog-dev nlohmann-json3-dev
 
 # Clone and build
-git clone https://github.com/yourusername/cashew.git
+git clone https://github.com/Plutomaster28/cashew.git
 cd cashew
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja -C build
@@ -170,7 +170,7 @@ ninja -C build
 brew install cmake ninja libsodium spdlog nlohmann-json
 
 # Clone and build
-git clone https://github.com/yourusername/cashew.git
+git clone https://github.com/Plutomaster28/cashew.git
 cd cashew
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja -C build
@@ -487,7 +487,7 @@ sub show_home {
     <div class="ascii">
 <pre>
        /\__/\
-     （　´∀｀）  <- Mona welcomes you!
+     （　´∀｀）  <- Cashew welcomes you!
      （　　　）
        ｜ ｜ |
      （＿_)＿）
@@ -983,7 +983,7 @@ A: Technically yes, but remember: your friends are hosting it too. Be respectful
 A: You can remove it from YOUR storage, but others in the network may still have it.
 
 **Q: What's with the peanut and cat mascot?**  
-A: Cashew is a nut! And Mona is a cat from 2channel (the OG Japanese imageboard). She's here to guide you through the decentralized web!
+A: Cashew is a nut! And Cashew is a cat from 2channel (the OG Japanese imageboard). She's here to guide you through the decentralized web!
 
 ### Privacy Questions
 
@@ -1023,7 +1023,7 @@ Congratulations! You now know the basics of Cashew!
     the Internet should belong to everyone, not corporations.
     
     Special thanks to:
-    • Mona the cat (our mascot, from 2channel)
+    • Cashew the cat (our mascot, from 2channel)
     • All the early testers
     • The open-source community
     • You, for using Cashew!
@@ -1049,3 +1049,4 @@ Congratulations! You now know the basics of Cashew!
 
 **Last Updated:** February 1, 2026  
 **Version:** 0.1.0
+

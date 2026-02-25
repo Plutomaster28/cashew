@@ -1,14 +1,6 @@
-# Cashew Network
+﻿# Cashew Network
 
 yeah it's another P2P thing. but this one actually compiles.
-
-```
-       /\__/\
-     （　´∀｀）  <- mona says hi (from 2channel)
-     （　　　）
-       ｜ ｜ |
-     （＿_)＿）
-```
 
 **Status:** it works. probably. builds clean at least.  
 **Lines of code:** too many (38k+)  
@@ -126,7 +118,7 @@ pacman -S mingw-w64-ucrt-x86_64-gcc \
           mingw-w64-ucrt-x86_64-spdlog \
           mingw-w64-ucrt-x86_64-nlohmann-json
 
-git clone https://github.com/yourusername/cashew.git
+git clone https://github.com/Plutomaster28/cashew.git
 cd cashew
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja -C build
@@ -141,7 +133,7 @@ sudo apt update
 sudo apt install build-essential cmake ninja-build \
                  libsodium-dev libspdlog-dev nlohmann-json3-dev
 
-git clone https://github.com/yourusername/cashew.git
+git clone https://github.com/Plutomaster28/cashew.git
 cd cashew
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja -C build
@@ -154,7 +146,7 @@ ninja -C build
 ```bash
 brew install cmake ninja libsodium spdlog nlohmann-json
 
-git clone https://github.com/yourusername/cashew.git
+git clone https://github.com/Plutomaster28/cashew.git
 cd cashew
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja -C build
@@ -346,7 +338,7 @@ connect to: ws://localhost:8080/ws
 - [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) - roadmap
 - [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - codebase layout
 
-the user manual is actually good, has diagrams and everything. features Mona the cat.
+the user manual is actually good, has diagrams and everything.
 
 ---
 
@@ -410,7 +402,7 @@ not bulletproof but better than trusting random cloud providers.
 
 ## why "cashew"
 
-it's a nut. Mona (the 2channel cat mascot) likes nuts probably. seemed cute.
+it's a nut. seemed cute.
 
 also "cache" + "new" if you squint.
 
@@ -455,7 +447,7 @@ built with:
 - C++20 (the good parts)
 - libsodium (actual cryptographers made this)
 
-special thanks to Mona the cat (from 2channel).
+special thanks to Cashew the cat (from 2channel).
 
 ---
 
@@ -476,3 +468,4 @@ special thanks to Mona the cat (from 2channel).
 last updated: february 1, 2026  
 version: 0.1.0  
 status: somehow functional
+

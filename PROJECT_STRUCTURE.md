@@ -1,4 +1,4 @@
-# Cashew Project Structure
+﻿# Cashew Project Structure
 
 ```
 cashew/
@@ -220,9 +220,9 @@ cashew/
 │   ├── js/
 │   │   ├── cashew_client.js       # Gateway API client
 │   │   ├── game_renderer.js
-│   │   └── mona.js                # Mascot animations
+│   │   └── Cashew.js                # Mascot animations
 │   ├── assets/
-│   │   └── mona/                  # Mona mascot images
+│   │   └── Cashew/                  # Cashew mascot images
 │   └── games/                     # Sample games
 │       ├── tetris/
 │       └── snake/
@@ -325,7 +325,7 @@ cashew/
 - HTML/CSS/JS frontend
 - Gateway API client
 - Game renderers
-- Mona mascot integration
+- Cashew mascot integration
 
 ### Documentation
 - Architecture documentation
@@ -412,3 +412,4 @@ cashew_core
 8. Add Network cluster management
 9. Create gateway for web access
 10. Integrate all components and test end-to-end
+

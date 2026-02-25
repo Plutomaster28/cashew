@@ -305,7 +305,6 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Implement CSS styling
 - [x] Implement Cashew Gateway API client (JavaScript)
 - [ ] Implement game renderer
-- [ ] Implement Mona mascot animations
 - [ ] Create sample games (Tetris, Snake, Pong)
 - [ ] Test browser compatibility
 

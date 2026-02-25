@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+﻿#!/usr/bin/env perl
 use strict;
 use warnings;
 use HTTP::Daemon;
@@ -54,7 +54,7 @@ sub serve_home {
     <title>（　´∀｀）Cashew Gateway</title>
     <style>
         body {
-            font-family: "MS PGothic", "Mona", monospace;
+            font-family: "MS PGothic", "Cashew", monospace;
             background: #ffffee;
             color: #000000;
             margin: 0;
@@ -76,8 +76,8 @@ sub serve_home {
             font-size: 16pt;
             border-bottom: 2px solid #000;
         }
-        .mona {
-            font-family: "Mona", "MS PGothic", monospace;
+        .Cashew {
+            font-family: "Cashew", "MS PGothic", monospace;
             white-space: pre;
             background: #f0f0f0;
             padding: 10px;
@@ -121,7 +121,7 @@ sub serve_home {
     <div class="container">
         <h1>（　´∀｀）Cashew P2P Network Gateway</h1>
         
-        <div class="mona">
+        <div class="Cashew">
 　　　　　　　　　　　　 ∧＿∧
 　　　　　　　　　　　（　´∀｀）　　＜ Welcome to Cashew!
 　　　　　　　　　　　（　　　　 ）
@@ -224,7 +224,7 @@ sub list_networks {
     <title>Networks - Cashew</title>
     <style>
         body {
-            font-family: "MS PGothic", "Mona", monospace;
+            font-family: "MS PGothic", "Cashew", monospace;
             background: #ffffee;
             color: #000000;
             margin: 0;
@@ -344,3 +344,4 @@ HTML
     $res->content($html);
     $c->send_response($res);
 }
+
