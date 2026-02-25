@@ -110,3 +110,4 @@ echo "  2. Build:     cmake --build build"
 echo "  3. Run:       ./build/src/cashew_node.exe"
 echo ""
 echo "Happy building!"
+

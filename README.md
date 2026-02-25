@@ -131,7 +131,7 @@ cd cashew
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja -C build
 
-# binary at build/src/cashew_node.exe
+# binary at build/src/cashew.exe
 ```
 
 ### linux
@@ -146,7 +146,7 @@ cd cashew
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja -C build
 
-# binary at build/src/cashew_node
+# binary at build/src/cashew
 ```
 
 ### macOS
@@ -159,52 +159,115 @@ cd cashew
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja -C build
 
-# binary at build/src/cashew_node
+# binary at build/src/cashew
 ```
 
 ---
 
-## running it
+## how to actually use this thing
 
-**basic:**
+### step 1: start your node
+
 ```bash
-./build/src/cashew_node
+# Windows
+.\build\src\cashew.exe
+
+# Linux/macOS  
+./build/src/cashew
 ```
 
-opens gateway on http://localhost:8080
-
-**with config:**
-```bash
-./build/src/cashew_node --config cashew.conf
+you'll see:
+```
+Cashew node is running!
+  Gateway:    http://localhost:8080
+  WebSocket:  ws://localhost:8080/ws
+  Node ID:    2ada83c1819a5372...
 ```
 
-**example config:**
-```ini
-log_level = info
-data_dir = ./data
-http_port = 8080
-web_root = ./web
-```
+the gateway serves:
+- `/` - basic status page (hardcoded HTML)
+- `/api/status` - JSON with node info
+- `/api/networks` - JSON list of your networks
+- `/api/thing/{hash}` - retrieve content by BLAKE3 hash
 
----
+### step 2: understand what you just started
 
-## hosting content
+cashew node does:
+- stores content in `./data/storage/content/` (files by hash)
+- tracks metadata in `./data/storage/metadata/` (MIME types)
+- logs events to `./data/ledger/events.db` (sqlite)
+- exposes HTTP gateway on port 8080
 
-### perl CGI gateway (yes really)
+**important:** the gateway just gives you API access. to actually HOST a website and let browsers view it, you need a frontend gateway (see step 3).
 
-because sometimes you just want to use 1990s tech and it actually works fine.
+### step 3: host actual content
 
-install perl modules (MSYS2):
+you have two options:
+
+**option A: use the perl CGI example (recommended for testing)**
+
+the perl gateway lets browsers actually VIEW your content:
+
 ```bash
+# install perl (MSYS2)
 pacman -S mingw-w64-ucrt-x86_64-perl \
           mingw-w64-ucrt-x86_64-perl-cgi \
-          mingw-w64-ucrt-x86_64-perl-json \
-          mingw-w64-ucrt-x86_64-perl-http-message
+          mingw-w64-ucrt-x86_64-perl-json
+
+# go to example
+cd examples/perl-cgi
+
+# start perl gateway on port 8081
+perl server.pl
 ```
 
-see `examples/perl-cgi/cashew-gateway.pl` for a working example.
+now you have:
+- cashew node: localhost:8080 (stores content)
+- perl gateway: localhost:8081 (serves content to browsers)
 
-it's like 300 lines and serves content from your node via HTTP. retro but it works.
+the perl gateway fetches from cashew's `/api/thing/{hash}` and serves it as regular HTML/CSS/images.
+
+**option B: write your own frontend**
+
+cashew provides the API. you build whatever frontend you want:
+- react app
+- static site generator
+- mobile app
+- whatever
+
+just hit `/api/status`, `/api/networks`, `/api/thing/{hash}`.
+
+### step 4: actually upload content
+
+right now there's no CLI tool (coming soon). for testing:
+
+```bash
+# manually add files to storage
+cd data/storage/content
+
+# copy your file
+cp ~/my-site/index.html .
+
+# get its hash
+blake3sum index.html  # or use any BLAKE3 tool
+
+# create metadata
+echo '{"mime_type":"text/html"}' > ../metadata/{hash}.json
+```
+
+then access via: `http://localhost:8081/api/thing/{hash}`
+
+**better way:** use the perl upload example in `examples/perl-full-demo/` which has a web UI for uploading.
+
+### step 5: share with friends (networks)
+
+networks are invitation-only groups that help host the same content.
+
+**creating a network:** not implemented in UI yet. coming in v1.1.
+
+**joining a network:** need an invitation from existing member. invitations are cryptographically signed.
+
+for now, cashew works as a single-node content store. P2P networking and invitations coming soon.
 
 ---
 
@@ -259,7 +322,7 @@ prevents spam because creating fake identities is expensive (cpu time).
 ### P2P networking
 
 **when someone requests content:**
-1. gateway gets HTTP request: GET /thing/abc123
+1. gateway gets HTTP request: GET /api/thing/abc123
 2. storage checks: "do I have abc123?"
 3. yes: serve from disk
 4. no: ask network members

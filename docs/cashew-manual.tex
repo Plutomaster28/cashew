@@ -66,7 +66,7 @@
 % Custom boxes (Wii-style)
 \tcbuselibrary{skins}
 
-\newtcolorbox{monabox}[1]{
+\newtcolorbox{infobox}[1]{
   colback=softblue!5,
   colframe=softblue!80!black,
   fonttitle=\bfseries,
@@ -131,7 +131,6 @@
   {\large Freedom over profit. Privacy over surveillance.}
 }
 \author{
-  \textit{With Mona the Cat (from 2channel)}\\[0.5cm]
   Version 0.1.0 --- February 2026
 }
 \date{}
@@ -141,25 +140,26 @@
 \maketitle
 \newpage
 
-% Mona's welcome message
+% Welcome message
 \begin{center}
 
 \vspace{1cm}
 
-\begin{monabox}{Mona Says Hello!}
+\begin{infobox}{So You Want to Escape Big Tech}
 \centering
-\textit{``Hi there, friend! I'm Mona, your guide to the Cashew network!''}
+\textit{``Yeah, we get it. You're tired of corporations owning your data.''}
 
 \vspace{0.5cm}
 
-Welcome to a world where \textbf{you} own your content,\\
-\textbf{you} control who sees it, and \textbf{nobody} can take it away!
+Welcome to Cashew, where \textbf{you} actually own your stuff,\\
+\textbf{you} decide who sees it, and nobody can pull the plug on you.\\
+No rent-seeking, no surveillance capitalism, no bullshit.
 
 \vspace{0.3cm}
 
-This manual will teach you everything you need to know.\\
-Let's get started! 
-\end{monabox}
+This manual will show you how it works.\\
+Try not to break anything. 
+\end{infobox}
 \end{center}
 
 \newpage
@@ -172,7 +172,7 @@ Let's get started!
 
 \subsection{What is Cashew?}
 
-Cashew is a \textbf{peer-to-peer content distribution network} that lets you and your friends share content without relying on big corporations.
+Cashew is a \textbf{peer-to-peer content distribution network}. Think BitTorrent, but for hosting websites. And you don't have to explain to your ISP why you're seeding \textit{that} torrent.
 
 \begin{center}
 \begin{tikzpicture}
@@ -187,7 +187,7 @@ Cashew is a \textbf{peer-to-peer content distribution network} that lets you and
   \draw[->] (user3) -- (server);
   
   \node at (0,0) {\textbf{Traditional Web}};
-  \node at (0,-0.5) {\small Everything goes through one server};
+  \node at (0,-0.5) {\small Single point of failure};
   
   % Cashew network
   \node[draw, circle, fill=cashewbrown!30] (p1) at (6,3) {You};
@@ -199,22 +199,22 @@ Cashew is a \textbf{peer-to-peer content distribution network} that lets you and
   \draw[<->] (p3) -- (p1);
   
   \node at (7,0) {\textbf{Cashew Network}};
-  \node at (7,-0.5) {\small Everyone shares directly};
+  \node at (7,-0.5) {\small No single point of failure};
 \end{tikzpicture}
 \end{center}
 
 \begin{tipbox}
-Think of Cashew like a \textbf{neighborhood library} where everyone has copies of the same books. If one person is away, you can still borrow from someone else!
+If one person goes offline, the content stays up. It's like having multiple copies of the same book scattered across your friend group.
 \end{tipbox}
 
 \subsection{Key Features}
 
 \begin{itemize}
-  \item[\faCheck] \textbf{You own your data} --- Stored on YOUR computer
-  \item[\faCheck] \textbf{Privacy first} --- No corporate surveillance
-  \item[\faCheck] \textbf{Invite-only sharing} --- You choose who joins
-  \item[\faCheck] \textbf{Free forever} --- No subscriptions or fees
-  \item[\faCheck] \textbf{Host anything} --- Websites, photos, documents, more!
+  \item[\faCheck] \textbf{You own your data} --- It's on YOUR disk, not Amazon's
+  \item[\faCheck] \textbf{Privacy first} --- No tracking pixels, no analytics
+  \item[\faCheck] \textbf{Invite-only} --- Your network, your rules
+  \item[\faCheck] \textbf{Free forever} --- No VC funding to burn through
+  \item[\faCheck] \textbf{Host anything} --- As long as it's legal (we're not your lawyers)
 \end{itemize}
 
 % ============================================================================
@@ -222,12 +222,19 @@ Think of Cashew like a \textbf{neighborhood library} where everyone has copies o
 
 \subsection{System Requirements}
 
+\textit{It's written in C++, so honestly...}
+
 \begin{tabular}{ll}
-\textbf{OS:} & Windows 10+, Linux, macOS 10.15+ \\
+\textbf{Bare minimum:} & Electricity (and a computer) \\
+\textbf{OS:} & Windows, Linux, macOS, or whatever runs C++ \\
 \textbf{RAM:} & 512 MB minimum, 2 GB recommended \\
 \textbf{Storage:} & 100 MB for program, + your content \\
 \textbf{Network:} & Internet connection (for P2P) \\
 \end{tabular}
+
+\begin{tipbox}
+If your machine can compile and run C++ code, it can run Cashew. We've even heard rumors of it running on a toaster (results pending).
+\end{tipbox}
 
 \subsection{Installation on Windows}
 
@@ -255,7 +262,7 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja -C build
 \end{lstlisting}
 
-  \item Run: \texttt{.\textbackslash build\textbackslash src\textbackslash cashew\_node.exe}
+  \item Run: \texttt{.\textbackslash build\textbackslash src\textbackslash cashew.exe}
 \end{enumerate}
 
 \subsection{Installation on Linux}
@@ -273,7 +280,7 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja -C build
 
 # Run
-./build/src/cashew_node
+./build/src/cashew
 \end{lstlisting}
 
 % ============================================================================
@@ -281,45 +288,26 @@ ninja -C build
 
 \subsection{Starting Your Node}
 
-\begin{monabox}{Mona's 5-Minute Setup!}
-Let's get you online quickly! Just three steps:
+\begin{infobox}{Let's Get You Running!}
+Getting started with Cashew is straightforward:
 
 \begin{enumerate}
-  \item Create a config file (optional)
-  \item Start the node
-  \item Open your browser to \url{http://localhost:8080}
+  \item Start the Cashew node (stores content)
+  \item Start the Perl frontend (optional, for browsers)
+  \item Upload and share content
 \end{enumerate}
 
-Easy peasy!
-\end{monabox}
+Let's do it!
+\end{infobox}
 
-\subsubsection{Optional: Configuration File}
-
-Create \texttt{cashew.conf}:
-
-\begin{lstlisting}[language=bash]
-# Cashew Node Configuration
-
-# Logging
-log_level = info
-log_to_file = false
-
-# Data storage
-data_dir = ./data
-
-# Gateway server
-http_port = 8080
-web_root = ./web
-\end{lstlisting}
-
-\subsubsection{Starting the Node}
+\subsubsection{Step 1: Start the Node}
 
 \begin{lstlisting}[language=bash]
 # Windows
-.\build\src\cashew_node.exe
+.\build\src\cashew.exe
 
 # Linux/macOS
-./build/src/cashew_node
+./build/src/cashew
 \end{lstlisting}
 
 You should see:
@@ -332,13 +320,75 @@ Freedom over profit. Privacy over surveillance.
 
 Gateway:    http://localhost:8080
 WebSocket:  ws://localhost:8080/ws
-Web UI:     http://localhost:8080/
+
+Node ID:    2ada83c1819a5372...
+Storage:    0 items
+Networks:   0
 
 Press Ctrl+C to shutdown
 \end{lstlisting}
 
+\textbf{What just happened?}
+
+Your node is now:
+\begin{itemize}
+  \item Running HTTP gateway on port 8080
+  \item Storing content in \texttt{./data/storage/}
+  \item Exposing API endpoints (\texttt{/api/status}, \texttt{/api/thing/\{hash\}})
+\end{itemize}
+
+Visit \url{http://localhost:8080} to see a basic status page.
+
+\subsubsection{Step 2: Start the Perl Frontend (Optional)}
+
+The Cashew node only provides API access. To let browsers VIEW content nicely, run the Perl frontend:
+
+\begin{lstlisting}[language=bash]
+# Install Perl dependencies (MSYS2)
+pacman -S mingw-w64-ucrt-x86_64-perl \
+          mingw-w64-ucrt-x86_64-perl-cgi
+
+# Go to example directory
+cd examples/perl-cgi
+
+# Start Perl server on port 8081
+perl server.pl
+\end{lstlisting}
+
+Now you have TWO services:
+\begin{itemize}
+  \item \textbf{Cashew node} (localhost:8080) --- stores content, API
+  \item \textbf{Perl gateway} (localhost:8081) --- serves to browsers
+\end{itemize}
+
+\subsubsection{Step 3: Upload Content}
+
+\textbf{Easy way:} Use the upload demo:
+
+\begin{lstlisting}[language=bash]
+cd examples/perl-full-demo
+perl server.pl
+# Visit http://localhost:8082 for upload UI
+\end{lstlisting}
+
+\textbf{Manual way:} Copy files directly to storage:
+
+\begin{lstlisting}[language=bash]
+# Copy your file
+cp myfile.html data/storage/content/
+
+# Calculate BLAKE3 hash (becomes Thing ID)
+b3sum myfile.html
+
+# Create metadata
+echo '{"mime_type":"text/html"}' > \
+  data/storage/metadata/{hash}.json
+
+# Access via: /api/thing/{hash}
+\end{lstlisting}
+
 \begin{tipbox}
-\textbf{Pro Tip:} Bookmark \url{http://localhost:8080} for quick access!
+\textbf{Pro Tip:} The Perl upload demo (\texttt{perl-full-demo}) is the easiest way to test uploading files. It gives you a web form and automatically calculates hashes!
 \end{tipbox}
 
 % ============================================================================
@@ -585,7 +635,7 @@ Example:
   Try nonce=1:     hash = "8d4c..."  X Too high  
   Try nonce=2:     hash = "7b1e..."  X Too high
   ...
-  Try nonce=1847:  hash = "0003..."  ✓ Success!
+  Try nonce=1847:  hash = "0003..."  [*] Success!
 \end{lstlisting}
 
 \subsection{Difficulty Levels}
@@ -658,17 +708,17 @@ Combining \textbf{PoW + Reputation} prevents abuse:
 % ============================================================================
 \section{Hosting with Perl + CGI}
 
-\begin{monabox}{Mona's Nostalgia Corner}
-Perl + CGI is like the grandfather of the web. Old, reliable, and surprisingly powerful!
+\begin{infobox}{Retro Vibes}
+Perl + CGI is like finding your dad's old cassette tapes. Ancient, dusty, but it still works.
 
 Perfect for:
 \begin{itemize}
   \item Raspberry Pi hosting
-  \item Old computers
-  \item Learning web basics
-  \item Feeling like it's 1995 again!
+  \item That spare PC from 2009
+  \item Pretending it's the 90s again
+  \item Actually learning how the web works (without 50 layers of JavaScript frameworks)
 \end{itemize}
-\end{monabox}
+\end{infobox}
 
 \subsection{Why Perl + CGI?}
 
@@ -758,34 +808,34 @@ Node crashes on startup & Known issue, workaround active \\ \hline
 \section{FAQ}
 
 \textbf{Q: Is Cashew a cryptocurrency?}\\
-A: Nope! No coins, no mining. Just content sharing.
+A: No. If we wanted to make a ponzi scheme we'd be working at a VC firm.
 
 \vspace{0.3cm}
 
 \textbf{Q: Do I need to be online 24/7?}\\
-A: Not if other network members are online. That's redundancy!
+A: Only if you want to be the sole host. Otherwise, convince your friends to help share the load.
 
 \vspace{0.3cm}
 
 \textbf{Q: How much disk space do I need?}\\
-A: Depends on what you host. Start with 1GB free.
+A: As much as you're hosting. This isn't the cloud — it's YOUR disk.
 
 \vspace{0.3cm}
 
 \textbf{Q: Is my data encrypted?}\\
-A: Content is stored as-is. Encrypt it yourself if needed.
+A: Content is stored as-is. Want encryption? Do it yourself before uploading.
 
 % ============================================================================
 \section{Next Steps}
 
-Congratulations! You're now a Cashew user!
+Congrats, you made it through the manual.
 
 \begin{center}
 \begin{tikzpicture}
   \node[draw, rectangle, rounded corners, fill=successgreen!20, minimum width=8cm, minimum height=2cm] (box) at (0,0) {};
-  \node at (0,0.5) {\Large\textbf{Ready for More?}};
-  \node at (0,-0.3) {Check out the Advanced User Guide};
-  \node at (0,-0.7) {Explore the API Documentation};
+  \node at (0,0.5) {\Large\textbf{What Now?}};
+  \node at (0,-0.3) {Actually USE the thing (novel concept)};
+  \node at (0,-0.7) {Read the API docs if you're into that};
 \end{tikzpicture}
 \end{center}
 
@@ -796,7 +846,9 @@ Congratulations! You're now a Cashew user!
 
 \vspace{1cm}
 
-\textit{``Thank you for using Cashew!''}
+\textit{``Thanks for actually reading this thing.''}
+
+\textit{``Now go build something cool.''}
 
 \vspace{0.5cm}
 

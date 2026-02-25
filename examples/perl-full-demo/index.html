@@ -287,7 +287,7 @@
         }
         
         .feature-card li:before {
-            content: "✓";
+            content: "[*]";
             position: absolute;
             left: 0;
             color: #28a745;
@@ -298,7 +298,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>🥜 Cashew Network</h1>
+            <h1>Cashew Network</h1>
             <p>Complete Decentralized Framework Demo - Version 1.0</p>
         </header>
         
@@ -325,7 +325,7 @@
                 
                 <div class="feature-grid">
                     <div class="feature-card">
-                        <h3>🗂️ Content System</h3>
+                        <h3>Content System</h3>
                         <ul>
                             <li>Publish up to 500MB content</li>
                             <li>Content-addressed storage</li>
@@ -335,7 +335,7 @@
                     </div>
                     
                     <div class="feature-card">
-                        <h3>🔐 Identity & Keys</h3>
+                        <h3>Identity & Keys</h3>
                         <ul>
                             <li>Ed25519 signatures</li>
                             <li>Key rotation support</li>
@@ -345,7 +345,7 @@
                     </div>
                     
                     <div class="feature-card">
-                        <h3>⚡ Proof-of-Work</h3>
+                        <h3>Proof-of-Work</h3>
                         <ul>
                             <li>Argon2id memory-hard puzzles</li>
                             <li>Adaptive difficulty</li>
@@ -355,7 +355,7 @@
                     </div>
                     
                     <div class="feature-card">
-                        <h3>⭐ Reputation System</h3>
+                        <h3>Reputation System</h3>
                         <ul>
                             <li>Trust attestations</li>
                             <li>Vouching workflow</li>
@@ -365,7 +365,7 @@
                     </div>
                     
                     <div class="feature-card">
-                        <h3>📊 Ledger & State</h3>
+                        <h3>Ledger & State</h3>
                         <ul>
                             <li>Blockchain-based ledger</li>
                             <li>State reconciliation</li>
@@ -375,7 +375,7 @@
                     </div>
                     
                     <div class="feature-card">
-                        <h3>🌐 Network Features</h3>
+                        <h3>Network Features</h3>
                         <ul>
                             <li>P2P connectivity</li>
                             <li>NAT traversal</li>
@@ -625,7 +625,7 @@
             const el = document.getElementById(elementId);
             el.innerHTML = `
                 <div class="result ${isError ? 'error' : ''}">
-                    <strong>${isError ? '❌ Error' : '✅ Success'}</strong>
+                    <strong>${isError ? 'Error' : 'Success'}</strong>
                     <pre>${JSON.stringify(data, null, 2)}</pre>
                 </div>
             `;
@@ -767,7 +767,7 @@
                             <strong>#${i+1} ${node.name}</strong><br>
                             <small>Score: ${node.reputation.toFixed(2)}</small>
                         </div>
-                        <span class="badge badge-success">⭐ ${node.reputation.toFixed(2)}</span>
+                        <span class="badge badge-success"> ${node.reputation.toFixed(2)}</span>
                     </div>
                 `).join('');
             }

@@ -1,4 +1,4 @@
-# 🐪 Perl CGI Gateway for Cashew
+# Perl CGI Gateway for Cashew
 
 A nostalgic, lightweight gateway to the Cashew network using classic Perl + CGI!
 
@@ -8,16 +8,16 @@ A nostalgic, lightweight gateway to the Cashew network using classic Perl + CGI!
      > ^ <
 ```
 
-## 🎯 What Is This?
+## What Is This?
 
 This is a **Perl CGI script** that acts as a gateway to your local Cashew node. It's perfect for:
 
-- 🍓 **Raspberry Pi hosting** - Lightweight and efficient
-- 💻 **Old computers** - Runs on anything with Perl
-- 📚 **Learning** - Simple code, easy to understand
-- 😊 **Nostalgia** - Like the 90s web, but better!
+- **Raspberry Pi hosting** - Lightweight and efficient
+- **Old computers** - Runs on anything with Perl
+- **Learning** - Simple code, easy to understand
+- **Nostalgia** - Like the 90s web, but better!
 
-## 📋 Requirements
+## Requirements
 
 - Perl 5.10+ (usually pre-installed on Linux/macOS)
 - Required Perl modules:
@@ -25,7 +25,7 @@ This is a **Perl CGI script** that acts as a gateway to your local Cashew node. 
   - `JSON`
   - `HTTP::Tiny`
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Option 1: Using Perl's Built-in Server (Easiest!)
 
@@ -75,7 +75,7 @@ sudo apt install fcgiwrap
 sudo systemctl restart nginx
 ```
 
-## 🎨 Features
+## Features
 
 ### Home Page
 - Beautiful retro design
@@ -97,7 +97,7 @@ sudo systemctl restart nginx
 - Proper MIME types
 - Cache headers
 
-## 🔧 Configuration
+## Configuration
 
 Set environment variables to customize:
 
@@ -109,7 +109,7 @@ export CASHEW_API="http://localhost:8080/api"
 export DEBUG=1
 ```
 
-## 📝 Example Usage
+## Example Usage
 
 ### View a Thing
 ```
@@ -126,11 +126,11 @@ http://localhost:8081/cashew-gateway.pl/networks
 http://localhost:8081/cashew-gateway.pl/upload
 ```
 
-## 🎯 Testing
+## Testing
 
 1. **Start your Cashew node:**
    ```bash
-   ./build/src/cashew_node
+   ./build/src/cashew
    ```
 
 2. **Start the Perl gateway:**
@@ -149,7 +149,7 @@ http://localhost:8081/cashew-gateway.pl/upload
    - Try uploading content
    - Browse existing Things
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### "Can't locate CGI.pm"
 ```bash
@@ -164,7 +164,7 @@ chmod +x cashew-gateway.pl
 ### "Can't connect to Cashew API"
 Make sure your Cashew node is running on http://localhost:8080
 
-## 💡 Customization
+## Customization
 
 The script is designed to be easily customizable:
 
@@ -185,7 +185,7 @@ if ($path eq '/my-route') {
 ### Modify Templates
 All HTML is inline - just edit the heredoc strings!
 
-## 📊 Performance
+## Performance
 
 **Benchmarks on Raspberry Pi 4:**
 - Startup: < 50ms
@@ -195,7 +195,7 @@ All HTML is inline - just edit the heredoc strings!
 
 **Perfect for low-power hosting!**
 
-## 🎓 Learning Resources
+## Learning Resources
 
 Want to learn more about Perl CGI?
 
@@ -203,7 +203,7 @@ Want to learn more about Perl CGI?
 - [HTTP::Tiny Documentation](https://metacpan.org/pod/HTTP::Tiny)
 - [Modern Perl](http://modernperlbooks.com/)
 
-## 🌟 Why Perl in 2026?
+## Why Perl in 2026?
 
 You might ask: "Why Perl? Isn't that ancient?"
 
@@ -215,9 +215,9 @@ You might ask: "Why Perl? Isn't that ancient?"
 4. **Simple** - No webpack, no npm, no build steps
 5. **Fun** - Embrace the nostalgia!
 
-Plus, Perl is what powered the early web. If it was good enough for Amazon and Craigslist, it's good enough for us! 🐪
+Plus, Perl is what powered the early web. If it was good enough for Amazon and Craigslist, it's good enough for us! 
 
-## 🚀 Next Steps
+## Next Steps
 
 1. **Add Authentication** - Integrate Ed25519 signing
 2. **Upload Support** - Actually store files via API
@@ -225,11 +225,11 @@ Plus, Perl is what powered the early web. If it was good enough for Amazon and C
 4. **Real-time Updates** - WebSocket support
 5. **Mobile UI** - Responsive design
 
-## 📜 License
+## License
 
 MIT License - Free as in freedom!
 
-## 🙏 Credits
+## Credits
 
 Made with ❤️ by the Cashew team
 
@@ -240,8 +240,6 @@ Special thanks to:
 - You (for using this!)
 
 ---
-
-**Happy hacking! 🥜**
 
 ```
     Mona says: "May your code be bug-free

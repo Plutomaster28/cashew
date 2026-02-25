@@ -1,4 +1,4 @@
-# Cashew Network - Complete Implementation Checklist
+﻿# Cashew Network - Complete Implementation Checklist
 
 ## Overview
 This checklist covers everything needed to build the Cashew network from scratch, organized by development phase and priority.
@@ -19,7 +19,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 
 ## Phase 1: Foundation (Weeks 1-4)
 
-### 1.1 Project Setup ✓
+### 1.1 Project Setup [*]
 - [x] Create CMake project structure
 - [x] Configure cross-platform build (Windows/Linux)
 - [x] Set up Ninja build generator
@@ -29,7 +29,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Set up CI/CD pipelines (GitHub Actions)
 - [ ] Create Docker development environment (optional)
 
-### 1.2 Cryptography Library Integration ✓
+### 1.2 Cryptography Library Integration [*]
 - [x] Integrate libsodium
 - [x] Create Ed25519 wrapper (signatures)
 - [x] Create X25519 wrapper (key exchange)
@@ -40,7 +40,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Create key derivation functions (HKDF)
 - [x] Write crypto unit tests
 
-### 1.3 Common Types & Utilities ✓
+### 1.3 Common Types & Utilities [*]
 - [x] Define common types (NodeID, Hash256, PublicKey, etc.)
 - [x] Implement hex encoding/decoding
 - [x] Implement Base64 encoding/decoding
@@ -51,7 +51,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Create error handling framework
 - [x] Write utility unit tests
 
-### 1.4 Node Identity System ✓
+### 1.4 Node Identity System [*]
 - [x] Implement NodeIdentity class
 - [x] Implement key generation
 - [x] Implement secure key storage (encrypted at rest)
@@ -65,7 +65,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 
 ## Phase 2: Core Protocol (Weeks 5-8)
 
-### 2.1 Thing (Content) System ✓
+### 2.1 Thing (Content) System [*]
 - [x] Define Thing metadata structure
 - [x] Implement Thing creation
 - [x] Implement content hashing (BLAKE3)
@@ -76,7 +76,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Implement Thing manager
 - [x] Write Thing unit tests
 
-### 2.2 Storage Backend ✓
+### 2.2 Storage Backend [*]
 - [x] Choose storage backend (LevelDB)
 - [x] Implement content-addressed storage
 - [x] Implement metadata storage
@@ -86,7 +86,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Create storage garbage collection
 - [x] Write storage unit tests
 
-### 2.3 Proof-of-Work System ✓
+### 2.3 Proof-of-Work System [*]
 - [x] Design PoW puzzle format
 - [x] Implement node benchmarking
 - [x] Implement adaptive difficulty calculator
@@ -100,7 +100,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Write PoW unit tests
 - [ ] Benchmark PoW on Raspberry Pi
 
-### 2.4 Participation Key System ✓
+### 2.4 Participation Key System [*]
 - [x] Define key types (Identity, Node, Network, Service, Routing)
 - [x] Implement Key class
 - [x] Implement KeyManager
@@ -112,7 +112,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Implement transfer/vouching system (KeyTransfer, KeyVouch structures)
 - [x] Write key system unit tests (needs API alignment)
 
-### 2.5 Network (Cluster) System ✓
+### 2.5 Network (Cluster) System [*]
 - [x] Define Network structure
 - [x] Implement Network creation
 - [x] Implement invitation workflow
@@ -127,7 +127,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 
 ## Phase 3: Networking & Routing (Weeks 9-12)
 
-### 3.1 Transport Layer ✓
+### 3.1 Transport Layer [*]
 - [x] Design handshake protocol
 - [x] Implement X25519 key exchange
 - [x] Implement session key derivation (HKDF)
@@ -139,7 +139,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Implement connection pooling
 - [x] Write transport unit tests
 
-### 3.2 Peer Discovery ✓
+### 3.2 Peer Discovery [*]
 - [x] Define bootstrap node format (in peer.hpp)
 - [x] Implement bootstrap connection
 - [x] Implement peer announcement messages
@@ -150,7 +150,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Implement NAT traversal (STUN-like)
 - [x] Write discovery unit tests
 
-### 3.3 Gossip Protocol ✓
+### 3.3 Gossip Protocol [*]
 - [x] Define gossip message types
 - [x] Implement message signing
 - [x] Implement message verification
@@ -160,7 +160,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Implement network state broadcasts (10 minutes)
 - [x] Write gossip unit tests
 
-### 3.4 Routing System ✓
+### 3.4 Routing System [*]
 - [x] Implement RoutingTable
 - [x] Implement content-addressed routing
 - [x] Implement multi-hop routing
@@ -170,7 +170,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Implement onion routing (for anonymity)
 - [x] Write routing unit tests
 
-### 3.5 P2P Mesh Integration ✓
+### 3.5 P2P Mesh Integration [*]
 - [x] Implement async I/O (native POSIX/Winsock with std::thread)
 - [x] Implement connection manager (ConnectionManager with TCPConnection)
 - [x] Implement NAT traversal (STUN-like with RFC 5389 message format)
@@ -182,7 +182,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 
 ## Phase 4: State & Reputation (Weeks 13-16)
 
-### 4.1 Ledger & State Management ✓
+### 4.1 Ledger & State Management [*]
 - [x] Design event log structure
 - [x] Implement append-only event log
 - [x] Implement event types (identity, key issuance, network formation, etc.)
@@ -193,7 +193,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Implement state reconciliation (StateReconciliation with merge strategies)
 - [x] Write ledger unit tests
 
-### 4.2 Proof-of-Stake System ✓
+### 4.2 Proof-of-Stake System [*]
 - [x] Implement PoStake structure (postake.cpp)
 - [x] Implement contribution score calculator
 - [x] Implement PoStake reward distributor
@@ -202,7 +202,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Implement hybrid PoW/PoStake coordinator
 - [x] Write PoStake unit tests
 
-### 4.3 Trust & Reputation System ✓
+### 4.3 Trust & Reputation System [*]
 - [x] Define reputation scoring algorithm
 - [x] Implement reputation structure
 - [x] Implement reputation calculation
@@ -215,7 +215,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Implement vouching workflow (VouchingWorkflow with request/accept/revoke)
 - [x] Write reputation unit tests
 
-### 4.4 Decay System ✓
+### 4.4 Decay System [*]
 - [x] Implement activity monitor
 - [x] Implement key decay scheduler
 - [x] Implement Thing decay tracking
@@ -225,7 +225,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Implement DecayRunner (active enforcement)
 - [x] Write decay unit tests
 
-### 4.5 Human Identity (Pseudonymous) ✓
+### 4.5 Human Identity (Pseudonymous) [*]
 - [x] Implement HumanIdentity class
 - [x] Implement human identity key generation
 - [x] Implement reputation linking
@@ -239,7 +239,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 
 ## Phase 5: Security & Privacy (Weeks 17-20)
 
-### 5.1 Capability Tokens ✓
+### 5.1 Capability Tokens [*]
 - [x] Define CapabilityToken structure
 - [x] Implement token issuance
 - [x] Implement token signing
@@ -251,7 +251,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Implement revocation list gossip (RevocationListUpdate with deduplication and witnesses)
 - [x] Write capability token unit tests
 
-### 5.2 Attack Prevention ✓
+### 5.2 Attack Prevention [*]
 - [x] Implement rate limiter (per-peer, per-operation)
 - [x] Implement Sybil attack detection
 - [x] Implement DDoS mitigation
@@ -260,7 +260,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Implement quorum verification
 - [x] Write attack prevention unit tests
 
-### 5.3 Anonymity Features ✓
+### 5.3 Anonymity Features [*]
 - [x] Implement onion routing (multi-layer encryption)
 - [x] Implement traffic mixing
 - [x] Implement dynamic peer rotation
@@ -268,7 +268,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Implement metadata minimization
 - [x] Write anonymity unit tests
 
-### 5.4 Key Security ✓
+### 5.4 Key Security [*]
 - [x] Implement encrypted key storage (AES-256)
 - [x] Implement hardware-backed key storage (TPM, optional) - stub with SoftwareKeyStorage fallback
 - [x] Implement challenge-response authentication
@@ -280,7 +280,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 
 ## Phase 6: Gateway & Web Layer (Weeks 21-24)
 
-### 6.1 HTTP/HTTPS Gateway ✓
+### 6.1 HTTP/HTTPS Gateway [*]
 - [x] Choose HTTP library (cpp-httplib)
 - [x] Implement HTTP server
 - [x] Implement HTTPS (TLS) support
@@ -291,7 +291,7 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 - [x] Wire to actual storage backend
 - [x] Write gateway unit tests
 
-### 6.2 WebSocket Support ✓
+### 6.2 WebSocket Support [*]
 - [x] Implement WebSocket server
 - [x] Implement real-time updates
 - [x] Implement bidirectional messaging
@@ -493,25 +493,25 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 ## Success Criteria
 
 ### Technical
-- ✅ Cross-platform build (Windows + Linux)
-- ✅ Raspberry Pi capable (PoW in ~10 minutes)
-- ✅ <1 second Thing lookup latency
-- ✅ 99.9% uptime with 3+ node redundancy
-- ✅ No successful Sybil attacks in testing
-- ✅ No key theft in testing
-- ✅ No DDoS vulnerabilities
+- [+] Cross-platform build (Windows + Linux)
+- [+] Raspberry Pi capable (PoW in ~10 minutes)
+- [+] <1 second Thing lookup latency
+- [+] 99.9% uptime with 3+ node redundancy
+- [+] No successful Sybil attacks in testing
+- [+] No key theft in testing
+- [+] No DDoS vulnerabilities
 
 ### User Experience
-- ✅ <5 minute node setup
-- ✅ Instant browser game access
-- ✅ No registration/login for viewing
-- ✅ <10MB client binary
+- [+] <5 minute node setup
+- [+] Instant browser game access
+- [+] No registration/login for viewing
+- [+] <10MB client binary
 
 ### Community
-- ✅ 100+ alpha testers
-- ✅ 10+ games hosted
-- ✅ 50+ active nodes
-- ✅ Active Discord community
+- [+] 100+ alpha testers
+- [+] 10+ games hosted
+- [+] 50+ active nodes
+- [+] Active Discord community
 
 ---
 
@@ -576,6 +576,9 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 
 ---
 
-**🥜 Let's build Cashew! 🐱**
+**Let's build Cashew!**
 
 *"Not everything needs to be serious."*
+
+
+

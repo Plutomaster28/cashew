@@ -567,7 +567,7 @@ sub handle_upload {
 </head>
 <body>
     <div class="result">
-        <div class="success">✅</div>
+        <div class="success">Check</div>
         <h1>Upload Successful!</h1>
         <p>Your content has been stored in Cashew.</p>
         
@@ -610,3 +610,4 @@ sub debug_log {
 }
 
 1;
+

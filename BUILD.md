@@ -1,4 +1,4 @@
-# Building Cashew 🥜
+# Building Cashew
 
 ## Quick Setup (Automated)
 

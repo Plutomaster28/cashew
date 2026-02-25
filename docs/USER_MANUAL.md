@@ -127,7 +127,7 @@ cd cashew
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja -C build
 
-# You now have cashew_node.exe in build/src/
+# You now have cashew.exe in build/src/
 ```
 
 **Step 3: Install Perl CGI Dependencies (MSYS2)**
@@ -157,7 +157,7 @@ cd cashew
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja -C build
 
-# Binary is at build/src/cashew_node
+# Binary is at build/src/cashew
 ```
 
 ### macOS
@@ -175,7 +175,7 @@ cd cashew
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja -C build
 
-# Binary is at build/src/cashew_node
+# Binary is at build/src/cashew
 ```
 
 ---
@@ -183,65 +183,24 @@ ninja -C build
 <a name="quick-start"></a>
 ##  Quick Start Guide
 
-### Starting Your Node (5 Minutes!)
+### Starting Your Node
 
-```
-    Mona says: "Let's get you online in 5 minutes!"
-    
-       /\__/\
-     （　´∀｀）
-     （　　　）
-       ｜ ｜ |
-     （＿_)＿）
-```
-
-**Step 1: Create a config file (optional)**
-
-Create `cashew.conf` in your Cashew directory:
-
-```ini
-# Cashew Node Configuration
-
-# Logging
-log_level = info
-log_to_file = false
-
-# Data storage
-data_dir = ./data
-
-# Gateway server
-http_port = 8080
-web_root = ./web
-
-# Identity (leave empty for auto-generation)
-identity_file = cashew_identity.dat
-identity_password =
-```
-
-**Step 2: Start your node!**
+**Step 1: Start the Cashew node**
 
 ```bash
 # Windows (PowerShell)
-.\build\src\cashew_node.exe
+.\build\src\cashew.exe
 
 # Linux/macOS
-./build/src/cashew_node
+./build/src/cashew
 ```
 
-**Step 3: Open your browser**
-
-Navigate to: **http://localhost:8080**
-
-**You're running a Cashew node!**
-
-### What You'll See
-
+You'll see:
 ```
 Cashew node is running!
 
   Gateway:    http://localhost:8080
   WebSocket:  ws://localhost:8080/ws
-  Web UI:     http://localhost:8080/
 
   Node ID:    2ada83c1819a5372dae1238fc1ded123c8104fdaa15862aaee69428a1820fcda
   Storage:    0 items
@@ -251,18 +210,68 @@ Cashew node is running!
 Press Ctrl+C to shutdown
 ```
 
+**Step 2: Check what's running**
+
+Open http://localhost:8080 in your browser. You'll see a basic status page.
+
+**What just happened?**
+
+Your Cashew node is now:
+- ✓ Running an HTTP gateway on port 8080
+- ✓ Storing content in `./data/storage/`
+- ✓ Exposing API endpoints for content retrieval
+- ✓ Ready to serve content by BLAKE3 hash
+
+**Step 3: Understanding the gateway**
+
+The gateway serves these endpoints:
+- `/` - Basic status page (hardcoded HTML)
+- `/api/status` - JSON with node info (storage, networks, uptime)
+- `/api/networks` - JSON list of your networks
+- `/api/thing/{hash}` - Retrieve content by its BLAKE3 hash
+
+**Important:** The gateway only provides API access. To let browsers VIEW your content (like websites), you need a frontend gateway.
+
+### Step 4: Set up the Perl frontend (so browsers can view content)
+
+The Perl CGI gateway acts as a bridge between browsers and your Cashew node.
+
+```bash
+# Install Perl (if not already installed)
+# MSYS2/Windows:
+pacman -S mingw-w64-ucrt-x86_64-perl \
+          mingw-w64-ucrt-x86_64-perl-cgi \
+          mingw-w64-ucrt-x86_64-perl-json
+
+# Ubuntu/Debian:
+sudo apt install perl libcgi-pm-perl libjson-perl libwww-perl
+
+# macOS:
+# Perl comes pre-installed
+
+# Start the Perl gateway
+cd examples/perl-cgi
+perl server.pl
+```
+
+Now you have TWO services running:
+- **Cashew node** (localhost:8080) - stores content, provides API
+- **Perl gateway** (localhost:8081) - serves content to browsers
+
+Visit http://localhost:8081 to see the frontend!
+
 ---
 
 <a name="creating-website"></a>
 ## Creating Your First Website
 
-Let's create a simple website and share it on Cashew!
+Now let's actually host some content!
 
-### The Old-School Way: Static HTML
+### Method 1: Manual Upload (Understanding the Basics)
 
 **Step 1: Create your website**
 
-Create a folder `my-first-site/` with:
+Create a folder `my-site/` with:
 
 ```html
 <!-- index.html -->
@@ -270,54 +279,80 @@ Create a folder `my-first-site/` with:
 <html>
 <head>
     <title>My Cashew Site!</title>
-    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1> Welcome to My Cashew Site!</h1>
-    <p>This is my first website on the Cashew network!</p>
-    <p>No corporations. No tracking. Just me and my friends.</p>
+    <h1>Welcome to My Cashew Site!</h1>
+    <p>This is hosted on the Cashew network!</p>
 </body>
 </html>
 ```
 
-```css
-/* style.css */
-body {
-    font-family: Arial, sans-serif;
-    max-width: 800px;
-    margin: 50px auto;
-    padding: 20px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-}
-
-h1 {
-    color: #8B4513;
-    text-align: center;
-}
-```
-
-**Step 2: Store it in Cashew**
+**Step 2: Manually add it to storage**
 
 ```bash
-# Coming soon: cashew-cli tool
-# For now, we'll use Perl + CGI!
+# Make sure your Cashew node is running
+cd data/storage/content
+
+# Copy your file
+cp ~/my-site/index.html ./
+
+# Calculate its BLAKE3 hash (this becomes the Thing ID)
+# On Linux/macOS with b3sum installed:
+b3sum index.html
+
+# On Windows or without b3sum:
+# The hash is: af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262
+# (This is BLAKE3 of "<!DOCTYPE html>..." content)
+
+# Create metadata file
+echo '{"mime_type":"text/html","size":123}' > ../metadata/af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262.json
 ```
+
+**Step 3: Access it!**
+
+Via Cashew API:
+```
+http://localhost:8080/api/thing/af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262
+```
+
+Via Perl gateway (nicer for browsers):
+```
+http://localhost:8081/thing/af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262
+```
+
+### Method 2: Using the Perl Upload Example (Easier!)
+
+The `perl-full-demo` example includes a web UI for uploading:
+
+```bash
+cd examples/perl-full-demo
+
+# Start the demo (includes upload UI)
+perl server.pl
+```
+
+Visit http://localhost:8082 and you'll see:
+- Upload form for files
+- List of uploaded content
+- Links to view each Thing
+
+This is the easiest way to test! Just drag files into the upload form.
+
+### Understanding What Happened
+
+When you uploaded a file:
+
+1. **File stored**: Copied to `data/storage/content/{hash}`
+2. **Hash calculated**: BLAKE3 of file content becomes its ID
+3. **Metadata created**: MIME type and size stored in `data/storage/metadata/{hash}.json`
+4. **Ledger updated**: Event recorded in `data/ledger/events.db`
+
+Now anyone with the hash can retrieve it via `/api/thing/{hash}`!
 
 ---
 
 <a name="perl-hosting"></a>
-## Hosting with Perl + CGI (The Fun Way!)
-
-```
-    Mona says: "Perl is like the grandfather of the web.
-                Old, reliable, and surprisingly powerful!"
-    
-       /\__/\
-     （　´∀｀）
-     （　　　）
-       ｜ ｜ |
-     （＿_)＿）
-```
+## Hosting with Perl + CGI (Understanding the Frontend)
 
 ### Why Perl + CGI?
 
@@ -639,7 +674,7 @@ data/
 
 **When someone requests a Thing:**
 
-1. **Gateway receives HTTP request:** `GET /thing/abc123...`
+1. **Gateway receives HTTP request:** `GET /api/thing/abc123...`
 2. **Storage layer checks:** "Do I have this hash?"
 3. **If yes:** Serve it directly from disk
 4. **If no:** Ask network members ("Who has abc123...?")
@@ -649,7 +684,7 @@ data/
 ```
   Browser              Your Node           Friend's Node
      │                     │                      │
-     │  GET /thing/abc123  │                      │
+     │  GET /api/thing/abc123  │                  │
      ├────────────────────►│                      │
      │                     │  "Got abc123?"       │
      │                     ├─────────────────────►│

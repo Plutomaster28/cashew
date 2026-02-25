@@ -3,14 +3,26 @@ build/
 build-*/
 cmake-build-*/
 out/
+bin/
+obj/
+Debug/
+Release/
+RelWithDebInfo/
+MinSizeRel/
 
-# IDE files
+# IDE and Editor files
 .vscode/
 .idea/
+.vs/
 *.swp
 *.swo
 *~
 .DS_Store
+*.code-workspace
+.project
+.cproject
+.settings/
+*.sublime-*
 
 # Generated files
 *.o
@@ -18,41 +30,110 @@ out/
 *.exe
 *.dll
 *.so
+*.so.*
 *.dylib
 *.a
 *.lib
+*.exp
+*.pdb
+*.idb
+*.ilk
+*.manifest
 
 # CMake
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
+install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 Makefile
+*.cmake
+!CMakeLists.txt
+!cmake/*.cmake
 
-# Node runtime files
-cashew_identity.dat
+# Runtime data directories
+data/
 cashew_data/
-cashew.log*
+*.db
+*.sqlite
+*.sqlite3
+
+# Node runtime files and configs
+cashew_identity.dat
+cashew.conf
 *.log
+*.log.*
+*.pid
 
 # Package managers
 vcpkg_installed/
 .vcpkg/
 conan/
+_deps/
+node_modules/
 
-# Test results
+# Test results and coverage
 Testing/
 *.tlog
-*.ilk
-*.pdb
+*.gcda
+*.gcno
+*.gcov
+coverage/
+htmlcov/
+.coverage
 
 # OS specific
+Thumbs.db
 Thumbs.DB
 desktop.ini
 .directory
+.DS_Store
+.AppleDouble
+.LSOverride
+ehthumbs.db
+ehthumbs_vista.db
 
-# Backup files
+# Backup and temporary files
 *.bak
 *.backup
+*.tmp
+*.temp
 *~
+*.orig
+*.rej
+\#*\#
+.#*
+
+# Documentation build artifacts
+docs/**/*.aux
+docs/**/*.log
+docs/**/*.out
+docs/**/*.toc
+docs/**/*.pdf
+docs/**/*.synctex.gz
+*.aux
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+
+# Personal notes and TODOs (keep these local)
+NOTES.md
+TODO.personal.md
+scratch/
+.env
+.env.local
+
+# Third-party that should be downloaded
+third_party/*/
+!third_party/README.md
+
+# Credentials and secrets (IMPORTANT)
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+credentials/
+.secrets
+config.local.*

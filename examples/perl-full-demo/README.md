@@ -4,7 +4,7 @@ This comprehensive demo showcases all major features of the Cashew decentralized
 
 ## Features Demonstrated
 
-### 🗂️ Content System (Things)
+### Content System (Things)
 - Publish content up to 500MB
 - Content-addressed storage using BLAKE3 hashing
 - Metadata support
@@ -12,14 +12,14 @@ This comprehensive demo showcases all major features of the Cashew decentralized
 - Content deduplication
 - Browse and retrieve published Things
 
-### 🔐 Identity Management
+### Identity Management
 - Create Node and Human identities
 - Ed25519 key generation and management
 - Key rotation with certificate chains
 - Identity verification
 - Secure key storage (encrypted at rest)
 
-### 🔑 Participation Keys
+### Participation Keys
 - 5 key types: Identity, Node, Network, Service, Routing
 - PoW-gated key issuance
 - Time-based decay (exponential)
@@ -27,7 +27,7 @@ This comprehensive demo showcases all major features of the Cashew decentralized
 - Key transfer and vouching
 - Per-epoch issuance limits
 
-### ⚡ Proof-of-Work
+### Proof-of-Work
 - Argon2id memory-hard puzzles
 - Adaptive difficulty calculation
 - Network entropy incorporation
@@ -35,7 +35,7 @@ This comprehensive demo showcases all major features of the Cashew decentralized
 - Solution verification
 - Anti-spam protection
 
-### ⭐ Reputation System
+### Reputation System
 - Trust attestations between nodes
 - Reputation scoring
 - Vouching workflow
@@ -43,21 +43,21 @@ This comprehensive demo showcases all major features of the Cashew decentralized
 - Bridge node detection
 - Top nodes leaderboard
 
-### 📊 Ledger & State
+### Ledger & State
 - Blockchain-based ledger
 - State reconciliation
 - Entry types: thing_publish, key_issue, attestation, transfer
 - Ledger history tracking
 - Hash chain verification
 
-### 🌐 Network Features
+### Network Features
 - Network status monitoring
 - Peer list management
 - Connectivity stats
 - Latency tracking
 - Version information
 
-### 📈 Statistics & Analytics
+### Statistics & Analytics
 - Real-time metrics
 - Content statistics
 - Identity counts

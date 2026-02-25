@@ -164,3 +164,4 @@ echo "  3. Run:       ./build/src/cashew_node"
 echo "  4. Test:      cd build && ctest --verbose"
 echo ""
 echo "Happy building!"
+
