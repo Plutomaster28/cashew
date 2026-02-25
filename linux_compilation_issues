@@ -1,0 +1,640 @@
+[1/23] Building CXX object tests/CMakeFiles/test_keys.dir/test_keys.cpp.o
+FAILED: tests/CMakeFiles/test_keys.dir/test_keys.cpp.o 
+/usr/bin/c++ -DCASHEW_PLATFORM_LINUX -DFMT_SHARED -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -I/home/miyamii/cashew/include -I/home/miyamii/cashew/src -I/home/miyamii/cashew/third_party/BLAKE3/c -O3 -DNDEBUG -std=c++20 -Wall -Wextra -Wpedantic -O3 -march=native -DGTEST_HAS_PTHREAD=1 -MD -MT tests/CMakeFiles/test_keys.dir/test_keys.cpp.o -MF tests/CMakeFiles/test_keys.dir/test_keys.cpp.o.d -o tests/CMakeFiles/test_keys.dir/test_keys.cpp.o -c /home/miyamii/cashew/tests/test_keys.cpp
+/home/miyamii/cashew/tests/test_keys.cpp: In member function ‘virtual void KeySystemTest_KeyIssuance_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_keys.cpp:23:28: error: ‘class cashew::core::KeyManager’ has no member named ‘issue_key’
+   23 |     auto key = key_manager.issue_key(node1.id(), KeyType::Identity, 1);
+      |                            ^~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:23:59: error: ‘Identity’ is not a member of ‘cashew::core::KeyType’
+   23 |     auto key = key_manager.issue_key(node1.id(), KeyType::Identity, 1);
+      |                                                           ^~~~~~~~
+In file included from /usr/include/gtest/gtest.h:71,
+                 from /home/miyamii/cashew/tests/test_keys.cpp:5:
+/home/miyamii/cashew/tests/test_keys.cpp:26:35: error: ‘Identity’ is not a member of ‘cashew::core::KeyType’
+   26 |     EXPECT_EQ(key->type, KeyType::Identity);
+      |                                   ^~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp: In member function ‘virtual void KeySystemTest_AllKeyTypes_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_keys.cpp:34:18: error: ‘Identity’ is not a member of ‘cashew::core::KeyType’
+   34 |         KeyType::Identity,
+      |                  ^~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:35:18: error: ‘Node’ is not a member of ‘cashew::core::KeyType’
+   35 |         KeyType::Node,
+      |                  ^~~~
+/home/miyamii/cashew/tests/test_keys.cpp:36:18: error: ‘Network’ is not a member of ‘cashew::core::KeyType’
+   36 |         KeyType::Network,
+      |                  ^~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:37:18: error: ‘Service’ is not a member of ‘cashew::core::KeyType’
+   37 |         KeyType::Service,
+      |                  ^~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:38:18: error: ‘Routing’ is not a member of ‘cashew::core::KeyType’
+   38 |         KeyType::Routing
+      |                  ^~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:39:5: error: could not convert ‘{<expression error>, <expression error>, <expression error>, <expression error>, <expression error>}’ from ‘<brace-enclosed initializer list>’ to ‘std::vector<cashew::core::KeyType>’
+   39 |     };
+      |     ^
+      |     |
+      |     <brace-enclosed initializer list>
+/home/miyamii/cashew/tests/test_keys.cpp:42:32: error: ‘class cashew::core::KeyManager’ has no member named ‘issue_key’
+   42 |         auto key = key_manager.issue_key(node1.id(), type, 1);
+      |                                ^~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp: In member function ‘virtual void KeySystemTest_EpochLimits_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_keys.cpp:54:32: error: ‘class cashew::core::KeyManager’ has no member named ‘issue_key’
+   54 |         auto key = key_manager.issue_key(node1.id(), KeyType::Network, epoch);
+      |                                ^~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:54:63: error: ‘Network’ is not a member of ‘cashew::core::KeyType’
+   54 |         auto key = key_manager.issue_key(node1.id(), KeyType::Network, epoch);
+      |                                                               ^~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:66:32: error: ‘class cashew::core::KeyManager’ has no member named ‘issue_key’
+   66 |         auto key = key_manager.issue_key(node1.id(), KeyType::Network, epoch);
+      |                                ^~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:66:63: error: ‘Network’ is not a member of ‘cashew::core::KeyType’
+   66 |         auto key = key_manager.issue_key(node1.id(), KeyType::Network, epoch);
+      |                                                               ^~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp: In member function ‘virtual void KeySystemTest_KeyDecay_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_keys.cpp:78:28: error: ‘class cashew::core::KeyManager’ has no member named ‘issue_key’
+   78 |     auto key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                            ^~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:78:59: error: ‘Network’ is not a member of ‘cashew::core::KeyType’
+   78 |     auto key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                                                           ^~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:90:17: error: ‘class cashew::core::KeyManager’ has no member named ‘apply_decay’
+   90 |     key_manager.apply_decay(key_id, 0.1);
+      |                 ^~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp: In member function ‘virtual void KeySystemTest_ExponentialDecay_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_keys.cpp:101:28: error: ‘class cashew::core::KeyManager’ has no member named ‘issue_key’
+  101 |     auto key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                            ^~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:101:59: error: ‘Network’ is not a member of ‘cashew::core::KeyType’
+  101 |     auto key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                                                           ^~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:109:21: error: ‘class cashew::core::KeyManager’ has no member named ‘apply_decay’
+  109 |         key_manager.apply_decay(key_id, decay_rate);
+      |                     ^~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:116:12: warning: unused variable ‘expected_min’ [-Wunused-variable]
+  116 |     double expected_min = 0.5;
+      |            ^~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp: In member function ‘virtual void KeySystemTest_KeyTransfer_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_keys.cpp:122:28: error: ‘class cashew::core::KeyManager’ has no member named ‘issue_key’
+  122 |     auto key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                            ^~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:122:59: error: ‘Network’ is not a member of ‘cashew::core::KeyType’
+  122 |     auto key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                                                           ^~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:130:9: error: ‘time’ is not a class, namespace, or enumeration
+  130 |         time::now(),
+      |         ^~~~
+/home/miyamii/cashew/tests/test_keys.cpp:135:32: error: ‘class cashew::core::KeyManager’ has no member named ‘transfer_key’
+  135 |     bool success = key_manager.transfer_key(transfer);
+      |                                ^~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp: In member function ‘virtual void KeySystemTest_KeyVouching_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_keys.cpp:149:18: error: ‘Network’ is not a member of ‘cashew::core::KeyType’
+  149 |         KeyType::Network,
+      |                  ^~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:151:9: error: ‘time’ is not a class, namespace, or enumeration
+  151 |         time::now(),
+      |         ^~~~
+/home/miyamii/cashew/tests/test_keys.cpp:155:32: error: ‘class cashew::core::KeyManager’ has no member named ‘record_vouch’
+  155 |     bool success = key_manager.record_vouch(vouch);
+      |                                ^~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:167:25: error: ‘const struct cashew::core::KeyVouch’ has no member named ‘strength’
+  167 |             EXPECT_EQ(v.strength, 0.8);
+      |                         ^~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp: In member function ‘virtual void KeySystemTest_KeyRevocation_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_keys.cpp:175:28: error: ‘class cashew::core::KeyManager’ has no member named ‘issue_key’
+  175 |     auto key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                            ^~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:175:59: error: ‘Network’ is not a member of ‘cashew::core::KeyType’
+  175 |     auto key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                                                           ^~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:181:32: error: ‘class cashew::core::KeyManager’ has no member named ‘revoke_key’; did you mean ‘remove_key’?
+  181 |     bool success = key_manager.revoke_key(key_id);
+      |                                ^~~~~~~~~~
+      |                                remove_key
+In file included from /usr/include/gtest/gtest-printers.h:122,
+                 from /usr/include/gtest/gtest-matchers.h:49,
+                 from /usr/include/gtest/internal/gtest-death-test-internal.h:47,
+                 from /usr/include/gtest/gtest-death-test.h:43,
+                 from /usr/include/gtest/gtest.h:64:
+/home/miyamii/cashew/tests/test_keys.cpp:190:30: error: ‘class cashew::core::KeyManager’ has no member named ‘is_key_valid’
+  190 |     EXPECT_FALSE(key_manager.is_key_valid(key_id));
+      |                              ^~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp: In member function ‘virtual void KeySystemTest_KeyExpiration_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_keys.cpp:194:28: error: ‘class cashew::core::KeyManager’ has no member named ‘issue_key’
+  194 |     auto key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                            ^~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:194:59: error: ‘Network’ is not a member of ‘cashew::core::KeyType’
+  194 |     auto key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                                                           ^~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:200:17: error: ‘class cashew::core::KeyManager’ has no member named ‘set_expiration’
+  200 |     key_manager.set_expiration(key_id, time::now() - std::chrono::hours(1));
+      |                 ^~~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:200:40: error: ‘time’ is not a class, namespace, or enumeration
+  200 |     key_manager.set_expiration(key_id, time::now() - std::chrono::hours(1));
+      |                                        ^~~~
+/home/miyamii/cashew/tests/test_keys.cpp:203:30: error: ‘class cashew::core::KeyManager’ has no member named ‘is_key_valid’
+  203 |     EXPECT_FALSE(key_manager.is_key_valid(key_id));
+      |                              ^~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp: In member function ‘virtual void KeySystemTest_KeyPowerThresholds_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_keys.cpp:207:28: error: ‘class cashew::core::KeyManager’ has no member named ‘issue_key’
+  207 |     auto key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                            ^~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:207:59: error: ‘Network’ is not a member of ‘cashew::core::KeyType’
+  207 |     auto key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                                                           ^~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:214:21: error: ‘class cashew::core::KeyManager’ has no member named ‘apply_decay’
+  214 |         key_manager.apply_decay(key_id, 0.2);
+      |                     ^~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:222:34: error: ‘class cashew::core::KeyManager’ has no member named ‘is_key_valid’
+  222 |         EXPECT_FALSE(key_manager.is_key_valid(key_id));
+      |                                  ^~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp: In member function ‘virtual void KeySystemTest_MultipleKeysPerNode_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_keys.cpp:228:31: error: ‘class cashew::core::KeyManager’ has no member named ‘issue_key’
+  228 |     auto id_key = key_manager.issue_key(node1.id(), KeyType::Identity, 1);
+      |                               ^~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:228:62: error: ‘Identity’ is not a member of ‘cashew::core::KeyType’
+  228 |     auto id_key = key_manager.issue_key(node1.id(), KeyType::Identity, 1);
+      |                                                              ^~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:229:32: error: ‘class cashew::core::KeyManager’ has no member named ‘issue_key’
+  229 |     auto net_key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                                ^~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:229:63: error: ‘Network’ is not a member of ‘cashew::core::KeyType’
+  229 |     auto net_key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                                                               ^~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:230:32: error: ‘class cashew::core::KeyManager’ has no member named ‘issue_key’
+  230 |     auto svc_key = key_manager.issue_key(node1.id(), KeyType::Service, 1);
+      |                                ^~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:230:63: error: ‘Service’ is not a member of ‘cashew::core::KeyType’
+  230 |     auto svc_key = key_manager.issue_key(node1.id(), KeyType::Service, 1);
+      |                                                               ^~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:241:34: error: ‘class cashew::core::KeyManager’ has no member named ‘get_keys_for_node’
+  241 |     auto node_keys = key_manager.get_keys_for_node(node1.id());
+      |                                  ^~~~~~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp: In member function ‘virtual void KeySystemTest_KeySerialization_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_keys.cpp:246:28: error: ‘class cashew::core::KeyManager’ has no member named ‘issue_key’
+  246 |     auto key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                            ^~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:246:59: error: ‘Network’ is not a member of ‘cashew::core::KeyType’
+  246 |     auto key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                                                           ^~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:254:26: error: ‘from_bytes’ is not a member of ‘cashew::core::Key’
+  254 |     auto restored = Key::from_bytes(data);
+      |                          ^~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp: In lambda function:
+/home/miyamii/cashew/tests/test_keys.cpp:270:36: error: ‘class cashew::core::KeyManager’ has no member named ‘issue_key’
+  270 |             auto key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                                    ^~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:270:67: error: ‘Network’ is not a member of ‘cashew::core::KeyType’
+  270 |             auto key = key_manager.issue_key(node1.id(), KeyType::Network, 1);
+      |                                                                   ^~~~~~~
+/usr/include/gtest/internal/gtest-internal.h: In instantiation of ‘testing::Test* testing::internal::TestFactoryImpl<TestClass>::CreateTest() [with TestClass = KeySystemTest_ConcurrentIssuance_Test]’:
+/usr/include/gtest/internal/gtest-internal.h:456:9:   required from here
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |         ^~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h:456:40: error: use of deleted function ‘KeySystemTest_ConcurrentIssuance_Test::KeySystemTest_ConcurrentIssuance_Test()’
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:263:8: note: ‘KeySystemTest_ConcurrentIssuance_Test::KeySystemTest_ConcurrentIssuance_Test()’ is implicitly deleted because the default definition would be ill-formed:
+  263 | TEST_F(KeySystemTest, ConcurrentIssuance) {
+      |        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:263:8: error: use of deleted function ‘KeySystemTest::KeySystemTest()’
+/home/miyamii/cashew/tests/test_keys.cpp:10:7: note: ‘KeySystemTest::KeySystemTest()’ is implicitly deleted because the default definition would be ill-formed:
+   10 | class KeySystemTest : public ::testing::Test {
+      |       ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:10:7: error: no matching function for call to ‘cashew::core::NodeIdentity::NodeIdentity()’
+In file included from /home/miyamii/cashew/tests/test_keys.cpp:2:
+/home/miyamii/cashew/src/core/node/node_identity.hpp:109:5: note: candidate: ‘cashew::core::NodeIdentity::NodeIdentity(const cashew::PublicKey&, const cashew::SecretKey&, uint64_t, const std::vector<cashew::core::RotationCertificate>&)’
+  109 |     NodeIdentity(const PublicKey& pk, const SecretKey& sk, uint64_t timestamp,
+      |     ^~~~~~~~~~~~
+/home/miyamii/cashew/src/core/node/node_identity.hpp:109:5: note:   candidate expects 4 arguments, 0 provided
+/home/miyamii/cashew/src/core/node/node_identity.hpp:108:5: note: candidate: ‘cashew::core::NodeIdentity::NodeIdentity(const cashew::PublicKey&, const cashew::SecretKey&, uint64_t)’
+  108 |     NodeIdentity(const PublicKey& pk, const SecretKey& sk, uint64_t timestamp);
+      |     ^~~~~~~~~~~~
+/home/miyamii/cashew/src/core/node/node_identity.hpp:108:5: note:   candidate expects 3 arguments, 0 provided
+/home/miyamii/cashew/src/core/node/node_identity.hpp:32:7: note: candidate: ‘constexpr cashew::core::NodeIdentity::NodeIdentity(const cashew::core::NodeIdentity&)’
+   32 | class NodeIdentity {
+      |       ^~~~~~~~~~~~
+/home/miyamii/cashew/src/core/node/node_identity.hpp:32:7: note:   candidate expects 1 argument, 0 provided
+/home/miyamii/cashew/src/core/node/node_identity.hpp:32:7: note: candidate: ‘constexpr cashew::core::NodeIdentity::NodeIdentity(cashew::core::NodeIdentity&&)’
+/home/miyamii/cashew/src/core/node/node_identity.hpp:32:7: note:   candidate expects 1 argument, 0 provided
+/home/miyamii/cashew/tests/test_keys.cpp:10:7: error: no matching function for call to ‘cashew::core::NodeIdentity::NodeIdentity()’
+   10 | class KeySystemTest : public ::testing::Test {
+      |       ^~~~~~~~~~~~~
+/home/miyamii/cashew/src/core/node/node_identity.hpp:109:5: note: candidate: ‘cashew::core::NodeIdentity::NodeIdentity(const cashew::PublicKey&, const cashew::SecretKey&, uint64_t, const std::vector<cashew::core::RotationCertificate>&)’
+  109 |     NodeIdentity(const PublicKey& pk, const SecretKey& sk, uint64_t timestamp,
+      |     ^~~~~~~~~~~~
+/home/miyamii/cashew/src/core/node/node_identity.hpp:109:5: note:   candidate expects 4 arguments, 0 provided
+/home/miyamii/cashew/src/core/node/node_identity.hpp:108:5: note: candidate: ‘cashew::core::NodeIdentity::NodeIdentity(const cashew::PublicKey&, const cashew::SecretKey&, uint64_t)’
+  108 |     NodeIdentity(const PublicKey& pk, const SecretKey& sk, uint64_t timestamp);
+      |     ^~~~~~~~~~~~
+/home/miyamii/cashew/src/core/node/node_identity.hpp:108:5: note:   candidate expects 3 arguments, 0 provided
+/home/miyamii/cashew/src/core/node/node_identity.hpp:32:7: note: candidate: ‘constexpr cashew::core::NodeIdentity::NodeIdentity(const cashew::core::NodeIdentity&)’
+   32 | class NodeIdentity {
+      |       ^~~~~~~~~~~~
+/home/miyamii/cashew/src/core/node/node_identity.hpp:32:7: note:   candidate expects 1 argument, 0 provided
+/home/miyamii/cashew/src/core/node/node_identity.hpp:32:7: note: candidate: ‘constexpr cashew::core::NodeIdentity::NodeIdentity(cashew::core::NodeIdentity&&)’
+/home/miyamii/cashew/src/core/node/node_identity.hpp:32:7: note:   candidate expects 1 argument, 0 provided
+/home/miyamii/cashew/tests/test_keys.cpp:263:8: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+  263 | TEST_F(KeySystemTest, ConcurrentIssuance) {
+      |        ^~~~~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h:456:40: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h: In instantiation of ‘testing::Test* testing::internal::TestFactoryImpl<TestClass>::CreateTest() [with TestClass = KeySystemTest_KeySerialization_Test]’:
+/usr/include/gtest/internal/gtest-internal.h:456:9:   required from here
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |         ^~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h:456:40: error: use of deleted function ‘KeySystemTest_KeySerialization_Test::KeySystemTest_KeySerialization_Test()’
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:245:8: note: ‘KeySystemTest_KeySerialization_Test::KeySystemTest_KeySerialization_Test()’ is implicitly deleted because the default definition would be ill-formed:
+  245 | TEST_F(KeySystemTest, KeySerialization) {
+      |        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:245:8: error: use of deleted function ‘KeySystemTest::KeySystemTest()’
+/home/miyamii/cashew/tests/test_keys.cpp:245:8: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+/usr/include/gtest/internal/gtest-internal.h:456:40: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h: In instantiation of ‘testing::Test* testing::internal::TestFactoryImpl<TestClass>::CreateTest() [with TestClass = KeySystemTest_MultipleKeysPerNode_Test]’:
+/usr/include/gtest/internal/gtest-internal.h:456:9:   required from here
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |         ^~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h:456:40: error: use of deleted function ‘KeySystemTest_MultipleKeysPerNode_Test::KeySystemTest_MultipleKeysPerNode_Test()’
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:226:8: note: ‘KeySystemTest_MultipleKeysPerNode_Test::KeySystemTest_MultipleKeysPerNode_Test()’ is implicitly deleted because the default definition would be ill-formed:
+  226 | TEST_F(KeySystemTest, MultipleKeysPerNode) {
+      |        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:226:8: error: use of deleted function ‘KeySystemTest::KeySystemTest()’
+/home/miyamii/cashew/tests/test_keys.cpp:226:8: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+/usr/include/gtest/internal/gtest-internal.h:456:40: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h: In instantiation of ‘testing::Test* testing::internal::TestFactoryImpl<TestClass>::CreateTest() [with TestClass = KeySystemTest_KeyPowerThresholds_Test]’:
+/usr/include/gtest/internal/gtest-internal.h:456:9:   required from here
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |         ^~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h:456:40: error: use of deleted function ‘KeySystemTest_KeyPowerThresholds_Test::KeySystemTest_KeyPowerThresholds_Test()’
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:206:8: note: ‘KeySystemTest_KeyPowerThresholds_Test::KeySystemTest_KeyPowerThresholds_Test()’ is implicitly deleted because the default definition would be ill-formed:
+  206 | TEST_F(KeySystemTest, KeyPowerThresholds) {
+      |        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:206:8: error: use of deleted function ‘KeySystemTest::KeySystemTest()’
+/home/miyamii/cashew/tests/test_keys.cpp:206:8: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+/usr/include/gtest/internal/gtest-internal.h:456:40: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h: In instantiation of ‘testing::Test* testing::internal::TestFactoryImpl<TestClass>::CreateTest() [with TestClass = KeySystemTest_KeyExpiration_Test]’:
+/usr/include/gtest/internal/gtest-internal.h:456:9:   required from here
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |         ^~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h:456:40: error: use of deleted function ‘KeySystemTest_KeyExpiration_Test::KeySystemTest_KeyExpiration_Test()’
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:193:8: note: ‘KeySystemTest_KeyExpiration_Test::KeySystemTest_KeyExpiration_Test()’ is implicitly deleted because the default definition would be ill-formed:
+  193 | TEST_F(KeySystemTest, KeyExpiration) {
+      |        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:193:8: error: use of deleted function ‘KeySystemTest::KeySystemTest()’
+/home/miyamii/cashew/tests/test_keys.cpp:193:8: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+/usr/include/gtest/internal/gtest-internal.h:456:40: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h: In instantiation of ‘testing::Test* testing::internal::TestFactoryImpl<TestClass>::CreateTest() [with TestClass = KeySystemTest_KeyRevocation_Test]’:
+/usr/include/gtest/internal/gtest-internal.h:456:9:   required from here
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |         ^~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h:456:40: error: use of deleted function ‘KeySystemTest_KeyRevocation_Test::KeySystemTest_KeyRevocation_Test()’
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:174:8: note: ‘KeySystemTest_KeyRevocation_Test::KeySystemTest_KeyRevocation_Test()’ is implicitly deleted because the default definition would be ill-formed:
+  174 | TEST_F(KeySystemTest, KeyRevocation) {
+      |        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:174:8: error: use of deleted function ‘KeySystemTest::KeySystemTest()’
+/home/miyamii/cashew/tests/test_keys.cpp:174:8: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+/usr/include/gtest/internal/gtest-internal.h:456:40: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h: In instantiation of ‘testing::Test* testing::internal::TestFactoryImpl<TestClass>::CreateTest() [with TestClass = KeySystemTest_KeyVouching_Test]’:
+/usr/include/gtest/internal/gtest-internal.h:456:9:   required from here
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |         ^~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h:456:40: error: use of deleted function ‘KeySystemTest_KeyVouching_Test::KeySystemTest_KeyVouching_Test()’
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:144:8: note: ‘KeySystemTest_KeyVouching_Test::KeySystemTest_KeyVouching_Test()’ is implicitly deleted because the default definition would be ill-formed:
+  144 | TEST_F(KeySystemTest, KeyVouching) {
+      |        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:144:8: error: use of deleted function ‘KeySystemTest::KeySystemTest()’
+/home/miyamii/cashew/tests/test_keys.cpp:144:8: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+/usr/include/gtest/internal/gtest-internal.h:456:40: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h: In instantiation of ‘testing::Test* testing::internal::TestFactoryImpl<TestClass>::CreateTest() [with TestClass = KeySystemTest_KeyTransfer_Test]’:
+/usr/include/gtest/internal/gtest-internal.h:456:9:   required from here
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |         ^~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h:456:40: error: use of deleted function ‘KeySystemTest_KeyTransfer_Test::KeySystemTest_KeyTransfer_Test()’
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:121:8: note: ‘KeySystemTest_KeyTransfer_Test::KeySystemTest_KeyTransfer_Test()’ is implicitly deleted because the default definition would be ill-formed:
+  121 | TEST_F(KeySystemTest, KeyTransfer) {
+      |        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:121:8: error: use of deleted function ‘KeySystemTest::KeySystemTest()’
+/home/miyamii/cashew/tests/test_keys.cpp:121:8: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+/usr/include/gtest/internal/gtest-internal.h:456:40: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h: In instantiation of ‘testing::Test* testing::internal::TestFactoryImpl<TestClass>::CreateTest() [with TestClass = KeySystemTest_ExponentialDecay_Test]’:
+/usr/include/gtest/internal/gtest-internal.h:456:9:   required from here
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |         ^~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h:456:40: error: use of deleted function ‘KeySystemTest_ExponentialDecay_Test::KeySystemTest_ExponentialDecay_Test()’
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:100:8: note: ‘KeySystemTest_ExponentialDecay_Test::KeySystemTest_ExponentialDecay_Test()’ is implicitly deleted because the default definition would be ill-formed:
+  100 | TEST_F(KeySystemTest, ExponentialDecay) {
+      |        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:100:8: error: use of deleted function ‘KeySystemTest::KeySystemTest()’
+/home/miyamii/cashew/tests/test_keys.cpp:100:8: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+/usr/include/gtest/internal/gtest-internal.h:456:40: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h: In instantiation of ‘testing::Test* testing::internal::TestFactoryImpl<TestClass>::CreateTest() [with TestClass = KeySystemTest_KeyDecay_Test]’:
+/usr/include/gtest/internal/gtest-internal.h:456:9:   required from here
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |         ^~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h:456:40: error: use of deleted function ‘KeySystemTest_KeyDecay_Test::KeySystemTest_KeyDecay_Test()’
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:77:8: note: ‘KeySystemTest_KeyDecay_Test::KeySystemTest_KeyDecay_Test()’ is implicitly deleted because the default definition would be ill-formed:
+   77 | TEST_F(KeySystemTest, KeyDecay) {
+      |        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:77:8: error: use of deleted function ‘KeySystemTest::KeySystemTest()’
+/home/miyamii/cashew/tests/test_keys.cpp:77:8: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+/usr/include/gtest/internal/gtest-internal.h:456:40: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h: In instantiation of ‘testing::Test* testing::internal::TestFactoryImpl<TestClass>::CreateTest() [with TestClass = KeySystemTest_EpochLimits_Test]’:
+/usr/include/gtest/internal/gtest-internal.h:456:9:   required from here
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |         ^~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h:456:40: error: use of deleted function ‘KeySystemTest_EpochLimits_Test::KeySystemTest_EpochLimits_Test()’
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:48:8: note: ‘KeySystemTest_EpochLimits_Test::KeySystemTest_EpochLimits_Test()’ is implicitly deleted because the default definition would be ill-formed:
+   48 | TEST_F(KeySystemTest, EpochLimits) {
+      |        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:48:8: error: use of deleted function ‘KeySystemTest::KeySystemTest()’
+/home/miyamii/cashew/tests/test_keys.cpp:48:8: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+/usr/include/gtest/internal/gtest-internal.h:456:40: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h: In instantiation of ‘testing::Test* testing::internal::TestFactoryImpl<TestClass>::CreateTest() [with TestClass = KeySystemTest_AllKeyTypes_Test]’:
+/usr/include/gtest/internal/gtest-internal.h:456:9:   required from here
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |         ^~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h:456:40: error: use of deleted function ‘KeySystemTest_AllKeyTypes_Test::KeySystemTest_AllKeyTypes_Test()’
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:32:8: note: ‘KeySystemTest_AllKeyTypes_Test::KeySystemTest_AllKeyTypes_Test()’ is implicitly deleted because the default definition would be ill-formed:
+   32 | TEST_F(KeySystemTest, AllKeyTypes) {
+      |        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:32:8: error: use of deleted function ‘KeySystemTest::KeySystemTest()’
+/home/miyamii/cashew/tests/test_keys.cpp:32:8: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+/usr/include/gtest/internal/gtest-internal.h:456:40: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h: In instantiation of ‘testing::Test* testing::internal::TestFactoryImpl<TestClass>::CreateTest() [with TestClass = KeySystemTest_KeyIssuance_Test]’:
+/usr/include/gtest/internal/gtest-internal.h:456:9:   required from here
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |         ^~~~~~~~~~
+/usr/include/gtest/internal/gtest-internal.h:456:40: error: use of deleted function ‘KeySystemTest_KeyIssuance_Test::KeySystemTest_KeyIssuance_Test()’
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:21:8: note: ‘KeySystemTest_KeyIssuance_Test::KeySystemTest_KeyIssuance_Test()’ is implicitly deleted because the default definition would be ill-formed:
+   21 | TEST_F(KeySystemTest, KeyIssuance) {
+      |        ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_keys.cpp:21:8: error: use of deleted function ‘KeySystemTest::KeySystemTest()’
+/home/miyamii/cashew/tests/test_keys.cpp:21:8: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+/usr/include/gtest/internal/gtest-internal.h:456:40: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+  456 |   Test* CreateTest() override { return new TestClass; }
+      |                                        ^~~~~~~~~~~~~
+[2/23] Building CXX object tests/CMakeFiles/test_storage.dir/test_storage.cpp.o
+FAILED: tests/CMakeFiles/test_storage.dir/test_storage.cpp.o 
+/usr/bin/c++ -DCASHEW_PLATFORM_LINUX -DFMT_SHARED -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -I/home/miyamii/cashew/include -I/home/miyamii/cashew/src -I/home/miyamii/cashew/third_party/BLAKE3/c -O3 -DNDEBUG -std=c++20 -Wall -Wextra -Wpedantic -O3 -march=native -DGTEST_HAS_PTHREAD=1 -MD -MT tests/CMakeFiles/test_storage.dir/test_storage.cpp.o -MF tests/CMakeFiles/test_storage.dir/test_storage.cpp.o.d -o tests/CMakeFiles/test_storage.dir/test_storage.cpp.o -c /home/miyamii/cashew/tests/test_storage.cpp
+/home/miyamii/cashew/tests/test_storage.cpp: In member function ‘virtual void StorageTest_StoreAndRetrieve_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_storage.cpp:39:25: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+   39 |     auto hash = storage.store(test_data);
+      |                         ^~~~~
+      |                         Storage
+/home/miyamii/cashew/tests/test_storage.cpp:44:30: error: ‘class cashew::storage::Storage’ has no member named ‘retrieve’
+   44 |     auto retrieved = storage.retrieve(hash.value());
+      |                              ^~~~~~~~
+/home/miyamii/cashew/tests/test_storage.cpp: In member function ‘virtual void StorageTest_ContentAddressing_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_storage.cpp:56:26: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+   56 |     auto hash1 = storage.store(data1);
+      |                          ^~~~~
+      |                          Storage
+/home/miyamii/cashew/tests/test_storage.cpp:57:26: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+   57 |     auto hash2 = storage.store(data2);
+      |                          ^~~~~
+      |                          Storage
+/home/miyamii/cashew/tests/test_storage.cpp:58:26: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+   58 |     auto hash3 = storage.store(data3);
+      |                          ^~~~~
+      |                          Storage
+/home/miyamii/cashew/tests/test_storage.cpp: In member function ‘virtual void StorageTest_Deduplication_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_storage.cpp:72:26: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+   72 |     auto hash1 = storage.store(data);
+      |                          ^~~~~
+      |                          Storage
+/home/miyamii/cashew/tests/test_storage.cpp:73:26: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+   73 |     auto hash2 = storage.store(data);
+      |                          ^~~~~
+      |                          Storage
+/home/miyamii/cashew/tests/test_storage.cpp:74:26: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+   74 |     auto hash3 = storage.store(data);
+      |                          ^~~~~
+      |                          Storage
+/home/miyamii/cashew/tests/test_storage.cpp:81:26: error: ‘class cashew::storage::Storage’ has no member named ‘get_stats’
+   81 |     auto stats = storage.get_stats();
+      |                          ^~~~~~~~~
+/home/miyamii/cashew/tests/test_storage.cpp: In member function ‘virtual void StorageTest_LargeContent_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_storage.cpp:91:25: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+   91 |     auto hash = storage.store(large_data);
+      |                         ^~~~~
+      |                         Storage
+/home/miyamii/cashew/tests/test_storage.cpp:94:30: error: ‘class cashew::storage::Storage’ has no member named ‘retrieve’
+   94 |     auto retrieved = storage.retrieve(hash.value());
+      |                              ^~~~~~~~
+/home/miyamii/cashew/tests/test_storage.cpp: In member function ‘virtual void StorageTest_Chunking_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_storage.cpp:106:25: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+  106 |     auto hash = storage.store(large_data);
+      |                         ^~~~~
+      |                         Storage
+/home/miyamii/cashew/tests/test_storage.cpp:110:26: error: ‘class cashew::storage::Storage’ has no member named ‘get_stats’
+  110 |     auto stats = storage.get_stats();
+      |                          ^~~~~~~~~
+/home/miyamii/cashew/tests/test_storage.cpp:114:30: error: ‘class cashew::storage::Storage’ has no member named ‘retrieve’
+  114 |     auto retrieved = storage.retrieve(hash.value());
+      |                              ^~~~~~~~
+/home/miyamii/cashew/tests/test_storage.cpp: In member function ‘virtual void StorageTest_QuotaManagement_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_storage.cpp:121:42: error: no matching function for call to ‘cashew::storage::Storage::Storage(std::string&, int)’
+  121 |     Storage storage(test_dir, 1024 * 1024);
+      |                                          ^
+In file included from /home/miyamii/cashew/tests/test_storage.cpp:1:
+/home/miyamii/cashew/src/storage/storage.hpp:27:5: note: candidate: ‘cashew::storage::Storage::Storage(cashew::storage::Storage&&)’
+   27 |     Storage(Storage&&) noexcept;
+      |     ^~~~~~~
+/home/miyamii/cashew/src/storage/storage.hpp:27:5: note:   candidate expects 1 argument, 2 provided
+/home/miyamii/cashew/src/storage/storage.hpp:21:14: note: candidate: ‘cashew::storage::Storage::Storage(const std::filesystem::__cxx11::path&)’
+   21 |     explicit Storage(const std::filesystem::path& data_dir);
+      |              ^~~~~~~
+/home/miyamii/cashew/src/storage/storage.hpp:21:14: note:   candidate expects 1 argument, 2 provided
+/home/miyamii/cashew/tests/test_storage.cpp:125:26: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+  125 |     auto hash1 = storage.store(data1);
+      |                          ^~~~~
+      |                          Storage
+/home/miyamii/cashew/tests/test_storage.cpp:130:26: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+  130 |     auto hash2 = storage.store(data2);
+      |                          ^~~~~
+      |                          Storage
+/home/miyamii/cashew/tests/test_storage.cpp:135:26: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+  135 |     auto hash3 = storage.store(data3);
+      |                          ^~~~~
+      |                          Storage
+/home/miyamii/cashew/tests/test_storage.cpp:138:26: error: ‘class cashew::storage::Storage’ has no member named ‘get_stats’
+  138 |     auto stats = storage.get_stats();
+      |                          ^~~~~~~~~
+/home/miyamii/cashew/tests/test_storage.cpp: In member function ‘virtual void StorageTest_MetadataStorage_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_storage.cpp:146:25: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+  146 |     auto hash = storage.store(data);
+      |                         ^~~~~
+      |                         Storage
+/home/miyamii/cashew/tests/test_storage.cpp:150:5: error: ‘nlohmann’ has not been declared
+  150 |     nlohmann::json metadata;
+      |     ^~~~~~~~
+/home/miyamii/cashew/tests/test_storage.cpp:151:5: error: ‘metadata’ was not declared in this scope
+  151 |     metadata["title"] = "Test Thing";
+      |     ^~~~~~~~
+/home/miyamii/cashew/tests/test_storage.cpp:154:27: error: ‘class cashew::storage::Storage’ has no member named ‘store_metadata’; did you mean ‘put_metadata’?
+  154 |     bool result = storage.store_metadata(hash.value(), metadata);
+      |                           ^~~~~~~~~~~~~~
+      |                           put_metadata
+/home/miyamii/cashew/tests/test_storage.cpp: In member function ‘virtual void StorageTest_GarbageCollection_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_storage.cpp:165:42: error: no matching function for call to ‘cashew::storage::Storage::Storage(std::string&, int)’
+  165 |     Storage storage(test_dir, 1024 * 1024); // 1MB quota
+      |                                          ^
+/home/miyamii/cashew/src/storage/storage.hpp:27:5: note: candidate: ‘cashew::storage::Storage::Storage(cashew::storage::Storage&&)’
+   27 |     Storage(Storage&&) noexcept;
+      |     ^~~~~~~
+/home/miyamii/cashew/src/storage/storage.hpp:27:5: note:   candidate expects 1 argument, 2 provided
+/home/miyamii/cashew/src/storage/storage.hpp:21:14: note: candidate: ‘cashew::storage::Storage::Storage(const std::filesystem::__cxx11::path&)’
+   21 |     explicit Storage(const std::filesystem::path& data_dir);
+      |              ^~~~~~~
+/home/miyamii/cashew/src/storage/storage.hpp:21:14: note:   candidate expects 1 argument, 2 provided
+/home/miyamii/cashew/tests/test_storage.cpp:172:29: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+  172 |         auto hash = storage.store(data);
+      |                             ^~~~~
+      |                             Storage
+/home/miyamii/cashew/tests/test_storage.cpp:179:13: error: ‘class cashew::storage::Storage’ has no member named ‘mark_accessed’
+  179 |     storage.mark_accessed(hashes[0]);
+      |             ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_storage.cpp:180:13: error: ‘class cashew::storage::Storage’ has no member named ‘mark_accessed’
+  180 |     storage.mark_accessed(hashes[1]);
+      |             ^~~~~~~~~~~~~
+/home/miyamii/cashew/tests/test_storage.cpp:183:13: error: ‘class cashew::storage::Storage’ has no member named ‘garbage_collect’
+  183 |     storage.garbage_collect();
+      |             ^~~~~~~~~~~~~~~
+In file included from /usr/include/gtest/gtest-printers.h:122,
+                 from /usr/include/gtest/gtest-matchers.h:49,
+                 from /usr/include/gtest/internal/gtest-death-test-internal.h:47,
+                 from /usr/include/gtest/gtest-death-test.h:43,
+                 from /usr/include/gtest/gtest.h:64,
+                 from /home/miyamii/cashew/tests/test_storage.cpp:4:
+/home/miyamii/cashew/tests/test_storage.cpp:186:25: error: ‘class cashew::storage::Storage’ has no member named ‘exists’
+  186 |     EXPECT_TRUE(storage.exists(hashes[0]));
+      |                         ^~~~~~
+/home/miyamii/cashew/tests/test_storage.cpp:187:25: error: ‘class cashew::storage::Storage’ has no member named ‘exists’
+  187 |     EXPECT_TRUE(storage.exists(hashes[1]));
+      |                         ^~~~~~
+/home/miyamii/cashew/tests/test_storage.cpp:190:26: error: ‘class cashew::storage::Storage’ has no member named ‘get_stats’
+  190 |     auto stats = storage.get_stats();
+      |                          ^~~~~~~~~
+/home/miyamii/cashew/tests/test_storage.cpp: In member function ‘virtual void StorageTest_NonExistentRetrieval_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_storage.cpp:201:27: error: ‘class cashew::storage::Storage’ has no member named ‘retrieve’
+  201 |     auto result = storage.retrieve(fake_hash);
+      |                           ^~~~~~~~
+/home/miyamii/cashew/tests/test_storage.cpp: In member function ‘virtual void StorageTest_StorageStats_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_storage.cpp:213:13: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+  213 |     storage.store(data1);
+      |             ^~~~~
+      |             Storage
+/home/miyamii/cashew/tests/test_storage.cpp:214:13: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+  214 |     storage.store(data2);
+      |             ^~~~~
+      |             Storage
+/home/miyamii/cashew/tests/test_storage.cpp:215:13: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+  215 |     storage.store(data3);
+      |             ^~~~~
+      |             Storage
+/home/miyamii/cashew/tests/test_storage.cpp:217:26: error: ‘class cashew::storage::Storage’ has no member named ‘get_stats’
+  217 |     auto stats = storage.get_stats();
+      |                          ^~~~~~~~~
+/home/miyamii/cashew/tests/test_storage.cpp: In member function ‘virtual void StorageTest_ConcurrentAccess_Test::TestBody()’:
+/home/miyamii/cashew/tests/test_storage.cpp:229:25: error: ‘class cashew::storage::Storage’ has no member named ‘store’; did you mean ‘Storage’?
+  229 |     auto hash = storage.store(data);
+      |                         ^~~~~
+      |                         Storage
+/home/miyamii/cashew/tests/test_storage.cpp: In lambda function:
+/home/miyamii/cashew/tests/test_storage.cpp:238:35: error: ‘class cashew::storage::Storage’ has no member named ‘retrieve’
+  238 |             auto result = storage.retrieve(hash.value());
+      |                                   ^~~~~~~~
+/home/miyamii/cashew/tests/test_storage.cpp:238:44: error: ‘hash’ is not captured
+  238 |             auto result = storage.retrieve(hash.value());
+      |                                            ^~~~
+/home/miyamii/cashew/tests/test_storage.cpp:237:62: note: the lambda has no capture-default
+  237 |         threads.emplace_back([&storage, &hash, &success_count]() {
+      |                                                              ^
+/home/miyamii/cashew/tests/test_storage.cpp:229:10: note: ‘<typeprefixerror>hash’ declared here
+  229 |     auto hash = storage.store(data);
+      |          ^~~~
+[5/23] Building CXX object src/CMakeFiles/cashew_core.dir/network/activity_monitor.cpp.o
+/home/miyamii/cashew/src/network/activity_monitor.cpp: In member function ‘void cashew::network::ActivityMonitor::on_route_successful(const cashew::NodeID&, const cashew::Hash256&)’:
+/home/miyamii/cashew/src/network/activity_monitor.cpp:134:81: warning: unused parameter ‘content_hash’ [-Wunused-parameter]
+  134 | void ActivityMonitor::on_route_successful(const NodeID& node_id, const Hash256& content_hash) {
+      |                                                                  ~~~~~~~~~~~~~~~^~~~~~~~~~~~
+/home/miyamii/cashew/src/network/activity_monitor.cpp: In member function ‘void cashew::network::ActivityMonitor::on_route_failed(const cashew::NodeID&, const cashew::Hash256&)’:
+/home/miyamii/cashew/src/network/activity_monitor.cpp:144:77: warning: unused parameter ‘content_hash’ [-Wunused-parameter]
+  144 | void ActivityMonitor::on_route_failed(const NodeID& node_id, const Hash256& content_hash) {
+      |                                                              ~~~~~~~~~~~~~~~^~~~~~~~~~~~
+[6/23] Building CXX object src/CMakeFiles/cashew_core.dir/network/nat_traversal.cpp.o
+In file included from /usr/include/x86_64-linux-gnu/c++/14/bits/c++allocator.h:33,
+                 from /usr/include/c++/14/bits/allocator.h:46,
+                 from /usr/include/c++/14/vector:63,
+                 from /home/miyamii/cashew/include/cashew/common.hpp:6,
+                 from /home/miyamii/cashew/src/network/nat_traversal.hpp:3,
+                 from /home/miyamii/cashew/src/network/nat_traversal.cpp:1:
+In member function ‘void std::__new_allocator<_Tp>::deallocate(_Tp*, size_type) [with _Tp = unsigned char]’,
+    inlined from ‘constexpr void std::allocator< <template-parameter-1-1> >::deallocate(_Tp*, std::size_t) [with _Tp = unsigned char]’ at /usr/include/c++/14/bits/allocator.h:208:35,
+    inlined from ‘static constexpr void std::allocator_traits<std::allocator<_Up> >::deallocate(allocator_type&, pointer, size_type) [with _Tp = unsigned char]’ at /usr/include/c++/14/bits/alloc_traits.h:550:23,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::_M_realloc_append(_Args&& ...)::_Guard::~_Guard() [with _Args = {unsigned char}; _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]’ at /usr/include/c++/14/bits/vector.tcc:616:18,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::_M_realloc_append(_Args&& ...) [with _Args = {unsigned char}; _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]’ at /usr/include/c++/14/bits/vector.tcc:688:7,
+    inlined from ‘constexpr std::vector<_Tp, _Alloc>::reference std::vector<_Tp, _Alloc>::emplace_back(_Args&& ...) [with _Args = {unsigned char}; _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]’ at /usr/include/c++/14/bits/vector.tcc:123:21,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::push_back(value_type&&) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]’ at /usr/include/c++/14/bits/stl_vector.h:1301:21,
+    inlined from ‘void cashew::network::write_uint16(std::vector<unsigned char>&, uint16_t)’ at /home/miyamii/cashew/src/network/nat_traversal.cpp:35:21,
+    inlined from ‘std::vector<unsigned char> cashew::network::STUNMessage::to_bytes() const’ at /home/miyamii/cashew/src/network/nat_traversal.cpp:72:17:
+/usr/include/c++/14/bits/new_allocator.h:172:33: warning: ‘void operator delete(void*, std::size_t)’ called on pointer ‘<unknown>’ with nonzero offset [1, 9223372036854775807] [-Wfree-nonheap-object]
+  172 |         _GLIBCXX_OPERATOR_DELETE(_GLIBCXX_SIZED_DEALLOC(__p, __n));
+      |                                 ^
+In member function ‘_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = unsigned char]’,
+    inlined from ‘constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = unsigned char]’ at /usr/include/c++/14/bits/allocator.h:196:40,
+    inlined from ‘static constexpr _Tp* std::allocator_traits<std::allocator<_Up> >::allocate(allocator_type&, size_type) [with _Tp = unsigned char]’ at /usr/include/c++/14/bits/alloc_traits.h:515:28,
+    inlined from ‘constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]’ at /usr/include/c++/14/bits/stl_vector.h:380:33,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::reserve(size_type) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]’ at /usr/include/c++/14/bits/vector.tcc:79:33,
+    inlined from ‘std::vector<unsigned char> cashew::network::STUNMessage::to_bytes() const’ at /home/miyamii/cashew/src/network/nat_traversal.cpp:69:19:
+/usr/include/c++/14/bits/new_allocator.h:151:55: note: returned from ‘void* operator new(std::size_t)’
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                       ^
+[10/23] Building CXX object src/CMakeFiles/cashew.dir/main.cpp.o
+ninja: build stopped: subcommand failed.
