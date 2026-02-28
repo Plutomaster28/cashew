@@ -1,6 +1,6 @@
-#include "gateway/gateway_server.hpp"
-#include "gateway/websocket_handler.hpp"
-#include "gateway/content_renderer.hpp"
+#include "cashew/gateway/gateway_server.hpp"
+#include "cashew/gateway/websocket_handler.hpp"
+#include "cashew/gateway/content_renderer.hpp"
 #include "cashew/common.hpp"
 #include <gtest/gtest.h>
 
