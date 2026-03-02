@@ -26,7 +26,13 @@ if(WIN32)
 elseif(UNIX AND NOT APPLE)
     message(STATUS "Building for Linux")
     add_definitions(-DCASHEW_PLATFORM_LINUX)
+elseif(APPLE)
+    message(STATUS "Building for macOS")
+    add_definitions(-DCASHEW_PLATFORM_MACOS)
 endif()
+
+# Architecture detection
+message(STATUS "Target architecture: ${CMAKE_SYSTEM_PROCESSOR}")
 
 # Compiler flags
 if(MSVC)
@@ -48,7 +54,27 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     endif()
 else()
     if(NOT MSVC)
-        add_compile_options(-O3 -march=native)
+        add_compile_options(-O3)
+        # Architecture-specific optimizations
+        # Only use -march=native for native builds, not for cross-compilation
+        if(NOT CMAKE_CROSSCOMPILING)
+            # Detect CPU architecture
+            if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|ARM64|armv8)")
+                # ARM 64-bit optimizations
+                add_compile_options(-mcpu=native)
+            elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|armv7)")
+                # ARM 32-bit optimizations
+                add_compile_options(-mcpu=native -mfpu=neon)
+            elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|AMD64|i686|x86|X86)")
+                # x86/x64 optimizations
+                add_compile_options(-march=native)
+            else()
+                # Generic optimization for other architectures
+                message(STATUS "Using generic optimizations for ${CMAKE_SYSTEM_PROCESSOR}")
+            endif()
+        else()
+            message(STATUS "Cross-compiling detected, skipping native CPU optimizations")
+        endif()
     endif()
 endif()
 
@@ -115,6 +141,9 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/include/ DESTINATION include)
 # Summary
 message(STATUS "=== Cashew Build Configuration ===")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "Target system: ${CMAKE_SYSTEM_NAME}")
+message(STATUS "Target architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+message(STATUS "Cross-compiling: ${CMAKE_CROSSCOMPILING}")
 message(STATUS "C++ standard: ${CMAKE_CXX_STANDARD}")
 message(STATUS "Build tests: ${CASHEW_BUILD_TESTS}")
 message(STATUS "Build benchmarks: ${CASHEW_BUILD_BENCHMARKS}")

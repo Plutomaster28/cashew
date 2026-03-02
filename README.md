@@ -94,6 +94,21 @@ data/
 
 ## building this thing
 
+### supported platforms
+
+**Operating Systems:**
+- Windows 10/11 (MSYS2/MinGW)
+- Linux (Ubuntu, Debian, Arch, Fedora, etc.)
+- macOS (Intel & Apple Silicon)
+
+**CPU Architectures:**
+- x86_64 (Intel/AMD 64-bit)
+- x86 (Intel/AMD 32-bit)
+- ARM64/AArch64 (Raspberry Pi 3/4/5 64-bit, Apple M1/M2, AWS Graviton)
+- ARMv7 (Raspberry Pi 2/3/4 32-bit)
+
+Cashew automatically detects your architecture and enables appropriate optimizations (SSE/AVX on x86, NEON on ARM). See [docs/ARM_SUPPORT.md](docs/ARM_SUPPORT.md) for Raspberry Pi details.
+
 ### dependencies
 
 you need:
@@ -140,6 +155,24 @@ ninja -C build
 
 # binary at build/src/cashew
 ```
+
+### raspberry pi
+
+```bash
+# Quick setup (installs dependencies + builds)
+git clone https://github.com/Plutomaster28/cashew.git
+cd cashew
+chmod +x setup-raspberry-pi.sh
+./setup-raspberry-pi.sh
+
+# binary at build/src/cashew
+```
+
+**Raspberry Pi notes:**
+- Fully supported on Pi 2/3/4/5 (both 32-bit and 64-bit OS)
+- ARM NEON SIMD acceleration enabled automatically
+- BLAKE3 uses ARM crypto extensions where available
+- See [docs/ARM_SUPPORT.md](docs/ARM_SUPPORT.md) for performance tips
 
 ### macOS
 
