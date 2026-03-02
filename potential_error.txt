@@ -1,0 +1,62 @@
+[2026-03-02 11:42:09.731] [info] [14709] =================================================
+[2026-03-02 11:42:09.731] [info] [14709]     Cashew Network Node v0.1.0
+[2026-03-02 11:42:09.731] [info] [14709]    Freedom over profit. Privacy over surveillance.
+[2026-03-02 11:42:09.731] [info] [14709] =================================================
+[2026-03-02 11:42:09.731] [warning] [14709] Node identity generation disabled for testing
+[2026-03-02 11:42:09.731] [warning] [14709] Creating temporary node ID...
+[2026-03-02 11:42:09.732] [info] [14709] Temporary Node ID: 2ada83c1819a5372dae1238fc1ded123c8104fdaa15862aaee69428a1820fcda
+[2026-03-02 11:42:09.732] [info] [14709] Initializing storage backend...
+[2026-03-02 11:42:09.732] [info] [14709] Storage initialized at: ./data/storage
+[2026-03-02 11:42:09.732] [info] [14709] Content directory: ./data/storage/content
+[2026-03-02 11:42:09.732] [info] [14709] Metadata directory: ./data/storage/metadata
+[2026-03-02 11:42:09.732] [info] [14709] Storage initialized: 0 items, 0 bytes
+[2026-03-02 11:42:09.732] [info] [14709] Initializing ledger...
+[2026-03-02 11:42:09.732] [info] [14709] Ledger initialized
+[2026-03-02 11:42:09.732] [info] [14709] Ledger initialized: epoch 2954122, 0 events
+[2026-03-02 11:42:09.732] [info] [14709] Initializing network registry...
+[2026-03-02 11:42:09.732] [info] [14709] Network registry initialized: 0 networks (0 healthy)
+[2026-03-02 11:42:09.732] [info] [14709] Initializing content renderer...
+[2026-03-02 11:42:09.732] [info] [14709] Content renderer initialized with storage callback
+[2026-03-02 11:42:09.732] [info] [14709] Initializing WebSocket handler...
+[2026-03-02 11:42:09.732] [info] [14709] Starting WebSocket handler
+[2026-03-02 11:42:09.732] [info] [14709] WebSocket handler started
+[2026-03-02 11:42:09.732] [info] [14709] Ledger event broadcasting wired to WebSocket
+[2026-03-02 11:42:09.732] [info] [14709] Initializing gateway server...
+[2026-03-02 11:42:09.732] [info] [14709] Storage backend connected to gateway
+[2026-03-02 11:42:09.732] [info] [14709] Content renderer connected to gateway with storage callback
+[2026-03-02 11:42:09.732] [info] [14709] Network registry connected to gateway
+[2026-03-02 11:42:09.732] [info] [14709] Gateway server configured with all dependencies
+[2026-03-02 11:42:09.732] [info] [14709] Starting gateway server on port 8080...
+[2026-03-02 11:42:09.732] [info] [14709] Starting gateway server on 0.0.0.0:8080
+[2026-03-02 11:42:09.733] [info] [14709] HTTP routes configured
+[2026-03-02 11:42:09.733] [info] [14711] HTTP server thread starting
+[2026-03-02 11:42:09.833] [info] [14709] Gateway server started successfully
+[2026-03-02 11:42:09.833] [info] [14709] 
+[2026-03-02 11:42:09.833] [info] [14709]  Cashew node is running!
+[2026-03-02 11:42:09.833] [info] [14709] 
+[2026-03-02 11:42:09.833] [info] [14709]   Gateway:    http://localhost:8080
+[2026-03-02 11:42:09.833] [info] [14709]   WebSocket:  ws://localhost:8080/ws
+[2026-03-02 11:42:09.833] [info] [14709]   Web UI:     http://localhost:8080/
+[2026-03-02 11:42:09.833] [info] [14709] 
+[2026-03-02 11:42:09.833] [info] [14709]   Node ID:    2ada83c1819a5372dae1238fc1ded123c8104fdaa15862aaee69428a1820fcda
+[2026-03-02 11:42:09.833] [info] [14709]   Storage:    0 items
+[2026-03-02 11:42:09.833] [info] [14709]   Networks:   0
+[2026-03-02 11:42:09.834] [info] [14709]   Ledger:     0 events
+[2026-03-02 11:42:09.834] [info] [14709] 
+[2026-03-02 11:42:09.834] [info] [14709] Press Ctrl+C to shutdown
+[2026-03-02 11:42:09.834] [info] [14709] 
+^C[2026-03-02 11:44:55.411] [info] [14709] Shutdown signal received...
+[2026-03-02 11:44:55.879] [info] [14709] Shutting down...
+[2026-03-02 11:44:55.879] [info] [14709] Stopping gateway server...
+[2026-03-02 11:44:55.879] [info] [14709] Stopping gateway server
+[2026-03-02 11:44:55.881] [info] [14711] HTTP server thread exiting
+[2026-03-02 11:44:55.881] [info] [14709] Gateway server stopped
+[2026-03-02 11:44:55.881] [info] [14709] Stopping WebSocket handler...
+[2026-03-02 11:44:55.881] [info] [14709] Stopping WebSocket handler
+[2026-03-02 11:45:09.734] [info] [14709] Saving network state...
+[2026-03-02 11:45:09.734] [info] [14709] 
+[2026-03-02 11:45:09.734] [info] [14709] Node stopped. Goodbye! 
+[2026-03-02 11:45:09.734] [info] [14709] 
+[2026-03-02 11:45:09.734] [info] [14709] Cleared entire content cache
+
+this seems off, so i'm putting this as a note to myself to fix it once i have time
