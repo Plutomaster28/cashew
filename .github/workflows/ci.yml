@@ -48,6 +48,22 @@ jobs:
       - name: Run CTest
         run: ctest --test-dir build --output-on-failure
 
+  linux-cross-compat:
+    name: Linux Cross-Compat (x86_64 + ARM64)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Verify Linux x86_64 and ARM64 cross-compile
+        run: |
+          chmod +x ./setup-linux.sh ./scripts/verify-linux-cross-compat.sh
+          ./setup-linux.sh --cross-arm64
+          ./scripts/verify-linux-cross-compat.sh
+
   build-and-test-windows:
     name: Build and Test (Windows MSYS2 UCRT64)
     runs-on: windows-latest

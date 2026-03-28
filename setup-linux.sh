@@ -4,6 +4,28 @@
 
 set -e
 
+ENABLE_ARM64_CROSS=0
+
+for arg in "$@"; do
+    case "$arg" in
+        --cross-arm64)
+            ENABLE_ARM64_CROSS=1
+            ;;
+        -h|--help)
+            echo "Usage: ./setup-linux.sh [--cross-arm64]"
+            echo ""
+            echo "Options:"
+            echo "  --cross-arm64   Install ARM64 cross-compilation toolchain (Linux host)"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $arg"
+            echo "Use --help for usage."
+            exit 1
+            ;;
+    esac
+done
+
 echo "========================================="
 echo "   Cashew Network - Dependency Setup     "
 echo "========================================="
@@ -19,6 +41,9 @@ else
 fi
 
 echo "Detected distribution: $DISTRO"
+if [[ $ENABLE_ARM64_CROSS -eq 1 ]]; then
+    echo "ARM64 cross-compilation setup: enabled"
+fi
 echo ""
 
 # Check if running as root (needed for some package managers)
@@ -51,6 +76,72 @@ case $DISTRO in
         
         # Note: blake3 is bundled, no need to install
         $SUDO apt install -y "${PACKAGES[@]}"
+
+        if [[ $ENABLE_ARM64_CROSS -eq 1 ]]; then
+            echo ""
+            echo "Installing ARM64 cross-compilation packages..."
+
+            # Ubuntu arm64 packages are hosted on ports.ubuntu.com; scope existing
+            # sources to amd64 and add a dedicated arm64 sources file when needed.
+            if [[ "$DISTRO" == "ubuntu" ]] && [[ -f /etc/apt/sources.list.d/ubuntu.sources ]]; then
+                if [[ ! -f /etc/apt/sources.list.d/ubuntu-arm64-ports.sources ]]; then
+                    echo "Configuring Ubuntu amd64/arm64 apt sources..."
+                    UBUNTU_CODENAME="${VERSION_CODENAME:-noble}"
+                    $SUDO cp /etc/apt/sources.list.d/ubuntu.sources /etc/apt/ubuntu.sources.bak-cashew-cross
+
+                    cat << 'EOF' | $SUDO tee /etc/apt/sources.list.d/ubuntu.sources >/dev/null
+Types: deb
+URIs: http://archive.ubuntu.com/ubuntu/
+Suites: UBUNTU_RELEASE UBUNTU_RELEASE-updates UBUNTU_RELEASE-backports
+Components: main universe restricted multiverse
+Architectures: amd64
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+Types: deb
+URIs: http://security.ubuntu.com/ubuntu/
+Suites: UBUNTU_RELEASE-security
+Components: main universe restricted multiverse
+Architectures: amd64
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+EOF
+
+                    $SUDO sed -i "s/UBUNTU_RELEASE/$UBUNTU_CODENAME/g" /etc/apt/sources.list.d/ubuntu.sources
+
+                    cat << 'EOF' | $SUDO tee /etc/apt/sources.list.d/ubuntu-arm64-ports.sources >/dev/null
+Types: deb
+URIs: http://ports.ubuntu.com/ubuntu-ports/
+Suites: UBUNTU_RELEASE UBUNTU_RELEASE-updates UBUNTU_RELEASE-backports
+Components: main universe restricted multiverse
+Architectures: arm64
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+Types: deb
+URIs: http://ports.ubuntu.com/ubuntu-ports/
+Suites: UBUNTU_RELEASE-security
+Components: main universe restricted multiverse
+Architectures: arm64
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+EOF
+
+                    $SUDO sed -i "s/UBUNTU_RELEASE/$UBUNTU_CODENAME/g" /etc/apt/sources.list.d/ubuntu-arm64-ports.sources
+                fi
+            fi
+
+            $SUDO dpkg --add-architecture arm64
+            $SUDO apt update
+
+            CROSS_PACKAGES=(
+                gcc-aarch64-linux-gnu
+                g++-aarch64-linux-gnu
+                libc6-dev-arm64-cross
+                libsodium-dev:arm64
+                libspdlog-dev:arm64
+                nlohmann-json3-dev:arm64
+                libssl-dev:arm64
+            )
+
+            $SUDO apt install -y "${CROSS_PACKAGES[@]}"
+        fi
         ;;
         
     arch|manjaro|msys)
@@ -64,6 +155,11 @@ case $DISTRO in
             nlohmann-json \
             blake3 \
             gtest
+        if [[ $ENABLE_ARM64_CROSS -eq 1 ]]; then
+            echo ""
+            echo "Warning: Automatic ARM64 cross-toolchain install is only implemented for apt-based distros."
+            echo "Install ARM64 cross toolchain and target libraries manually for your distribution."
+        fi
         ;;
         
     fedora|rhel|centos|rocky|almalinux)
@@ -77,6 +173,11 @@ case $DISTRO in
             json-devel \
             gtest-devel \
             blake3-devel
+        if [[ $ENABLE_ARM64_CROSS -eq 1 ]]; then
+            echo ""
+            echo "Warning: Automatic ARM64 cross-toolchain install is only implemented for apt-based distros."
+            echo "Install ARM64 cross toolchain and target libraries manually for your distribution."
+        fi
         ;;
         
     opensuse*|sles)
@@ -90,6 +191,11 @@ case $DISTRO in
             nlohmann_json-devel \
             gtest
         echo "Warning: You may need to install blake3 manually"
+        if [[ $ENABLE_ARM64_CROSS -eq 1 ]]; then
+            echo ""
+            echo "Warning: Automatic ARM64 cross-toolchain install is only implemented for apt-based distros."
+            echo "Install ARM64 cross toolchain and target libraries manually for your distribution."
+        fi
         ;;
         
     *)
@@ -142,6 +248,21 @@ else
     echo "    Ninja not found (optional, but recommended)"
 fi
 
+if [[ $ENABLE_ARM64_CROSS -eq 1 ]]; then
+    if command -v aarch64-linux-gnu-g++ &> /dev/null; then
+        echo "  ✓ ARM64 C++ cross-compiler: $(aarch64-linux-gnu-g++ --version | head -n1)"
+    else
+        echo "  ✗ ARM64 C++ cross-compiler not found"
+        exit 1
+    fi
+
+    if command -v aarch64-linux-gnu-pkg-config &> /dev/null; then
+        echo "  ✓ ARM64 pkg-config wrapper: available"
+    else
+        echo "  Note: aarch64-linux-gnu-pkg-config not found (standard pkg-config will be used with ARM64 libdir)"
+    fi
+fi
+
 # Check for libraries
 echo ""
 echo "Checking libraries..."
@@ -162,6 +283,9 @@ echo "  1. Configure: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release"
 echo "  2. Build:     cmake --build build"
 echo "  3. Run:       ./build/src/cashew"
 echo "  4. Test:      cd build && ctest --verbose"
+if [[ $ENABLE_ARM64_CROSS -eq 1 ]]; then
+    echo "  5. Verify x86 + ARM64: ./scripts/verify-linux-cross-compat.sh"
+fi
 echo ""
 echo "Happy building!"
 
