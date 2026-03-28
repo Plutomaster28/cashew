@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
 project(Cashew VERSION 0.1.0 LANGUAGES C CXX)
 
+# Ninja cross-builds can fail at generate time when install() would require a
+# relink for RPATH adjustment. Build with install RPATH in this mode.
+if(CMAKE_CROSSCOMPILING AND CMAKE_GENERATOR STREQUAL "Ninja")
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
+endif()
+
 # Enable CTest integration so `ctest` discovers registered tests.
 enable_testing()
 

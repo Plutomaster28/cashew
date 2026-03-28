@@ -110,6 +110,19 @@ cmake --build build
 ./build/src/cashew_node
 ```
 
+### Linux (x86 + ARM64 cross-compatibility)
+
+```bash
+# Install native + ARM64 cross-compilation dependencies
+./setup-linux.sh --cross-arm64
+
+# Verify native x86_64 build/tests and ARM64 cross-build
+./scripts/verify-linux-cross-compat.sh
+```
+
+If ARM64 toolchain packages are not yet installed, the verification script exits
+with clear next steps and a non-zero code.
+
 ### Linux (Arch/MSYS2)
 
 ```bash
