@@ -1,0 +1,18 @@
+# Copy this file to Caddyfile and replace example.com with your real domain.
+# Topology:
+#   - Cashew static gateway: 127.0.0.1:8080
+#   - Perl guestbook CGI server: 127.0.0.1:8000
+
+example.com {
+    encode zstd gzip
+
+    # Guestbook writes/reads go to Perl CGI backend.
+    handle /miyamii/cgi-bin/guestbook.pl* {
+        reverse_proxy 127.0.0.1:8000
+    }
+
+    # All other traffic goes to Cashew static site + APIs.
+    handle {
+        reverse_proxy 127.0.0.1:8080
+    }
+}

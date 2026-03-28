@@ -442,6 +442,13 @@
     justify-content: center;
     font-size: 36px;
     color: #c00;
+    overflow: hidden;
+  }
+  .profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
   .profile-info { font-size: 12px; line-height: 1.9; }
   .profile-info .field { color: #888; }
@@ -540,12 +547,12 @@
 
 <!-- NAV TABS -->
 <div class="nav-tabs">
-  <button class="tab-btn active" onclick="switchTab('guestbook', this)">📋 /guestbook/</button>
-  <button class="tab-btn" onclick="switchTab('cashew', this)">🌐 /cashew/</button>
-  <button class="tab-btn" onclick="switchTab('seabird', this)">🔧 /seabird/</button>
-  <button class="tab-btn" onclick="switchTab('about', this)">🐟 /about/</button>
-  <button class="tab-btn special" onclick="switchTab('pelage', this)">🐇 /pelage/ [NEW]</button>
-  <button class="tab-btn special" id="secret-tab-btn" onclick="switchTab('secret', this)" style="display:none">💀 /dev/null/</button>
+  <button class="tab-btn active" onclick="switchTab('guestbook', this)"> /guestbook/</button>
+  <button class="tab-btn" onclick="switchTab('cashew', this)"> /cashew/</button>
+  <button class="tab-btn" onclick="switchTab('seabird', this)"> /seabird/</button>
+  <button class="tab-btn" onclick="switchTab('about', this)"> /about/</button>
+  <button class="tab-btn special" onclick="switchTab('pelage', this)"> /pelage/ [NEW]</button>
+  <button class="tab-btn special" id="secret-tab-btn" onclick="switchTab('secret', this)" style="display:none"> /dev/null/</button>
 </div>
 
 <!-- MAIN LAYOUT -->
@@ -749,11 +756,11 @@
 
           <table class="spec-table">
             <tr><th>Component</th><th>Language</th><th>Status</th></tr>
-            <tr><td>Node binary</td><td>C++</td><td>✅ Working</td></tr>
-            <tr><td>Demo server</td><td>Perl (server.pl)</td><td>✅ Working</td></tr>
-            <tr><td>Peer discovery</td><td>—</td><td>🔧 WIP</td></tr>
-            <tr><td>DHT routing</td><td>—</td><td>📋 Planned</td></tr>
-            <tr><td>Encryption layer</td><td>—</td><td>📋 Planned</td></tr>
+            <tr><td>Node binary</td><td>C++</td><td> Working</td></tr>
+            <tr><td>Demo server</td><td>Perl (server.pl)</td><td> Working</td></tr>
+            <tr><td>Peer discovery</td><td>—</td><td> WIP</td></tr>
+            <tr><td>DHT routing</td><td>—</td><td> Planned</td></tr>
+            <tr><td>Encryption layer</td><td>—</td><td> Planned</td></tr>
           </table>
 
           <h4>// Why Cashew?</h4>
@@ -793,9 +800,9 @@
 
           <table class="spec-table">
             <tr><th>Processor</th><th>Target</th><th>ISA</th><th>Node</th></tr>
-            <tr><td>🐠 Clownfish</td><td>Performance</td><td>RISC-V</td><td>130nm</td></tr>
-            <tr><td>🐟 Tetra</td><td>First SeaBird</td><td>SeaBird</td><td>TBD</td></tr>
-            <tr><td>❄️ Clione</td><td>Throughput</td><td>SeaBird</td><td>Wide superscalar</td></tr>
+            <tr><td> Clownfish</td><td>Performance</td><td>RISC-V</td><td>130nm</td></tr>
+            <tr><td> Tetra</td><td>First SeaBird</td><td>SeaBird</td><td>TBD</td></tr>
+            <tr><td> Clione</td><td>Throughput</td><td>SeaBird</td><td>Wide superscalar</td></tr>
           </table>
 
           <h4>// Clione Architecture Highlights</h4>
@@ -844,7 +851,7 @@
       <div class="about-box">
         <h3>[ about :: miyamii ]</h3>
         <div class="profile-grid">
-          <div class="profile-avatar">🐟</div>
+          <div class="profile-avatar"><img src="./-QNbYE_K_400x400.jpg" alt="miyamii avatar"></div>
           <div class="profile-info">
             <span class="field">handle: </span><span class="val">miyamii</span><br>
             <span class="field">status: </span><span class="val">incoming UTD EE student</span><br>
@@ -873,11 +880,11 @@
         <h3>[ active projects ]</h3>
         <table class="spec-table">
           <tr><th>Project</th><th>What is it</th><th>Status</th></tr>
-          <tr><td>Cashew Network</td><td>Custom P2P network protocol</td><td>🔧 alpha</td></tr>
-          <tr><td>SeaBird ISA</td><td>Custom hybrid CISC/RISC ISA</td><td>🔧 WIP</td></tr>
-          <tr><td>Clione</td><td>Wide superscalar processor</td><td>📋 designing</td></tr>
-          <tr><td>PELAGE</td><td>Fursuit design software suite</td><td>🔧 WIP</td></tr>
-          <tr><td>this website</td><td>2ch-style personal page</td><td>✅ u r here</td></tr>
+          <tr><td>Cashew Network</td><td>Custom P2P network protocol</td><td> alpha</td></tr>
+          <tr><td>SeaBird ISA</td><td>Custom hybrid CISC/RISC ISA</td><td> WIP</td></tr>
+          <tr><td>Clione</td><td>Wide superscalar processor</td><td> designing</td></tr>
+          <tr><td>PELAGE</td><td>Fursuit design software suite</td><td> WIP</td></tr>
+          <tr><td>this website</td><td>2ch-style personal page</td><td> u r here</td></tr>
         </table>
       </div>
     </div>
@@ -978,7 +985,13 @@
 </div>
 
 <script>
-  const guestbookApi = '/miyamii/cgi-bin/guestbook.pl';
+  const guestbookApi = (function () {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://127.0.0.1:8000/miyamii/cgi-bin/guestbook.pl';
+    }
+    return '/miyamii/cgi-bin/guestbook.pl';
+  })();
   const localPostsKey = 'miyamii_posts';
   const localHitsKey = 'miyamii_hits';
 
@@ -1117,11 +1130,20 @@
     }
 
     try {
-      const resp = await fetch(guestbookApi, {
+      let resp = await fetch(guestbookApi, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ name, subject, body })
       });
+
+      // Some CGI stacks parse form-urlencoded more reliably than raw JSON.
+      if (!resp.ok) {
+        resp = await fetch(guestbookApi, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Accept': 'application/json' },
+          body: new URLSearchParams({ name, subject, body }).toString()
+        });
+      }
 
       if (!resp.ok) {
         throw new Error('post failed');
@@ -1190,3 +1212,5 @@
 </script>
 </body>
 </html>
+
+

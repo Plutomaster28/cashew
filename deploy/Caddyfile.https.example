@@ -1,25 +1,23 @@
-{
-    # Keep HTTP reachable by IP while you are validating public routing.
-    auto_https off
-}
+# Copy to Caddyfile.https and replace both domain names.
+# Requires public DNS and ports 80/443 forwarded to this machine.
 
-# Public edge entrypoint.
-:80 {
+miyamii.net, www.miyamii.net {
     encode zstd gzip
 
     header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         X-Content-Type-Options "nosniff"
         X-Frame-Options "SAMEORIGIN"
         Referrer-Policy "strict-origin-when-cross-origin"
     }
 
-    # Dynamic guestbook endpoint goes to Perl backend.
+    # Dynamic guestbook endpoint -> Perl backend.
     @guestbook path /miyamii/cgi-bin/guestbook.pl*
     handle @guestbook {
         reverse_proxy 127.0.0.1:8000
     }
 
-    # Everything else (site, API, websocket, health) goes to Cashew.
+    # Everything else -> Cashew.
     handle {
         reverse_proxy 127.0.0.1:8080
     }

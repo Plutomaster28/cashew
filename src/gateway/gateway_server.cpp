@@ -1078,6 +1078,16 @@ HttpResponse GatewayServer::handle_static_file(const HttpRequest& req, GatewaySe
         return response;
     }
 
+    const std::string rel_lower = to_lower_ascii(relative_to_root.generic_string());
+    const std::string ext_lower = to_lower_ascii(resolved.extension().string());
+    if (rel_lower.find("/cgi-bin/") != std::string::npos ||
+        ext_lower == ".pl" || ext_lower == ".cgi" || ext_lower == ".pm") {
+        HttpResponse response;
+        response.status = HttpStatus::FORBIDDEN;
+        response.set_json_body(R"({"error": "Executable scripts are not served by static gateway"})");
+        return response;
+    }
+
     if (std::filesystem::is_directory(resolved)) {
         if (!config_.enable_directory_listing) {
             auto index_path = resolved / "index.html";

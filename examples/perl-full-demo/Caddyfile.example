@@ -1,0 +1,17 @@
+# Copy this file to Caddyfile and replace example.com with your real domain.
+# This setup serves static pages from Cashew and forwards the miyamii guestbook
+# endpoint to a Perl CGI server (examples/perl-cgi/server.pl).
+
+example.com {
+    encode zstd gzip
+
+    # Route guestbook CGI path to the Perl CGI server.
+    handle /miyamii/cgi-bin/guestbook.pl* {
+        reverse_proxy 127.0.0.1:8000
+    }
+
+    # Everything else goes to Cashew static gateway.
+    handle {
+        reverse_proxy 127.0.0.1:8080
+    }
+}

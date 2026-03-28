@@ -17,6 +17,12 @@ Some unit tests marked [x] below were written speculatively and don't compile ag
 
 ---
 
+## Operational Follow-Ups (Deferred)
+
+- [ ] Stabilize public internet exposure for festival sharing (quick tunnel/domain path can be flaky); keep LAN/local-host mode as primary for now and revisit after event timeline pressure is lower.
+
+---
+
 ## Phase 1: Foundation (Weeks 1-4)
 
 ### 1.1 Project Setup [*]
