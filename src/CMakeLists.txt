@@ -97,6 +97,11 @@ if(UNIX AND NOT APPLE)
     find_package(OpenSSL REQUIRED)
     target_link_libraries(cashew_core PUBLIC OpenSSL::SSL OpenSSL::Crypto)
 endif()
+if(APPLE)
+    # OpenSSL for HTTPS support on macOS
+    find_package(OpenSSL REQUIRED)
+    target_link_libraries(cashew_core PUBLIC OpenSSL::SSL OpenSSL::Crypto)
+endif()
 
 # Executable - Cashew Framework (v1.0)
 add_executable(cashew main.cpp)
