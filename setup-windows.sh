@@ -107,7 +107,7 @@ echo ""
 echo "Next steps:"
 echo "  1. Configure: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release"
 echo "  2. Build:     cmake --build build"
-echo "  3. Run:       ./build/src/cashew_node.exe"
+echo "  3. Run:       ./build/src/cashew.exe"
 echo ""
 echo "Happy building!"
 

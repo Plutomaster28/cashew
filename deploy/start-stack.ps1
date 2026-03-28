@@ -20,6 +20,38 @@ function Get-CaddyBinary {
     throw "Caddy not found. Install with: winget install --id CaddyServer.Caddy"
 }
 
+function Get-Msys2UcrtBin {
+    $candidates = @()
+
+    if ($env:MSYS2_ROOT) {
+        $candidates += (Join-Path $env:MSYS2_ROOT "ucrt64\bin")
+    }
+
+    $candidates += @(
+        "C:\msys64\ucrt64\bin",
+        "D:\msys64\ucrt64\bin"
+    )
+
+    foreach ($tool in @("gcc", "cc", "c++")) {
+        $cmd = Get-Command $tool -ErrorAction SilentlyContinue
+        if ($cmd) {
+            $toolDir = Split-Path $cmd.Source -Parent
+            if ($toolDir) {
+                $candidates += $toolDir
+            }
+        }
+    }
+
+    foreach ($path in ($candidates | Select-Object -Unique)) {
+        if (-not $path) { continue }
+        if ((Test-Path $path) -and (Test-Path (Join-Path $path "libsodium-26.dll"))) {
+            return $path
+        }
+    }
+
+    return $null
+}
+
 function Start-LoggedProcess {
     param(
         [Parameter(Mandatory = $true)]
@@ -71,6 +103,25 @@ New-Item -Path $runDir -ItemType Directory -Force | Out-Null
 $cashewBin = Join-Path $repoRoot "build\src\cashew.exe"
 if (-not (Test-Path $cashewBin)) {
     throw "Cashew binary not found at build/src/cashew.exe. Build first with cmake --build build"
+}
+
+$ucrtBin = Get-Msys2UcrtBin
+if ($ucrtBin) {
+    $pathParts = @($env:Path -split ';' | Where-Object { $_ -and $_.Trim().Length -gt 0 })
+    $alreadyPresent = $false
+    foreach ($part in $pathParts) {
+        if ($part.TrimEnd('\\').ToLowerInvariant() -eq $ucrtBin.TrimEnd('\\').ToLowerInvariant()) {
+            $alreadyPresent = $true
+            break
+        }
+    }
+
+    if (-not $alreadyPresent) {
+        $env:Path = "$ucrtBin;$env:Path"
+        Write-Host "Prepended MSYS2 runtime path: $ucrtBin"
+    }
+} else {
+    Write-Warning "MSYS2 UCRT runtime path not found. If cashew fails with missing DLLs, install MSYS2 UCRT64 and add its bin folder to PATH."
 }
 
 $caddyBin = Get-CaddyBinary

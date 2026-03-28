@@ -114,7 +114,9 @@ pacman -S mingw-w64-ucrt-x86_64-gcc \
           mingw-w64-ucrt-x86_64-ninja \
           mingw-w64-ucrt-x86_64-libsodium \
           mingw-w64-ucrt-x86_64-spdlog \
-          mingw-w64-ucrt-x86_64-nlohmann-json
+          mingw-w64-ucrt-x86_64-nlohmann-json \
+          mingw-w64-ucrt-x86_64-openssl \
+          mingw-w64-ucrt-x86_64-gtest
 ```
 
 **Step 2: Build Cashew**
@@ -124,11 +126,20 @@ git clone https://github.com/Plutomaster28/cashew.git
 cd cashew
 
 # Build
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-ninja -C build
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCASHEW_BUILD_TESTS=ON
+cmake --build build --parallel
+ctest --test-dir build --output-on-failure
 
 # You now have cashew.exe in build/src/
 ```
+
+Alternative (recommended for demo operations from Windows PowerShell):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\bootstrap-windows.ps1
+```
+
+This automates build/start/health checks and avoids common runtime PATH issues.
 
 **Step 3: Install Perl CGI Dependencies (MSYS2)**
 ```bash

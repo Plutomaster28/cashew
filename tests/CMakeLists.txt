@@ -1,6 +1,17 @@
 # Test CMake configuration
 
-find_package(GTest CONFIG REQUIRED)
+find_package(GTest CONFIG QUIET)
+
+if(NOT GTest_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+        googletest
+        URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+    )
+    # Keep parent compiler/linker settings on Windows.
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+endif()
 
 # Test for crypto
 add_executable(test_crypto test_crypto.cpp)

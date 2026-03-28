@@ -17,6 +17,25 @@ Yes, for LAN usage it is the same core startup process: run Cashew + guestbook +
 
 ## Fast startup (recommended)
 
+One-command Windows bootstrap (build + firewall + restart + health check):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\bootstrap-windows.ps1
+```
+
+Useful flags:
+
+```powershell
+# Skip rebuild, only apply firewall/start/health
+powershell -ExecutionPolicy Bypass -File .\deploy\bootstrap-windows.ps1 -SkipBuild
+
+# Keep current firewall rules untouched
+powershell -ExecutionPolicy Bypass -File .\deploy\bootstrap-windows.ps1 -SkipFirewall
+
+# Use HTTPS caddy config
+powershell -ExecutionPolicy Bypass -File .\deploy\bootstrap-windows.ps1 -Mode https
+```
+
 Windows (repo root):
 
 ```powershell

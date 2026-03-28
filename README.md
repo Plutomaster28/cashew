@@ -118,6 +118,10 @@ you need:
 - libsodium (for crypto)
 - spdlog (logging)
 - nlohmann-json (json parsing)
+- OpenSSL (HTTPS support)
+- GTest (for test builds)
+
+note: BLAKE3 is bundled in `third_party/BLAKE3` and built from source.
 
 ### windows (MSYS2)
 
@@ -131,12 +135,19 @@ pacman -S mingw-w64-ucrt-x86_64-gcc \
           mingw-w64-ucrt-x86_64-ninja \
           mingw-w64-ucrt-x86_64-libsodium \
           mingw-w64-ucrt-x86_64-spdlog \
-          mingw-w64-ucrt-x86_64-nlohmann-json
+          mingw-w64-ucrt-x86_64-nlohmann-json \
+          mingw-w64-ucrt-x86_64-openssl \
+          mingw-w64-ucrt-x86_64-gtest
 
 git clone https://github.com/Plutomaster28/cashew.git
 cd cashew
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja -C build
+
+# for CI-parity build with tests
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCASHEW_BUILD_TESTS=ON
+cmake --build build --parallel
+ctest --test-dir build --output-on-failure
 
 # binary at build/src/cashew.exe
 ```
@@ -146,7 +157,8 @@ ninja -C build
 ```bash
 sudo apt update
 sudo apt install build-essential cmake ninja-build \
-                 libsodium-dev libspdlog-dev nlohmann-json3-dev
+                 libsodium-dev libspdlog-dev nlohmann-json3-dev \
+                 libssl-dev libgtest-dev
 
 git clone https://github.com/Plutomaster28/cashew.git
 cd cashew
@@ -336,10 +348,10 @@ then `cashew share <hash>` prints internet-facing links automatically.
 **one-command option (windows/powershell):**
 
 ```powershell
-./scripts/festival-bootstrap.ps1 -AssetDir test-site -Gateway http://localhost:8080
+powershell -ExecutionPolicy Bypass -File .\deploy\bootstrap-windows.ps1
 ```
 
-this will build, start the node, ingest all files under `test-site/`, and write `festival-links.csv` with shareable URLs.
+this builds (unless skipped), applies optional firewall rules, restarts the stack, and runs health checks.
 
 ### production/festival checklist
 

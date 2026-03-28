@@ -173,7 +173,7 @@ PoStake (Contribution):
 
 ### Run a Node
 ```bash
-./cashew_node --config node.conf
+./build/src/cashew node
 ```
 
 ### Host a Game
@@ -183,7 +183,7 @@ PoStake (Contribution):
 
 ### Access via Browser
 ```
-http://localhost:7777
+http://localhost:8080
 ```
 
 ## Files to Read

@@ -54,7 +54,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: cashew-linux-x64
-        path: build/src/cashew_node
+        path: build/src/cashew
         retention-days: 30
 
   build-windows:
@@ -93,15 +93,23 @@ jobs:
           ..
     
     - name: Build
+      shell: msys2 {0}
       run: |
         cd build
         ninja -v
+
+    - name: Bundle Windows runtime dependencies
+      shell: msys2 {0}
+      run: |
+        mkdir -p bundle/windows
+        cp build/src/cashew.exe bundle/windows/
+        ldd build/src/cashew.exe | awk '/=> \/ucrt64\/bin\/.*\.dll/ {print $3}' | sort -u | xargs -r -I{} cp {} bundle/windows/
     
     - name: Upload Windows binary
       uses: actions/upload-artifact@v4
       with:
         name: cashew-windows-x64
-        path: build/src/cashew_node.exe
+        path: bundle/windows/*
         retention-days: 30
 
   build-macos:
@@ -141,5 +149,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: cashew-macos-x64
-        path: build/src/cashew_node
+        path: build/src/cashew
         retention-days: 30

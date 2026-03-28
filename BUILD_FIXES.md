@@ -80,7 +80,7 @@ Since both `Hash256` and `PublicKey` are type aliases for `fixed_bytes<32>`, the
 - All 17 targets compiled successfully
 - Blake3 bundled library linked correctly
 - cashew_core library built
-- cashew_node executable built
+- cashew executable built
 - test_crypto executable built
 - test_identity executable built
 
@@ -89,7 +89,7 @@ Since both `Hash256` and `PublicKey` are type aliases for `fixed_bytes<32>`, the
 The build was verified by:
 1. Running a clean CMake configuration
 2. Building with ninja in verbose mode
-3. Running `cashew_node.exe --help` successfully
+3. Running `cashew.exe --help` successfully
 
 ### Key Takeaways
 

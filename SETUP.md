@@ -21,7 +21,9 @@ This will:
 **Installed packages:**
 - base-devel (build tools)
 - gcc, cmake, ninja
-- libsodium, spdlog, nlohmann-json, blake3, gtest
+- libsodium, spdlog, nlohmann-json, openssl, gtest
+
+Note: BLAKE3 is bundled in the repository (third_party/BLAKE3) and built from source.
 
 ## Linux
 
@@ -51,19 +53,17 @@ If the scripts don't work for your system, see [BUILD.md](BUILD.md) for manual i
 
 ## Troubleshooting
 
-### Windows: "target not found: mingw-w64-ucrt-x86_64-blake3"
+### Windows: Missing DLL when launching cashew.exe
 
-BLAKE3 is not yet available in MSYS2 repositories. The build system will automatically handle this. You have two options:
+This typically means the UCRT64 runtime path is not in PATH for your current shell.
 
-1. **Use bundled implementation** (automatic - recommended)
-   - The project will build with a bundled BLAKE3 implementation
-   - No action needed
+Use:
 
-2. **Build BLAKE3 from source:**
-   ```bash
-   ./build-blake3.sh
-   ```
-   This will download, compile, and install BLAKE3 to your UCRT64 environment.
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\start-stack.ps1
+```
+
+The startup script detects and prepends UCRT64 runtime path for that process.
 
 ### Windows: "Permission denied"
 
@@ -75,9 +75,7 @@ chmod +x setup-windows.sh
 
 ### Linux: "blake3 not found"
 
-Some distributions don't have blake3 in their repositories yet. You can:
-1. Build from source: https://github.com/BLAKE3-team/BLAKE3
-2. The build will attempt to find it via CMake
+Cashew uses bundled BLAKE3 from third_party/BLAKE3, so a system blake3 package is not required.
 
 ### "Must be run as root" or "sudo required"
 
@@ -87,6 +85,7 @@ The scripts use `sudo` automatically on Linux. On Windows (MSYS2), you shouldn't
 
 **After setup, run:**
 ```bash
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build build
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCASHEW_BUILD_TESTS=ON
+cmake --build build --parallel
+ctest --test-dir build --output-on-failure
 ```

@@ -1,222 +1,146 @@
 # Building Cashew
 
-## Quick Setup (Automated)
+This guide is the canonical build path for local development and CI parity.
 
-We provide setup scripts that automatically install all dependencies:
+## Quick Paths
 
-### Windows (MSYS2 UCRT64)
-```bash
-# Open MSYS2 UCRT64 terminal
-./setup-windows.sh
+Windows all-in-one (build + restart stack + optional firewall + health check):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\bootstrap-windows.ps1
 ```
 
-### Linux
+Manual setup helpers:
+
 ```bash
-chmod +x setup-linux.sh
+./setup-windows.sh
 ./setup-linux.sh
 ```
 
-See [SETUP.md](SETUP.md) for details.
+## Prerequisites
 
----
+Windows (MSYS2 UCRT64):
+- mingw-w64-ucrt-x86_64-gcc
+- mingw-w64-ucrt-x86_64-cmake
+- mingw-w64-ucrt-x86_64-ninja
+- mingw-w64-ucrt-x86_64-libsodium
+- mingw-w64-ucrt-x86_64-spdlog
+- mingw-w64-ucrt-x86_64-nlohmann-json
+- mingw-w64-ucrt-x86_64-openssl
+- mingw-w64-ucrt-x86_64-gtest
 
-## Manual Setup
+Linux (Debian/Ubuntu):
+- build-essential
+- cmake
+- ninja-build
+- pkg-config
+- libsodium-dev
+- libspdlog-dev
+- nlohmann-json3-dev
+- libssl-dev
+- libgtest-dev
 
-### Prerequisites
+Note: BLAKE3 is built from the bundled third_party/BLAKE3 submodule.
 
-### Windows (MSYS2/UCRT64)
-- MSYS2 with UCRT64 environment
-- CMake 3.20+
-- Ninja build system
-- GCC toolchain (via MSYS2)
-
-### Linux
-- GCC 11+ or Clang 14+
-- CMake 3.20+
-- Ninja (optional but recommended)
-- Package manager (apt/dnf/pacman)
-
-## Setting up MSYS2 (Windows)
-
-1. **Download and install MSYS2** from https://www.msys2.org/
-
-2. **Open MSYS2 UCRT64 terminal** (the purple icon)
-
-3. **Update package database:**
-   ```bash
-   pacman -Syu
-   ```
-
-4. **Install build tools and dependencies:**
-   ```bash
-   pacman -S --needed base-devel \
-     mingw-w64-ucrt-x86_64-gcc \
-     mingw-w64-ucrt-x86_64-cmake \
-     mingw-w64-ucrt-x86_64-ninja \
-     mingw-w64-ucrt-x86_64-libsodium \
-     mingw-w64-ucrt-x86_64-spdlog \
-     mingw-w64-ucrt-x86_64-nlohmann-json \
-     mingw-w64-ucrt-x86_64-blake3 \
-     mingw-w64-ucrt-x86_64-gtest
-   ```
-
-5. **Add UCRT64 to your PATH** (optional, for running outside MSYS2):
-   - Add `C:\msys64\ucrt64\bin` to your Windows PATH environment variable
-
-## Building
-
-### Windows (MSYS2 UCRT64)
+## Windows Build (MSYS2 UCRT64)
 
 ```bash
-# Open MSYS2 UCRT64 terminal
-# Navigate to project directory
-cd /c/Users/YourName/path/to/cashew
+pacman -Syu
+pacman -S --needed base-devel \
+  mingw-w64-ucrt-x86_64-gcc \
+  mingw-w64-ucrt-x86_64-cmake \
+  mingw-w64-ucrt-x86_64-ninja \
+  mingw-w64-ucrt-x86_64-libsodium \
+  mingw-w64-ucrt-x86_64-spdlog \
+  mingw-w64-ucrt-x86_64-nlohmann-json \
+  mingw-w64-ucrt-x86_64-openssl \
+  mingw-w64-ucrt-x86_64-gtest
 
-# Configure
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCASHEW_BUILD_TESTS=ON
-
-# Build
-cmake --build build
-
-# Run
-./build/src/cashew_node.exe
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCASHEW_BUILD_TESTS=ON
+cmake --build build --parallel
+ctest --test-dir build --output-on-failure
 ```
 
-### Windows (PowerShell/CMD with UCRT64 in PATH)
+Binary output:
+- build/src/cashew.exe
+
+## Windows Build (PowerShell)
 
 ```powershell
-# Make sure C:\msys64\ucrt64\bin is in your PATH
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCASHEW_BUILD_TESTS=ON
-cmake --build build
-.\build\src\cashew_node.exe
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCASHEW_BUILD_TESTS=ON
+cmake --build build --parallel
+ctest --test-dir build --output-on-failure
 ```
 
-### Linux (Debian/Ubuntu)
+Run:
+
+```powershell
+.\build\src\cashew.exe
+```
+
+If you launch from plain PowerShell and hit missing DLL errors, run stack startup through:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\start-stack.ps1
+```
+
+That startup script auto-adds detected MSYS2 UCRT runtime path for the current session.
+
+## Linux Build
 
 ```bash
-# Install dependencies
 sudo apt update
-sudo apt install build-essential cmake ninja-build \
+sudo apt install -y \
+  build-essential cmake ninja-build pkg-config \
   libsodium-dev libspdlog-dev nlohmann-json3-dev \
-  libblake3-dev libgtest-dev
+  libssl-dev libgtest-dev
 
-# Configure
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCASHEW_BUILD_TESTS=ON
-
-# Build
-cmake --build build
-
-# Run
-./build/src/cashew_node
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCASHEW_BUILD_TESTS=ON
+cmake --build build --parallel
+ctest --test-dir build --output-on-failure
 ```
 
-### Linux (Arch/MSYS2)
+Binary output:
+- build/src/cashew
+
+## Hosting Stack Commands
+
+Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\start-stack.ps1
+powershell -ExecutionPolicy Bypass -File .\deploy\health-check.ps1
+powershell -ExecutionPolicy Bypass -File .\deploy\stop-stack.ps1
+```
+
+Linux:
 
 ```bash
-# Install dependencies
-sudo pacman -S base-devel cmake ninja libsodium spdlog \
-  nlohmann-json blake3 gtest
-
-# Configure
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCASHEW_BUILD_TESTS=ON
-
-# Build
-cmake --build build
-
-# Run
-./build/src/cashew_node
+./deploy/start-stack.sh
+./deploy/health-check.sh
+./deploy/stop-stack.sh
 ```
 
-## Running Tests
+## CI Parity
+
+These commands mirror CI behavior:
 
 ```bash
-cd build
-ctest --verbose
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCASHEW_BUILD_TESTS=ON
+cmake --build build --parallel
+ctest --test-dir build --output-on-failure
 ```
 
-## Project Status
+If system GTest is unavailable, CMake fetches googletest automatically during configure.
 
-### ✅ Completed (Phase 1 - Foundation)
-- [x] Project structure and CMake setup
-- [x] Dependency management (vcpkg)
-- [x] Cryptography wrappers (Ed25519, ChaCha20-Poly1305, BLAKE3)
-- [x] Logging system (spdlog)
-- [x] Configuration system (JSON)
-- [x] Node identity system (key generation, storage, signing)
-### Windows (MSYS2 UCRT64)
+## Troubleshooting
 
-1. **Install MSYS2 and dependencies** (see above)
+1. Configure fails on GTest:
+- Install gtest package for your platform, or rely on automatic FetchContent fallback.
 
-2. **Open MSYS2 UCRT64 terminal and build:**
-   ```bash
-   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-   cmake --build build
-   ```
+2. Windows EXE fails with missing DLL:
+- Ensure MSYS2 UCRT64 runtime is installed.
+- Start with deploy/start-stack.ps1 (it prepends runtime path automatically).
 
-3. **Run the node:**
-   ```bash
-   ./build/src/cashew_node.exe
-   ```
-
-### Linux
-
-1. **Install dependencies:**
-   ```bash
-   # Debian/Ubuntu
-   sudo apt install libsodium-dev libspdlog-dev nlohmann-json3-dev libblake3-dev
-
-   # Arch
-   sudo pacman -S libsodium spdlog nlohmann-json blake3
-   ```
-
-2. **Build:**
-   ```bash
-   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-   cmake --build build
-   ```
-
-3. **Run the node:**
-   ```bash
-   ./build/src/cashew_node
-   ```
-
-On first run, the nodeencies via vcpkg:**
-   ```bash
-   vcpkg install libsodium spdlog nlohmann-json blake3 gtest
-   ```
-
-2. **Build the project:**
-   ```bash
-   cmake -B build -DCMAKE_TOOLCHAIN_FILE=[vcpkg root]/scripts/buildsystems/vcpkg.cmake
-   cmake --build build
-   ```
-
-3. **Run the node:**
-   ```bash
-   ./build/src/cashew_node
-   ```
-
-   On first run, it will generate a new identity and save it to `cashew_identity.dat`.
-
-## Configuration
-
-Create a `cashew.conf` file (JSON format):
-
-```json
-{
-  "log_level": "info",
-  "log_to_file": false,
-  "identity_file": "cashew_identity.dat",
-  "identity_password": ""
-}
-```
-
-## Development
-
-- **Code style:** Follow existing C++20 style
-- **Testing:** Write tests for new features
-- **Documentation:** Update docs as needed
-
-## License
-
-MIT - See LICENSE file
+3. Port in use errors on startup:
+- Run deploy/stop-stack.ps1, then deploy/start-stack.ps1.

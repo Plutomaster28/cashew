@@ -32,15 +32,15 @@ jobs:
         include:
           - os: ubuntu-latest
             name: linux
-            artifact: cashew-node
+            artifact: cashew
             asset_name: cashew-linux-x64
           - os: windows-latest
             name: windows
-            artifact: cashew_node.exe
-            asset_name: cashew-windows-x64.exe
+            artifact: cashew.exe
+            asset_name: cashew-windows-x64
           - os: macos-latest
             name: macos
-            artifact: cashew-node
+            artifact: cashew
             asset_name: cashew-macos-x64
     
     runs-on: ${{ matrix.os }}
@@ -105,7 +105,10 @@ jobs:
       shell: msys2 {0}
       run: |
         strip build/src/${{ matrix.artifact }}
-        cd build/src && zip ../../${{ matrix.asset_name }}.zip ${{ matrix.artifact }}
+        mkdir -p bundle/windows
+        cp build/src/${{ matrix.artifact }} bundle/windows/
+        ldd build/src/${{ matrix.artifact }} | awk '/=> \/ucrt64\/bin\/.*\.dll/ {print $3}' | sort -u | xargs -r -I{} cp {} bundle/windows/
+        cd bundle/windows && zip ../../${{ matrix.asset_name }}.zip *
     
     - name: Upload Release Asset (Linux/macOS)
       if: matrix.os != 'windows-latest'
