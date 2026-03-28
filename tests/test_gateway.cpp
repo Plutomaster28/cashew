@@ -2,369 +2,134 @@
 #include "cashew/gateway/websocket_handler.hpp"
 #include "cashew/gateway/content_renderer.hpp"
 #include "cashew/common.hpp"
+#include "crypto/blake3.hpp"
 #include <gtest/gtest.h>
 
 using namespace cashew;
 using namespace cashew::gateway;
 
-class GatewayTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        // Gateway tests
-    }
-};
+namespace {
 
-// ============================================================================
-// HTTP Gateway Tests
-// ============================================================================
-
-TEST_F(GatewayTest, GatewayInitialization) {
-    GatewayConfig config;
-    config.port = 8080;
-    config.enable_https = false;
-    
-    GatewayServer server(config);
-    
-    EXPECT_EQ(server.port(), 8080);
-    EXPECT_FALSE(server.is_https_enabled());
+Hash256 hash_of(const std::vector<uint8_t>& data) {
+    return crypto::Blake3::hash(data);
 }
 
-TEST_F(GatewayTest, RouteRegistration) {
-    GatewayConfig config{8080, false};
-    GatewayServer server(config);
-    
-    // Register routes
-    server.register_route("/api/test", HTTPMethod::GET, [](const Request& req) {
-        Response res;
-        res.status = 200;
-        res.body = "test response";
-        return res;
+} // namespace
+
+TEST(GatewayTest, ContentTypeDetectionByMagicAndExtension) {
+    const std::vector<uint8_t> png = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A};
+    EXPECT_EQ(ContentRenderer::detect_content_type(png), ContentType::IMAGE_PNG);
+
+    const std::vector<uint8_t> html = {'<', 'h', 't', 'm', 'l', '>'};
+    EXPECT_EQ(ContentRenderer::detect_content_type(html, std::string("index.html")), ContentType::HTML);
+    EXPECT_EQ(ContentRenderer::get_mime_type(ContentType::HTML), "text/html; charset=utf-8");
+}
+
+TEST(GatewayTest, RendererFetchesCachesAndServesRanges) {
+    ContentRendererConfig cfg;
+    cfg.sanitize_html = false;
+    cfg.chunk_size = 4;
+
+    ContentRenderer renderer(cfg);
+
+    const std::vector<uint8_t> payload = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
+    const Hash256 content_hash = hash_of(payload);
+
+    renderer.set_fetch_callback([&](const Hash256& requested) -> std::optional<std::vector<uint8_t>> {
+        if (requested == content_hash) {
+            return payload;
+        }
+        return std::nullopt;
     });
-    
-    EXPECT_TRUE(server.has_route("/api/test"));
+
+    auto full = renderer.render_content(content_hash);
+    ASSERT_TRUE(full.has_value());
+    EXPECT_EQ(full->data, payload);
+    EXPECT_TRUE(renderer.is_cached(content_hash));
+
+    auto ranged = renderer.render_content(content_hash, std::make_pair<size_t, size_t>(2, 5));
+    ASSERT_TRUE(ranged.has_value());
+    EXPECT_TRUE(ranged->is_partial);
+    EXPECT_EQ(ranged->data.size(), 4u);
+    EXPECT_EQ(ranged->data[0], 'c');
+    EXPECT_EQ(ranged->data[3], 'f');
+
+    auto stats = renderer.get_cache_stats();
+    EXPECT_GE(stats.hit_count, 1u);
+    EXPECT_GE(stats.miss_count, 1u);
 }
 
-TEST_F(GatewayTest, APIEndpoints) {
-    GatewayConfig config{8080, false};
-    GatewayServer server(config);
-    
-    server.setup_default_routes();
-    
-    // Check standard endpoints
-    EXPECT_TRUE(server.has_route("/api/thing"));
-    EXPECT_TRUE(server.has_route("/api/identity"));
-    EXPECT_TRUE(server.has_route("/api/network"));
+TEST(GatewayTest, RendererStreamsChunks) {
+    ContentRendererConfig cfg;
+    cfg.chunk_size = 3;
+    cfg.sanitize_html = false;
+    ContentRenderer renderer(cfg);
+
+    const std::vector<uint8_t> payload = {'1', '2', '3', '4', '5', '6', '7'};
+    const Hash256 content_hash = hash_of(payload);
+
+    renderer.set_fetch_callback([&](const Hash256& requested) -> std::optional<std::vector<uint8_t>> {
+        return requested == content_hash ? std::optional<std::vector<uint8_t>>(payload) : std::nullopt;
+    });
+
+    size_t chunks = 0;
+    size_t total = 0;
+    bool saw_final = false;
+
+    ASSERT_TRUE(renderer.stream_content(content_hash, [&](const ContentChunk& c) {
+        chunks++;
+        total += c.length;
+        if (c.is_final) {
+            saw_final = true;
+        }
+    }));
+
+    EXPECT_EQ(total, payload.size());
+    EXPECT_TRUE(saw_final);
+    EXPECT_EQ(chunks, 3u);
 }
 
-TEST_F(GatewayTest, SessionManagement) {
-    SessionManager manager;
-    
-    // Create session
-    auto session_id = manager.create_session("user123");
-    EXPECT_GT(session_id.size(), 0);
-    
-    // Validate session
-    EXPECT_TRUE(manager.is_valid(session_id));
-    
-    // Destroy session
-    manager.destroy_session(session_id);
-    EXPECT_FALSE(manager.is_valid(session_id));
+TEST(GatewayTest, WebSocketSubscriptionTrackingAndEventMapping) {
+    WsHandlerConfig cfg;
+    cfg.max_connections = 4;
+    WebSocketHandler handler(cfg);
+
+    auto c1 = handler.accept_connection("conn-1");
+    auto c2 = handler.accept_connection("conn-2");
+    ASSERT_NE(c1, nullptr);
+    ASSERT_NE(c2, nullptr);
+
+    handler.subscribe(c1, WsEventType::LEDGER_EVENT);
+    handler.subscribe(c2, WsEventType::LEDGER_EVENT);
+
+    auto stats = handler.get_statistics();
+    EXPECT_EQ(stats.active_connections, 2u);
+    EXPECT_EQ(stats.subscription_count, 2u);
+
+    handler.unsubscribe(c1, WsEventType::LEDGER_EVENT);
+    stats = handler.get_statistics();
+    EXPECT_EQ(stats.subscription_count, 1u);
+
+    EXPECT_EQ(parse_event_type(event_type_to_string(WsEventType::PEER_STATUS)), WsEventType::PEER_STATUS);
 }
 
-TEST_F(GatewayTest, APIAuthentication) {
-    AuthManager auth;
-    
-    // Create API key
-    auto api_key = auth.create_api_key("user123", {"read", "write"});
-    EXPECT_GT(api_key.size(), 0);
-    
-    // Verify API key
-    auto permissions = auth.verify_api_key(api_key);
-    ASSERT_TRUE(permissions.has_value());
-    EXPECT_EQ(permissions->size(), 2);
-    
-    // Invalid key
-    auto invalid = auth.verify_api_key("invalid_key");
-    EXPECT_FALSE(invalid.has_value());
-}
-
-TEST_F(GatewayTest, ContentStreaming) {
-    ContentStreamer streamer;
-    
-    // Large content
-    bytes content(10 * 1024 * 1024, 0x42); // 10MB
-    
-    // Stream in chunks
-    size_t chunk_size = 1024 * 1024; // 1MB chunks
-    size_t offset = 0;
-    int chunk_count = 0;
-    
-    while (offset < content.size()) {
-        auto chunk = streamer.get_chunk(content, offset, chunk_size);
-        EXPECT_LE(chunk.size(), chunk_size);
-        offset += chunk.size();
-        chunk_count++;
-    }
-    
-    EXPECT_EQ(chunk_count, 10);
-}
-
-TEST_F(GatewayTest, HTTPSSupport) {
+TEST(GatewayTest, GatewayServerConstructsAndRegistersHandlers) {
     GatewayConfig config;
-    config.port = 8443;
-    config.enable_https = true;
-    config.cert_file = "test.crt";
-    config.key_file = "test.key";
-    
+    config.bind_address = "127.0.0.1";
+    config.http_port = 18080;
     GatewayServer server(config);
-    
-    EXPECT_TRUE(server.is_https_enabled());
-}
 
-// ============================================================================
-// WebSocket Tests
-// ============================================================================
+    EXPECT_FALSE(server.is_running());
 
-TEST_F(GatewayTest, WebSocketConnection) {
-    WebSocketHandler handler;
-    
-    // Simulate connection
-    auto conn_id = handler.create_connection();
-    EXPECT_GT(conn_id.size(), 0);
-    
-    EXPECT_TRUE(handler.is_connected(conn_id));
-    
-    // Close connection
-    handler.close_connection(conn_id);
-    EXPECT_FALSE(handler.is_connected(conn_id));
-}
+    server.register_handler(HttpMethod::GET, "/api/test", [](const HttpRequest&, GatewaySession&) {
+        HttpResponse response;
+        response.status = HttpStatus::OK;
+        response.set_json_body("{\"ok\":true}");
+        return response;
+    });
 
-TEST_F(GatewayTest, WebSocketMessaging) {
-    WebSocketHandler handler;
-    
-    auto conn_id = handler.create_connection();
-    
-    // Send message
-    std::string msg = "test message";
-    bool sent = handler.send_message(conn_id, msg);
-    EXPECT_TRUE(sent);
-}
-
-TEST_F(GatewayTest, WebSocketBroadcast) {
-    WebSocketHandler handler;
-    
-    // Create multiple connections
-    auto conn1 = handler.create_connection();
-    auto conn2 = handler.create_connection();
-    auto conn3 = handler.create_connection();
-    
-    // Broadcast message
-    std::string msg = "broadcast test";
-    int delivered = handler.broadcast(msg);
-    
-    EXPECT_EQ(delivered, 3);
-}
-
-TEST_F(GatewayTest, RealtimeUpdates) {
-    WebSocketHandler handler;
-    UpdateManager updates;
-    
-    auto conn_id = handler.create_connection();
-    
-    // Subscribe to updates
-    handler.subscribe(conn_id, "ledger");
-    handler.subscribe(conn_id, "network");
-    
-    // Trigger update
-    updates.notify("ledger", {{"height", 100}});
-    
-    // Connection should receive update
-    auto pending = handler.get_pending_updates(conn_id);
-    EXPECT_GT(pending.size(), 0);
-}
-
-TEST_F(GatewayTest, WebSocketAuthentication) {
-    WebSocketHandler handler;
-    AuthManager auth;
-    
-    auto conn_id = handler.create_connection();
-    
-    // Authenticate connection
-    std::string token = "valid_token";
-    bool authenticated = handler.authenticate(conn_id, token);
-    
-    EXPECT_TRUE(authenticated);
-    EXPECT_TRUE(handler.is_authenticated(conn_id));
-}
-
-// ============================================================================
-// Content Rendering Tests
-// ============================================================================
-
-TEST_F(GatewayTest, HTMLRendering) {
-    ContentRenderer renderer;
-    
-    bytes content = {'H', 'e', 'l', 'l', 'o'};
-    
-    auto html = renderer.render_as_html(content, "text/plain");
-    EXPECT_GT(html.size(), 0);
-    EXPECT_TRUE(html.find("Hello") != std::string::npos);
-}
-
-TEST_F(GatewayTest, ContentTypeDetection) {
-    ContentRenderer renderer;
-    
-    // HTML content
-    bytes html_content = {'<', 'h', 't', 'm', 'l', '>'};
-    auto type1 = renderer.detect_content_type(html_content);
-    EXPECT_EQ(type1, "text/html");
-    
-    // JSON content
-    bytes json_content = {'{', '"', 'a', '"', ':', '1', '}'};
-    auto type2 = renderer.detect_content_type(json_content);
-    EXPECT_EQ(type2, "application/json");
-}
-
-TEST_F(GatewayTest, ImageRendering) {
-    ContentRenderer renderer;
-    
-    // Fake PNG header
-    bytes png_data = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
-    
-    auto html = renderer.render_as_html(png_data, "image/png");
-    
-    EXPECT_TRUE(html.find("<img") != std::string::npos);
-}
-
-TEST_F(GatewayTest, CodeHighlighting) {
-    ContentRenderer renderer;
-    
-    std::string code = "int main() { return 0; }";
-    bytes code_bytes(code.begin(), code.end());
-    
-    auto html = renderer.render_as_html(code_bytes, "text/x-c++");
-    
-    // Should have syntax highlighting
-    EXPECT_GT(html.size(), code.size());
-}
-
-// ============================================================================
-// Security Tests
-// ============================================================================
-
-TEST_F(GatewayTest, CSPHeaders) {
-    GatewayServer server({8080, false});
-    
-    auto headers = server.get_security_headers();
-    
-    EXPECT_TRUE(headers.contains("Content-Security-Policy"));
-    EXPECT_TRUE(headers["Content-Security-Policy"].find("default-src 'self'") != std::string::npos);
-}
-
-TEST_F(GatewayTest, CORSConfiguration) {
-    GatewayServer server({8080, false});
-    
-    CORSConfig cors;
-    cors.allowed_origins = {"http://localhost:3000"};
-    cors.allowed_methods = {"GET", "POST"};
-    
-    server.configure_cors(cors);
-    
-    auto headers = server.get_cors_headers("http://localhost:3000");
-    EXPECT_TRUE(headers.contains("Access-Control-Allow-Origin"));
-}
-
-TEST_F(GatewayTest, RequestSandboxing) {
-    RequestSandbox sandbox;
-    
-    Request req;
-    req.path = "/api/thing";
-    req.method = HTTPMethod::GET;
-    
-    // Valid request
-    EXPECT_TRUE(sandbox.is_safe(req));
-    
-    // Path traversal attempt
-    req.path = "/api/../../etc/passwd";
-    EXPECT_FALSE(sandbox.is_safe(req));
-    
-    // SQL injection attempt
-    req.params["id"] = "1; DROP TABLE users--";
-    EXPECT_FALSE(sandbox.is_safe(req));
-}
-
-TEST_F(GatewayTest, RateLimiting) {
-    GatewayRateLimiter limiter(10, std::chrono::seconds(1));
-    
-    std::string client_ip = "192.168.1.100";
-    
-    // Allow first 10
-    for (int i = 0; i < 10; i++) {
-        EXPECT_TRUE(limiter.allow(client_ip));
-    }
-    
-    // Block 11th
-    EXPECT_FALSE(limiter.allow(client_ip));
-}
-
-TEST_F(GatewayTest, XSSPrevention) {
-    HTMLSanitizer sanitizer;
-    
-    // Malicious script
-    std::string malicious = "<script>alert('XSS')</script>Hello";
-    auto sanitized = sanitizer.sanitize(malicious);
-    
-    // Script should be removed
-    EXPECT_TRUE(sanitized.find("<script>") == std::string::npos);
-    EXPECT_TRUE(sanitized.find("Hello") != std::string::npos);
-    
-    // Allowed HTML
-    std::string safe = "<p>Hello <b>World</b></p>";
-    auto safe_result = sanitizer.sanitize(safe);
-    EXPECT_TRUE(safe_result.find("<p>") != std::string::npos);
-}
-
-TEST_F(GatewayTest, ContentIntegrityVerification) {
-    GatewayServer server({8080, false});
-    
-    bytes content = {1, 2, 3, 4, 5};
-    Hash256 expected_hash;
-    // Calculate expected hash
-    
-    // Verify content matches hash
-    bool valid = server.verify_content_integrity(content, expected_hash);
-    
-    // Should implement proper verification
-}
-
-TEST_F(GatewayTest, ErrorHandling) {
-    GatewayServer server({8080, false});
-    
-    // 404 Not Found
-    auto resp404 = server.handle_error(404, "Not Found");
-    EXPECT_EQ(resp404.status, 404);
-    EXPECT_TRUE(resp404.body.find("Not Found") != std::string::npos);
-    
-    // 500 Internal Server Error
-    auto resp500 = server.handle_error(500, "Internal Error");
-    EXPECT_EQ(resp500.status, 500);
-}
-
-TEST_F(GatewayTest, RequestLogging) {
-    RequestLogger logger;
-    
-    Request req;
-    req.path = "/api/thing";
-    req.method = HTTPMethod::GET;
-    req.client_ip = "192.168.1.100";
-    
-    Response resp;
-    resp.status = 200;
-    
-    logger.log(req, resp);
-    
-    auto entries = logger.get_recent(10);
-    EXPECT_GT(entries.size(), 0);
+    const auto stats = server.get_statistics();
+    EXPECT_EQ(stats.total_requests, 0u);
 }
 
 int main(int argc, char **argv) {

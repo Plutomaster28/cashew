@@ -158,7 +158,10 @@ void NodeIdentity::save(const std::filesystem::path& path, const std::string& pa
     CASHEW_LOG_DEBUG("Saving node identity to: {}", path.string());
     
     // Create directory if needed
-    std::filesystem::create_directories(path.parent_path());
+    const auto parent = path.parent_path();
+    if (!parent.empty()) {
+        std::filesystem::create_directories(parent);
+    }
     
     // Convert secret key to hex
     std::string sk_hex;

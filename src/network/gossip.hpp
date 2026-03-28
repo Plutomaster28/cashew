@@ -7,6 +7,7 @@
 #include <set>
 #include <functional>
 #include <chrono>
+#include <thread>
 
 namespace cashew::network {
 
@@ -125,6 +126,8 @@ struct GossipMessage {
  * GossipHandler - Callback for processing gossip messages
  */
 using GossipHandler = std::function<void(const GossipMessage&)>;
+using GossipSendCallback = std::function<bool(const NodeID&, const GossipMessage&)>;
+using GossipSignCallback = std::function<Signature(const std::vector<uint8_t>&)>;
 
 /**
  * GossipProtocol - Epidemic-style message propagation
@@ -143,6 +146,7 @@ public:
     // Message handling
     void receive_message(const GossipMessage& message);
     void broadcast_message(const GossipMessage& message);
+    bool send_direct_message(const NodeID& peer_id, const GossipMessage& message);
     
     // Message creation helpers
     GossipMessage create_peer_announcement(const NodeCapabilities& capabilities);
@@ -166,6 +170,9 @@ public:
     // Configuration
     void set_fanout(size_t fanout) { fanout_ = fanout; }
     void set_max_seen_messages(size_t max) { max_seen_messages_ = max; }
+    void set_send_callback(GossipSendCallback callback) { send_callback_ = std::move(callback); }
+    void set_local_public_key(const PublicKey& key) { local_public_key_ = key; }
+    void set_sign_callback(GossipSignCallback callback) { sign_callback_ = std::move(callback); }
     
     size_t get_fanout() const { return fanout_; }
     
@@ -215,8 +222,11 @@ private:
     void mark_as_seen(const Hash256& message_id);
     void invoke_handlers(const GossipMessage& message);
     
-    // TODO: Add actual network sending
     void send_to_peer(const NodeID& peer_id, const GossipMessage& message);
+
+    GossipSendCallback send_callback_;
+    std::optional<PublicKey> local_public_key_;
+    GossipSignCallback sign_callback_;
 };
 
 /**
@@ -230,7 +240,7 @@ private:
 class GossipScheduler {
 public:
     GossipScheduler(GossipProtocol& protocol);
-    ~GossipScheduler() = default;
+    ~GossipScheduler();
     
     // Start/stop scheduler
     void start();
@@ -271,7 +281,7 @@ private:
     // Background thread management
     void run_scheduler_loop();
     
-    // TODO: Add thread for background scheduling
+    std::thread scheduler_thread_;
 };
 
 } // namespace cashew::network

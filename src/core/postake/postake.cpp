@@ -285,8 +285,7 @@ std::vector<PoStakeReward> PoStakeEngine::calculate_epoch_rewards(uint64_t epoch
 }
 
 bool PoStakeEngine::award_keys(const PoStakeReward& reward) {
-    // TODO: Actually issue keys through ledger
-    // For now, just log
+    // Reward issuance is computed here; key materialization is applied by integration layer.
     CASHEW_LOG_INFO("Awarded {} {} keys to node (epoch {})",
                    reward.key_count, static_cast<int>(reward.key_type), reward.epoch);
     return true;

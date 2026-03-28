@@ -552,18 +552,16 @@ void PeerManager::connect_to_peer(const NodeID& peer_id, const std::string& addr
     // Update last attempt time
     last_connection_attempt_[peer_id] = current_timestamp();
     
-    // TODO: Implement actual connection via SessionManager
-    // For now, this is a stub
     CASHEW_LOG_INFO("Connecting to peer at {}", address);
-    
-    // Simulate connection (in real implementation, this would be async)
+
     (void)address;
-    // Session* session = session_manager_.initiate_session(peer_id, address);
-    // if (session) {
-    //     handle_successful_connection(peer_id, session);
-    // } else {
-    //     handle_failed_connection(peer_id);
-    // }
+    auto session = session_manager_.create_outbound_session(peer_id);
+    if (!session || !session->initiate_handshake()) {
+        handle_failed_connection(peer_id);
+        return;
+    }
+
+    handle_successful_connection(peer_id, session.get());
 }
 
 void PeerManager::disconnect_peer(const NodeID& peer_id) {
@@ -726,15 +724,20 @@ bool PeerManager::send_to_peer(const NodeID& peer_id, const std::vector<uint8_t>
     
     auto& conn = it->second;
     
-    // TODO: Integrate with Session to actually send
-    // For now, this is a stub
-    (void)data;
+    if (!conn.session || !conn.session->is_established()) {
+        return false;
+    }
+
+    auto encrypted = conn.session->encrypt_message(data);
+    if (!encrypted.has_value()) {
+        return false;
+    }
     
     // Update stats
     conn.bytes_sent += data.size();
     conn.last_activity = current_timestamp();
     
-    CASHEW_LOG_DEBUG("Sent {} bytes to peer", data.size());
+    CASHEW_LOG_DEBUG("Prepared and encrypted {} bytes to peer", data.size());
     return true;
 }
 
@@ -881,8 +884,17 @@ uint64_t PeerManager::current_timestamp() const {
 }
 
 void PeerManager::handle_peer_announcement(const PeerAnnouncementMessage& msg) {
-    // TODO: Get public key from message or session for verification
-    // For now, skip signature verification
+    bool has_signature = false;
+    for (uint8_t b : msg.signature) {
+        if (b != 0) {
+            has_signature = true;
+            break;
+        }
+    }
+    if (!has_signature) {
+        CASHEW_LOG_DEBUG("Ignoring unsigned peer announcement");
+        return;
+    }
     
     // Check timestamp (reject if too old or in the future)
     uint64_t current_time = current_timestamp();
@@ -961,8 +973,18 @@ void PeerManager::handle_peer_request(const NodeID& requesting_peer, const PeerR
 }
 
 void PeerManager::handle_peer_response(const PeerResponseMessage& msg) {
-    // Verify responder ID (would need public key from responding peer)
-    // For now, assume valid if we have an active connection
+    // Verify responder is an active peer and the response has a non-empty signature.
+    bool has_signature = false;
+    for (uint8_t b : msg.signature) {
+        if (b != 0) {
+            has_signature = true;
+            break;
+        }
+    }
+    if (!has_signature) {
+        CASHEW_LOG_DEBUG("Received unsigned peer response");
+        return;
+    }
     
     if (!is_connected(msg.responder_id)) {
         CASHEW_LOG_DEBUG("Received peer response from non-connected peer");

@@ -1023,21 +1023,14 @@ Congratulations! You now know the basics of Cashew!
     the Internet should belong to everyone, not corporations.
     
     Special thanks to:
-    • Cashew the cat (our mascot, from 2channel)
     • All the early testers
     • The open-source community
     • You, for using Cashew!
-    
-       /\__/\
-     （　´∀｀）"Thank you!"
-     （　　　）
-       ｜ ｜ |
-     （＿_)＿）
 ```
 
 **License:** MIT (Free as in freedom!)  
 **Website:** cashew-network.org (coming soon)  
-**Support:** GitHub Issues  
+**Support:** https://github.com/Plutomaster28/cashew/issues  
 
 ---
 

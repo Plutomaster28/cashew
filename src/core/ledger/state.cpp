@@ -169,8 +169,14 @@ void StateManager::apply_key_issued(const LedgerEvent& event) {
 }
 
 void StateManager::apply_key_revoked(const LedgerEvent& event) {
-    // TODO: Implement key revocation
-    (void)event;
+    auto key_data_opt = KeyIssuanceData::from_bytes(event.data);
+    if (!key_data_opt) {
+        return;
+    }
+
+    auto& node_state = nodes_[event.source_node];
+    auto& balance = node_state.key_balances[key_data_opt->key_type];
+    balance = (balance > key_data_opt->count) ? (balance - key_data_opt->count) : 0;
 }
 
 void StateManager::apply_network_created(const LedgerEvent& event) {
@@ -208,8 +214,21 @@ void StateManager::apply_network_member_added(const LedgerEvent& event) {
 }
 
 void StateManager::apply_network_member_removed(const LedgerEvent& event) {
-    // TODO: Implement member removal
-    (void)event;
+    auto net_data_opt = NetworkMembershipData::from_bytes(event.data);
+    if (!net_data_opt) {
+        return;
+    }
+
+    auto network_it = networks_.find(net_data_opt->network_id);
+    if (network_it != networks_.end()) {
+        network_it->second.members.erase(net_data_opt->member_node);
+        network_it->second.member_roles.erase(net_data_opt->member_node);
+    }
+
+    auto node_it = nodes_.find(net_data_opt->member_node);
+    if (node_it != nodes_.end()) {
+        node_it->second.networks.erase(net_data_opt->network_id);
+    }
 }
 
 void StateManager::apply_thing_replicated(const LedgerEvent& event) {
@@ -235,8 +254,26 @@ void StateManager::apply_thing_replicated(const LedgerEvent& event) {
 }
 
 void StateManager::apply_thing_removed(const LedgerEvent& event) {
-    // TODO: Implement thing removal
-    (void)event;
+    auto thing_data_opt = ThingReplicationData::from_bytes(event.data);
+    if (!thing_data_opt) {
+        return;
+    }
+
+    auto thing_it = things_.find(thing_data_opt->content_hash);
+    if (thing_it == things_.end()) {
+        return;
+    }
+
+    thing_it->second.hosts.erase(thing_data_opt->hosting_node);
+    thing_it->second.replication_count = static_cast<uint32_t>(thing_it->second.hosts.size());
+    if (thing_it->second.replication_count == 0) {
+        thing_it->second.is_available = false;
+    }
+
+    auto node_it = nodes_.find(thing_data_opt->hosting_node);
+    if (node_it != nodes_.end()) {
+        node_it->second.hosted_things.erase(thing_data_opt->content_hash);
+    }
 }
 
 void StateManager::apply_reputation_updated(const LedgerEvent& event) {
@@ -478,8 +515,26 @@ StateSnapshot StateManager::get_snapshot() const {
 }
 
 void StateManager::update_node_activity() {
-    // TODO: Mark nodes as inactive based on last activity
-    // This would integrate with PoStake uptime tracking
+    static constexpr uint64_t INACTIVITY_THRESHOLD_SECONDS = 14 * 24 * 60 * 60;
+    const uint64_t now = current_timestamp();
+
+    for (auto& [node_id, state] : nodes_) {
+        if (!state.is_active) {
+            continue;
+        }
+
+        uint64_t last_activity = state.joined_at;
+        const auto events = ledger_.get_events_by_node(node_id);
+        for (const auto& event : events) {
+            if (event.timestamp > last_activity) {
+                last_activity = event.timestamp;
+            }
+        }
+
+        if (now > last_activity && (now - last_activity) > INACTIVITY_THRESHOLD_SECONDS) {
+            state.is_active = false;
+        }
+    }
 }
 
 void StateManager::cleanup_stale_state() {

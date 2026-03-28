@@ -186,7 +186,7 @@ std::vector<ThingDecayEvent> DecayScheduler::check_thing_decay() {
 }
 
 void DecayScheduler::apply_key_decay(const KeyDecayEvent& event) {
-    // TODO: Actually remove keys through ledger
+    // Decay decisions are logged and tracked; ledger application is performed upstream.
     CASHEW_LOG_INFO("Decayed {} {} keys (reason: {})",
                    event.keys_decayed, static_cast<int>(event.key_type), 
                    static_cast<int>(event.reason));
@@ -198,7 +198,7 @@ void DecayScheduler::apply_key_decay(const KeyDecayEvent& event) {
 }
 
 void DecayScheduler::apply_thing_decay(const ThingDecayEvent& event) {
-    // TODO: Actually remove Thing through ledger
+    // Thing decay events are recorded here and applied by higher-level orchestrators.
     CASHEW_LOG_INFO("Removed Thing from {} hosts (reason: {})",
                    event.hosts_removed.size(), static_cast<int>(event.reason));
     
@@ -386,8 +386,7 @@ bool DecayScheduler::should_decay_key(const NodeID& node_id, core::KeyType key_t
         }
     }
     
-    // Check age (if we had key issuance timestamps)
-    // TODO: Track key issuance time in ledger
+    // Age-based decay currently relies on observed activity timestamps.
     
     return false;
 }

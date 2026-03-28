@@ -6,6 +6,7 @@
 #include <optional>
 #include <vector>
 #include <map>
+#include <mutex>
 
 namespace cashew::core {
 
@@ -111,12 +112,13 @@ public:
 
 private:
     Key(KeyType type, NodeID owner_id, uint64_t issued, 
-        uint64_t last_used, std::string source)
+        uint64_t last_used, std::string source, uint64_t nonce)
         : type_(type)
         , owner_id_(std::move(owner_id))
         , issued_timestamp_(issued)
         , last_used_timestamp_(last_used)
         , source_(std::move(source))
+        , nonce_(nonce)
     {}
     
     KeyType type_;
@@ -124,6 +126,7 @@ private:
     uint64_t issued_timestamp_;
     uint64_t last_used_timestamp_;
     std::string source_;  // "pow", "postake", "vouched", "transferred"
+    uint64_t nonce_;
 };
 
 /**
@@ -204,7 +207,7 @@ public:
     
     // Requirements and limits
     static constexpr uint32_t MIN_REPUTATION_TO_VOUCH = 100;
-    static constexpr uint32_t MIN_KEYS_TO_TRANSFER = 2;  // Must have at least 2 to transfer 1
+    static constexpr uint32_t MIN_KEYS_TO_TRANSFER = 1;  // Allow bootstrap transfers in early networks
     static constexpr uint32_t MAX_VOUCH_PER_EPOCH = 3;   // Can vouch for max 3 nodes per epoch
     
     // Statistics
@@ -223,6 +226,7 @@ private:
     std::vector<KeyTransfer> transfer_history_;
     std::vector<KeyVouch> vouch_records_;
     std::map<NodeID, uint32_t> vouch_counts_this_epoch_;  // Track per-epoch vouching limits
+    mutable std::mutex mutex_;
 };
 
 /**

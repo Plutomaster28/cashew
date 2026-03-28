@@ -267,9 +267,13 @@ bool VouchingWorkflow::revoke_vouch(
     );
     
     // Note: This attestation would need to be signed by the voucher's identity
-    // For now, we just mark it in the system
-    
-    // TODO: Mark vouch as inactive in reputation manager
+    // in a full distributed flow. Locally we still enforce vouch revocation state.
+    if (!reputation_mgr_.revoke_vouch(voucher, vouchee)) {
+        return false;
+    }
+
+    // Apply a local denouncement-style penalty immediately so revocation has effect.
+    reputation_mgr_.apply_score_delta(vouchee, attestation.score_delta, attestation.statement);
     
     CASHEW_LOG_INFO("Vouch revoked: {} revokes vouch for {}",
         voucher.to_string().substr(0, 8),
@@ -279,13 +283,16 @@ bool VouchingWorkflow::revoke_vouch(
 }
 
 std::vector<VouchRecord> VouchingWorkflow::get_active_vouches_for(const NodeID& vouchee) const {
-    std::vector<VouchRecord> result;
-    
-    // Search all vouches to find those for this vouchee
-    // This is inefficient but works for now
-    // TODO: Add index in ReputationManager for vouchee lookups
-    
-    return result;
+    auto all_vouches = reputation_mgr_.get_vouches_for(vouchee);
+
+    std::vector<VouchRecord> active;
+    for (const auto& vouch : all_vouches) {
+        if (vouch.still_active) {
+            active.push_back(vouch);
+        }
+    }
+
+    return active;
 }
 
 std::vector<VouchRecord> VouchingWorkflow::get_active_vouches_by(const NodeID& voucher) const {
@@ -373,9 +380,29 @@ VouchingWorkflow::VouchingStats VouchingWorkflow::get_vouching_stats(const NodeI
         }
     }
     
-    // TODO: Count vouches for this node (needs index)
-    // TODO: Calculate average voucher reputation
-    // TODO: Calculate vouching impact score
+    auto vouches_for = reputation_mgr_.get_vouches_for(node);
+    stats.total_vouched_by = static_cast<uint32_t>(vouches_for.size());
+
+    int64_t total_voucher_rep = 0;
+    int32_t total_impact = 0;
+    uint32_t active_received = 0;
+    for (const auto& vouch : vouches_for) {
+        if (!vouch.still_active) {
+            continue;
+        }
+
+        ++active_received;
+        total_voucher_rep += reputation_mgr_.get_reputation(vouch.voucher);
+        total_impact += vouch.calculate_voucher_impact();
+    }
+
+    if (active_received > 0) {
+        stats.average_voucher_reputation =
+            static_cast<float>(total_voucher_rep) / static_cast<float>(active_received);
+    } else {
+        stats.average_voucher_reputation = 0.0f;
+    }
+    stats.vouching_impact_score = static_cast<float>(total_impact);
     
     return stats;
 }
@@ -542,27 +569,58 @@ std::optional<uint32_t> TrustPathFinder::calculate_trust_distance(
 
 std::vector<NodeID> TrustPathFinder::find_bridge_nodes(float min_betweenness) const {
     std::vector<NodeID> bridges;
-    
-    // Calculate betweenness centrality for all nodes
-    // This is computationally expensive for large graphs
-    // TODO: Implement efficient betweenness centrality algorithm
-    
+
+    const auto nodes = graph_.get_all_nodes();
+    for (const auto& node : nodes) {
+        if (calculate_betweenness_centrality(node) >= min_betweenness) {
+            bridges.push_back(node);
+        }
+    }
+
     return bridges;
 }
 
 float TrustPathFinder::calculate_betweenness_centrality(const NodeID& node) const {
-    // Betweenness centrality: fraction of shortest paths that pass through this node
-    // TODO: Implement Brandes' algorithm for efficient calculation
-    
-    return 0.0f;
+    const auto nodes = graph_.get_all_nodes();
+    if (nodes.size() < 3) {
+        return 0.0f;
+    }
+
+    float total_paths = 0.0f;
+    float through_node = 0.0f;
+
+    for (const auto& source : nodes) {
+        for (const auto& target : nodes) {
+            if (source == target || source == node || target == node) {
+                continue;
+            }
+
+            auto shortest_path = find_strongest_path(source, target, 6);
+            if (!shortest_path || shortest_path->size() < 2) {
+                continue;
+            }
+
+            total_paths += 1.0f;
+            if (std::find(shortest_path->begin() + 1, shortest_path->end() - 1, node) != (shortest_path->end() - 1)) {
+                through_node += 1.0f;
+            }
+        }
+    }
+
+    if (total_paths == 0.0f) {
+        return 0.0f;
+    }
+
+    return through_node / total_paths;
 }
 
 std::vector<NodeID> TrustPathFinder::find_trust_hubs(uint32_t min_incoming_edges) const {
     std::map<NodeID, uint32_t> incoming_counts;
-    
-    // Count incoming edges for each node
-    // This requires iterating through all edges
-    // TODO: Implement efficient hub finding
+
+    const auto nodes = graph_.get_all_nodes();
+    for (const auto& node : nodes) {
+        incoming_counts[node] = static_cast<uint32_t>(graph_.get_trusted_by(node).size());
+    }
     
     std::vector<NodeID> hubs;
     for (const auto& [node, count] : incoming_counts) {

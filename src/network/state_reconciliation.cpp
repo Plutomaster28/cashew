@@ -3,6 +3,7 @@
 #include "crypto/blake3.hpp"
 #include <algorithm>
 #include <chrono>
+#include <set>
 
 namespace cashew::network {
 
@@ -46,9 +47,8 @@ std::optional<StateConflict> StateReconciliation::detect_conflict(
     conflict.peer_id = peer_id;
     conflict.detected_at = current_timestamp();
     
-    // Get our events for comparison
-    // Note: This is a simplified version - real implementation would query ledger
-    conflict.local_events = {}; // Would fetch from ledger
+    // Get our events for comparison.
+    conflict.local_events = ledger_.get_all_events();
     conflict.remote_events = peer_events;
     
     // Classify the specific type of conflict
@@ -271,16 +271,15 @@ std::vector<ledger::LedgerEvent> StateReconciliation::find_missing_events(
     const std::vector<ledger::LedgerEvent>& remote_events
 ) {
     std::vector<ledger::LedgerEvent> missing;
-    
-    // Simple implementation: check which remote events we don't have
-    // Real implementation would query ledger's event log
-    
+
+    const auto local_events = ledger_.get_all_events();
+    std::set<Hash256> local_event_ids;
+    for (const auto& event : local_events) {
+        local_event_ids.insert(event.event_id);
+    }
+
     for (const auto& remote_event : remote_events) {
-        // Check if we have this event (by hash or ID)
-        // This is a stub - real implementation would check ledger
-        bool have_event = false; // Would query ledger
-        
-        if (!have_event) {
+        if (local_event_ids.find(remote_event.event_id) == local_event_ids.end()) {
             missing.push_back(remote_event);
         }
     }
@@ -345,13 +344,16 @@ bool StateReconciliation::apply_local_preference(const StateConflict& /*conflict
     return true;
 }
 
-bool StateReconciliation::apply_remote_preference(const StateConflict& /*conflict*/) {
-    // Replace our state with remote
-    // This is a stub - real implementation would update ledger
-    CASHEW_LOG_WARN("Adopting remote state (may lose local events)");
-    
-    // Would call ledger_.reset_to_state(conflict.remote_events);
-    return true; // Stub
+bool StateReconciliation::apply_remote_preference(const StateConflict& conflict) {
+    // Full ledger replacement is intentionally unsupported; attempt additive convergence.
+    CASHEW_LOG_WARN("Adopting remote-preferred state via additive merge");
+
+    if (!apply_merge_both(conflict)) {
+        return false;
+    }
+
+    // Verify whether we converged to the remote view after merge.
+    return ledger_.get_latest_hash() == conflict.remote_hash;
 }
 
 bool StateReconciliation::apply_merge_both(const StateConflict& conflict) {
@@ -361,10 +363,16 @@ bool StateReconciliation::apply_merge_both(const StateConflict& conflict) {
     // Find missing events from remote
     auto missing = find_missing_events(conflict.remote_events);
     
-    // Add missing events to our ledger
-    // Would call ledger_.append_events(missing);
-    
-    return true; // Stub
+    bool all_applied = true;
+    for (const auto& event : missing) {
+        if (!ledger_.add_external_event(event)) {
+            all_applied = false;
+            continue;
+        }
+        state_manager_.apply_event(event);
+    }
+
+    return all_applied;
 }
 
 bool StateReconciliation::apply_highest_work(const StateConflict& conflict) {

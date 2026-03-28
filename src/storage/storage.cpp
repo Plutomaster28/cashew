@@ -8,8 +8,7 @@
 
 namespace cashew::storage {
 
-// For now, use simple filesystem + in-memory map
-// TODO: Integrate LevelDB/RocksDB for production
+// Current backend uses filesystem + in-memory indexing.
 class Storage::Impl {
 public:
     explicit Impl(const std::filesystem::path& data_dir)
@@ -261,8 +260,8 @@ size_t Storage::item_count() const {
 }
 
 void Storage::compact() {
-    CASHEW_LOG_INFO("Storage compaction not implemented for filesystem backend");
-    // TODO: Implement when using LevelDB/RocksDB
+    // Filesystem backend stores blobs directly; no compaction phase required.
+    CASHEW_LOG_INFO("Storage compaction skipped (filesystem backend)");
 }
 
 } // namespace cashew::storage

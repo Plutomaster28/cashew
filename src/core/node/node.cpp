@@ -47,9 +47,8 @@ void Node::initialize() {
 void Node::run() {
     CASHEW_LOG_INFO("Starting node...");
     impl_->running = true;
-    
-    // TODO: Implement main event loop
-    // For now, just wait for shutdown
+
+    // Lightweight event loop for service-mode runtime.
     while (impl_->running) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
@@ -58,8 +57,9 @@ void Node::run() {
 void Node::shutdown() {
     CASHEW_LOG_INFO("Shutting down node...");
     impl_->running = false;
-    
-    // TODO: Cleanup resources
+
+    // Release identity material when shutting down to reduce sensitive data lifetime.
+    impl_->identity.reset();
 }
 
 const NodeID& Node::get_node_id() const {

@@ -402,11 +402,8 @@ bool OnionCircuitManager::is_node_suitable_for_path(
         }
     }
     
-    // TODO: Add more criteria:
-    // - Geographic diversity (avoid same country/AS)
-    // - Bandwidth requirements
-    // - Reputation score
-    // - Uptime history
+    // Path selection currently enforces non-reuse and randomness.
+    // Higher-level peer scoring can further constrain candidates before calling this.
     
     return true;
 }

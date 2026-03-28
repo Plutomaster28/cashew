@@ -4,6 +4,7 @@
 #include "crypto/random.hpp"
 #include <algorithm>
 #include <cstring>
+#include <thread>
 
 namespace cashew::network {
 
@@ -455,19 +456,28 @@ void GossipProtocol::broadcast_message(const GossipMessage& message) {
     messages_sent_ += forward_peers.size();
 }
 
+bool GossipProtocol::send_direct_message(const NodeID& peer_id, const GossipMessage& message) {
+    send_to_peer(peer_id, message);
+    return true;
+}
+
 GossipMessage GossipProtocol::create_peer_announcement(const NodeCapabilities& capabilities) {
     PeerAnnouncement announcement;
     announcement.node_id = local_node_id_;
-    // TODO: Get actual public key
-    announcement.public_key = PublicKey{};
+    announcement.public_key = local_public_key_.value_or(PublicKey{});
     announcement.capabilities = capabilities;
     
     auto now = std::chrono::system_clock::now();
     announcement.timestamp = 
         std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
     
-    // TODO: Sign announcement
-    announcement.signature = Signature{};
+    if (sign_callback_) {
+        bytes signable = announcement.to_bytes();
+        signable.resize(signable.size() - announcement.signature.size());
+        announcement.signature = sign_callback_(signable);
+    } else {
+        announcement.signature = Signature{};
+    }
     
     GossipMessage message;
     message.type = GossipMessageType::PEER_ANNOUNCEMENT;
@@ -494,8 +504,13 @@ GossipMessage GossipProtocol::create_content_announcement(
     announcement.timestamp = 
         std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
     
-    // TODO: Sign announcement
-    announcement.signature = Signature{};
+    if (sign_callback_) {
+        bytes signable = announcement.to_bytes();
+        signable.resize(signable.size() - announcement.signature.size());
+        announcement.signature = sign_callback_(signable);
+    } else {
+        announcement.signature = Signature{};
+    }
     
     GossipMessage message;
     message.type = GossipMessageType::CONTENT_ANNOUNCEMENT;
@@ -632,10 +647,16 @@ void GossipProtocol::invoke_handlers(const GossipMessage& message) {
 }
 
 void GossipProtocol::send_to_peer(const NodeID& peer_id, const GossipMessage& message) {
-    (void)message;
-    // TODO: Actual network sending through SessionManager
-    CASHEW_LOG_DEBUG("Would send gossip to peer {}",
-                    crypto::Blake3::hash_to_hex(peer_id.id));
+    if (send_callback_) {
+        if (!send_callback_(peer_id, message)) {
+            CASHEW_LOG_WARN("Failed to send gossip message to peer {}",
+                           crypto::Blake3::hash_to_hex(peer_id.id).substr(0, 8));
+            return;
+        }
+    } else {
+        CASHEW_LOG_DEBUG("No gossip send callback set; dropping message to peer {}",
+                        crypto::Blake3::hash_to_hex(peer_id.id).substr(0, 8));
+    }
     ++messages_sent_;
 }
 
@@ -650,13 +671,29 @@ GossipScheduler::GossipScheduler(GossipProtocol& protocol)
       last_state_update_(0) {
 }
 
+GossipScheduler::~GossipScheduler() {
+    stop();
+}
+
 void GossipScheduler::start() {
+    if (running_) {
+        return;
+    }
+
     running_ = true;
+    scheduler_thread_ = std::thread(&GossipScheduler::run_scheduler_loop, this);
     CASHEW_LOG_INFO("Started gossip scheduler");
 }
 
 void GossipScheduler::stop() {
+    if (!running_) {
+        return;
+    }
+
     running_ = false;
+    if (scheduler_thread_.joinable()) {
+        scheduler_thread_.join();
+    }
     CASHEW_LOG_INFO("Stopped gossip scheduler");
 }
 
@@ -672,6 +709,27 @@ void GossipScheduler::announce_peer(const NodeCapabilities& capabilities) {
 void GossipScheduler::announce_content(const ContentHash& content_hash, uint64_t content_size) {
     auto message = protocol_.create_content_announcement(content_hash, content_size);
     protocol_.broadcast_message(message);
+}
+
+void GossipScheduler::run_scheduler_loop() {
+    while (running_) {
+        const uint64_t now = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+
+        if (last_peer_announcement_ == 0 ||
+            now - last_peer_announcement_ >= static_cast<uint64_t>(peer_announcement_interval_.count())) {
+            NodeCapabilities default_caps;
+            announce_peer(default_caps);
+        }
+
+        if (last_state_update_ == 0 ||
+            now - last_state_update_ >= static_cast<uint64_t>(state_update_interval_.count())) {
+            protocol_.cleanup_old_seen_messages();
+            last_state_update_ = now;
+        }
+
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
 }
 
 } // namespace cashew::network

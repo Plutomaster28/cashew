@@ -63,33 +63,38 @@ target_link_libraries(test_session
         GTest::gtest_main
 )
 
-# Test for ledger and reputation (temporarily disabled due to compilation errors)
-# add_executable(test_ledger_reputation test_ledger_reputation.cpp)
-# target_link_libraries(test_ledger_reputation
-#     PRIVATE
-#         cashew_core
-#         GTest::gtest
-#         GTest::gtest_main
-# )
+# Test for network
+add_executable(test_network test_network.cpp)
+target_link_libraries(test_network
+    PRIVATE
+        cashew_core
+        GTest::gtest
+        GTest::gtest_main
+)
 
-# Test for security (temporarily disabled due to compilation errors)
-# add_executable(test_security test_security.cpp)
-# target_link_libraries(test_security
-#     PRIVATE
-#         cashew_core
-#         GTest::gtest
-#         GTest::gtest_main
-# )
+add_executable(test_ledger_reputation test_ledger_reputation.cpp)
+target_link_libraries(test_ledger_reputation
+    PRIVATE
+        cashew_core
+        GTest::gtest
+        GTest::gtest_main
+)
 
-# Test for gateway
-# Temporarily disabled - needs API updates for Linux compatibility
-# add_executable(test_gateway test_gateway.cpp)
-# target_link_libraries(test_gateway
-#     PRIVATE
-#         cashew_core
-#         GTest::gtest
-#         GTest::gtest_main
-# )
+add_executable(test_security test_security.cpp)
+target_link_libraries(test_security
+    PRIVATE
+        cashew_core
+        GTest::gtest
+        GTest::gtest_main
+)
+
+add_executable(test_gateway test_gateway.cpp)
+target_link_libraries(test_gateway
+    PRIVATE
+        cashew_core
+        GTest::gtest
+        GTest::gtest_main
+)
 
 # Test for Thing
 add_executable(test_thing test_thing.cpp)
@@ -108,8 +113,8 @@ add_test(NAME StorageTests COMMAND test_storage)
 add_test(NAME PoWTests COMMAND test_pow)
 add_test(NAME KeysTests COMMAND test_keys)
 add_test(NAME NetworkTests COMMAND test_network)
-# add_test(NAME LedgerReputationTests COMMAND test_ledger_reputation)  # Temporarily disabled
-# add_test(NAME SecurityTests COMMAND test_security)  # Temporarily disabled
-# add_test(NAME GatewayTests COMMAND test_gateway)  # Temporarily disabled - needs API updates
+add_test(NAME LedgerReputationTests COMMAND test_ledger_reputation)
+add_test(NAME SecurityTests COMMAND test_security)
+add_test(NAME GatewayTests COMMAND test_gateway)
 add_test(NAME ThingTests COMMAND test_thing)
 

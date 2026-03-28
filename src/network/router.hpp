@@ -182,6 +182,11 @@ public:
     // Callbacks
     using ContentReceivedCallback = std::function<void(const ContentHash&, const std::vector<uint8_t>&)>;
     using ContentNotFoundCallback = std::function<void(const ContentHash&)>;
+    using LocalContentFetchCallback = std::function<std::optional<std::vector<uint8_t>>(const ContentHash&)>;
+    using ResponseSignCallback = std::function<Signature(const ContentResponse&)>;
+    using ResponseVerifyCallback = std::function<bool(const ContentResponse&)>;
+    using RequestSendCallback = std::function<bool(const NodeID&, const ContentRequest&)>;
+    using ResponseSendCallback = std::function<bool(const NodeID&, const ContentResponse&)>;
     
     void set_content_received_callback(ContentReceivedCallback callback) {
         content_received_callback_ = callback;
@@ -189,6 +194,26 @@ public:
     
     void set_content_not_found_callback(ContentNotFoundCallback callback) {
         content_not_found_callback_ = callback;
+    }
+
+    void set_local_content_fetch_callback(LocalContentFetchCallback callback) {
+        local_content_fetch_callback_ = callback;
+    }
+
+    void set_response_sign_callback(ResponseSignCallback callback) {
+        response_sign_callback_ = callback;
+    }
+
+    void set_response_verify_callback(ResponseVerifyCallback callback) {
+        response_verify_callback_ = callback;
+    }
+
+    void set_request_send_callback(RequestSendCallback callback) {
+        request_send_callback_ = std::move(callback);
+    }
+
+    void set_response_send_callback(ResponseSendCallback callback) {
+        response_send_callback_ = std::move(callback);
     }
     
     // Statistics
@@ -215,6 +240,11 @@ private:
     // Callbacks
     ContentReceivedCallback content_received_callback_;
     ContentNotFoundCallback content_not_found_callback_;
+    LocalContentFetchCallback local_content_fetch_callback_;
+    ResponseSignCallback response_sign_callback_;
+    ResponseVerifyCallback response_verify_callback_;
+    RequestSendCallback request_send_callback_;
+    ResponseSendCallback response_send_callback_;
     
     // Statistics
     uint64_t requests_sent_;
@@ -242,7 +272,7 @@ private:
         const std::vector<uint8_t>& encrypted_layer
     );
     
-    // TODO: Actual network sending (will integrate with SessionManager)
+    // Transport integration points (wired by higher-level networking components).
     void send_request_to_peer(const NodeID& peer_id, const ContentRequest& request);
     void send_response_to_peer(const NodeID& peer_id, const ContentResponse& response);
 };

@@ -195,7 +195,7 @@ private:
 /**
  * TPMKeyStorage - TPM 2.0 hardware storage (Linux/Windows)
  * 
- * NOTE: This is a stub implementation. Full TPM support requires:
+ * NOTE: TPM support is optional and depends on platform backends.
  * - tpm2-tss library
  * - TPM 2.0 device
  * - Platform-specific initialization

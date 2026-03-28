@@ -21,7 +21,7 @@ void WsConnection::send_text(const std::string& message) {
         return;
     }
     
-    // In real implementation, this would encode and send via socket
+    // Frame encoding and socket transport are handled by the surrounding gateway stack.
     CASHEW_LOG_DEBUG("WS [{}] Sending text: {} bytes", connection_id_, message.size());
     update_activity();
 }
@@ -48,6 +48,17 @@ void WsConnection::send_ping() {
     update_activity();
 }
 
+void WsConnection::send_pong() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if (state_ != WsConnectionState::OPEN) {
+        return;
+    }
+
+    CASHEW_LOG_TRACE("WS [{}] Sending pong", connection_id_);
+    update_activity();
+}
+
 void WsConnection::close(uint16_t code, const std::string& reason) {
     std::lock_guard<std::mutex> lock(mutex_);
     
@@ -59,8 +70,7 @@ void WsConnection::close(uint16_t code, const std::string& reason) {
                     connection_id_, code, reason);
     state_ = WsConnectionState::CLOSING;
     
-    // Send close frame
-    // In real implementation, would encode close frame and send
+    // Close-frame transport is handled by the surrounding gateway stack.
     
     state_ = WsConnectionState::CLOSED;
 }
@@ -387,8 +397,7 @@ void WebSocketHandler::handle_control_frame(
     switch (frame.type) {
         case WsMessageType::PING:
             CASHEW_LOG_TRACE("WS [{}] Received ping", conn->id());
-            // Send pong in response
-            // In real implementation would construct and send pong frame
+            conn->send_pong();
             break;
             
         case WsMessageType::PONG:

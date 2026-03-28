@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>miyamii.net :: welcome</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+1+Code:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap');
+
+  :root {
+    --bg: #ffffee;
+    --panel: #ffffff;
+    --border: #aaaaaa;
+    --border-dark: #888888;
+    --accent: #aa0000;
+    --accent2: #0055aa;
+    --accent3: #007700;
+    --link: #0000ee;
+    --link-visited: #551a8b;
+    --thread-bg: #f0e0d6;
+    --thread-border: #d9bfb7;
+    --reply-bg: #f0f8ff;
+    --reply-border: #9ab0c8;
+    --header-bg: #aa0000;
+    --header-text: #ffffff;
+    --tab-active: #aa0000;
+    --tab-inactive: #dddddd;
+    --marquee-bg: #000000;
+    --marquee-text: #00ff00;
+    --sage: #789922;
+    --trip: #800000;
+    --num: #aa0000;
+    --footer-bg: #eeeeee;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Noto Sans JP', 'MS PGothic', Osaka, sans-serif;
+    font-size: 13px;
+    color: #333;
+    min-height: 100vh;
+  }
+
+  /* ====== MARQUEE TOP ====== */
+  .marquee-bar {
+    background: var(--marquee-bg);
+    color: var(--marquee-text);
+    font-family: 'M PLUS 1 Code', 'Courier New', monospace;
+    font-size: 11px;
+    padding: 3px 0;
+    overflow: hidden;
+    white-space: nowrap;
+    border-bottom: 2px solid #00ff00;
+  }
+  .marquee-inner {
+    display: inline-block;
+    animation: scroll-left 40s linear infinite;
+  }
+  @keyframes scroll-left {
+    from { transform: translateX(100vw); }
+    to { transform: translateX(-100%); }
+  }
+
+  /* ====== SITE HEADER ====== */
+  .site-header {
+    background: var(--header-bg);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid #660000;
+  }
+  .site-title {
+    font-family: 'DotGothic16', monospace;
+    font-size: 22px;
+    color: #fff;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px #660000;
+  }
+  .site-title span {
+    color: #ffdd00;
+  }
+  .site-subtitle {
+    font-size: 10px;
+    color: #ffaaaa;
+    font-family: 'M PLUS 1 Code', monospace;
+    margin-top: 2px;
+  }
+  .header-stats {
+    font-family: 'M PLUS 1 Code', monospace;
+    font-size: 10px;
+    color: #ffdddd;
+    text-align: right;
+  }
+  .header-stats span {
+    color: #ffff00;
+    font-weight: bold;
+  }
+
+  /* ====== NAV TABS ====== */
+  .nav-tabs {
+    display: flex;
+    background: #cccccc;
+    border-bottom: 2px solid var(--border-dark);
+    padding: 0 8px;
+    gap: 2px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    background: var(--tab-inactive);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    margin-top: 4px;
+    border-radius: 4px 4px 0 0;
+    color: #333;
+    transition: background 0.1s;
+  }
+  .tab-btn:hover { background: #eeeeee; }
+  .tab-btn.active {
+    background: var(--bg);
+    border-color: var(--border-dark);
+    color: var(--accent);
+    font-weight: bold;
+  }
+  .tab-btn.special {
+    color: var(--accent2);
+    font-style: italic;
+  }
+
+  /* ====== MAIN LAYOUT ====== */
+  .main-wrap {
+    display: flex;
+    gap: 0;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 8px;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .left-col { width: 170px; flex-shrink: 0; }
+  .center-col { flex: 1; min-width: 0; }
+
+  /* ====== SIDEBAR ====== */
+  .sidebar-box {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    margin-bottom: 8px;
+  }
+  .sidebar-title {
+    background: #336699;
+    color: #fff;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 3px 6px;
+    font-family: 'M PLUS 1 Code', monospace;
+    letter-spacing: 1px;
+  }
+  .sidebar-content {
+    padding: 6px;
+    font-size: 11px;
+    line-height: 1.7;
+  }
+  .sidebar-content a {
+    color: var(--link);
+    text-decoration: none;
+    display: block;
+  }
+  .sidebar-content a:hover { text-decoration: underline; color: var(--accent); }
+  .sidebar-content a::before { content: ">> "; color: var(--accent); }
+
+  .pixel-hr {
+    border: none;
+    border-top: 1px dashed var(--border);
+    margin: 4px 0;
+  }
+
+  .sidebar-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 9px;
+    padding: 1px 4px;
+    margin: 1px;
+    font-family: monospace;
+  }
+  .sidebar-badge.blue { background: var(--accent2); }
+  .sidebar-badge.green { background: var(--accent3); }
+
+  .kaomoji-box {
+    text-align: center;
+    font-size: 13px;
+    padding: 6px;
+    line-height: 2;
+    color: #555;
+  }
+
+  /* ====== TABS CONTENT ====== */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ====== BOARD HEADER ====== */
+  .board-header {
+    background: var(--thread-bg);
+    border: 1px solid var(--thread-border);
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #555;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .board-header strong { color: var(--accent); font-family: 'DotGothic16', monospace; font-size: 14px; }
+
+  /* ====== POST / THREAD STYLES ====== */
+  .thread { margin-bottom: 12px; }
+  .post {
+    border: 1px solid var(--thread-border);
+    background: var(--panel);
+    margin-bottom: 2px;
+  }
+  .post-header {
+    background: var(--thread-bg);
+    padding: 3px 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    font-size: 11px;
+    border-bottom: 1px solid var(--thread-border);
+  }
+  .post-num { color: var(--num); font-weight: bold; font-family: monospace; }
+  .post-name { font-weight: bold; color: #000080; }
+  .post-trip { color: var(--trip); font-family: monospace; font-size: 10px; }
+  .post-date { color: #888; font-size: 10px; font-family: monospace; }
+  .post-id { color: #999; font-size: 10px; font-family: monospace; background: #eee; padding: 0 3px; }
+  .post-body {
+    padding: 6px 10px;
+    line-height: 1.7;
+    font-size: 13px;
+    word-break: break-word;
+  }
+  .post-body .quote { color: var(--sage); }
+  .post-body .greentext { color: var(--sage); }
+  .post-body a { color: var(--link); }
+
+  /* Replies */
+  .reply {
+    background: var(--reply-bg);
+    border: 1px solid var(--reply-border);
+    margin-bottom: 2px;
+    margin-left: 20px;
+  }
+  .reply .post-header { background: #d8e8f4; border-color: var(--reply-border); }
+
+  /* ====== FORM ====== */
+  .post-form {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    padding: 8px 12px;
+    margin-bottom: 10px;
+  }
+  .post-form h3 {
+    font-size: 12px;
+    color: var(--accent);
+    font-family: 'DotGothic16', monospace;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+  }
+  .form-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    gap: 6px;
+  }
+  .form-row label {
+    width: 80px;
+    font-size: 11px;
+    color: #555;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .form-row input, .form-row textarea, .form-row select {
+    border: 1px solid var(--border);
+    font-size: 12px;
+    font-family: 'Noto Sans JP', sans-serif;
+    padding: 3px 5px;
+    background: #fff;
+    color: #333;
+  }
+  .form-row input { width: 200px; }
+  .form-row textarea { width: 100%; height: 70px; resize: vertical; }
+  .form-row input:focus, .form-row textarea:focus {
+    outline: 1px solid var(--accent2);
+    background: #f8f8ff;
+  }
+  .submit-btn {
+    background: var(--accent);
+    color: #fff;
+    border: 1px solid #660000;
+    padding: 4px 16px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'DotGothic16', monospace;
+    letter-spacing: 1px;
+  }
+  .submit-btn:hover { background: #cc0000; }
+  .submit-btn:active { background: #880000; }
+
+  /* ====== POSTS CONTAINER ====== */
+  #posts-container .reply { margin-left: 0; }
+
+  /* ====== PROJECT TABS ====== */
+  .project-section {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    margin-bottom: 10px;
+  }
+  .project-header {
+    background: #004488;
+    color: #fff;
+    padding: 5px 10px;
+    font-family: 'DotGothic16', monospace;
+    font-size: 14px;
+    letter-spacing: 1px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .project-header .tag {
+    font-size: 9px;
+    background: #ffdd00;
+    color: #000;
+    padding: 1px 5px;
+    font-family: monospace;
+    font-weight: bold;
+  }
+  .project-body {
+    padding: 10px;
+    font-size: 12px;
+    line-height: 1.8;
+  }
+  .project-body h4 {
+    color: var(--accent2);
+    margin: 8px 0 4px;
+    font-size: 12px;
+    border-left: 3px solid var(--accent2);
+    padding-left: 6px;
+  }
+  .project-body code {
+    background: #f0f0f0;
+    font-family: 'M PLUS 1 Code', monospace;
+    font-size: 11px;
+    padding: 1px 4px;
+    border: 1px solid #ddd;
+  }
+  .spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin: 6px 0;
+  }
+  .spec-table td, .spec-table th {
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+  }
+  .spec-table th {
+    background: #e8e8e8;
+    font-weight: bold;
+    color: #333;
+    text-align: left;
+  }
+  .spec-table tr:nth-child(even) td { background: #f8f8f8; }
+
+  /* ASCII art */
+  .ascii-box {
+    background: #111;
+    color: #0f0;
+    font-family: 'M PLUS 1 Code', 'Courier New', monospace;
+    font-size: 11px;
+    padding: 10px;
+    line-height: 1.3;
+    overflow-x: auto;
+    margin: 6px 0;
+    white-space: pre;
+  }
+
+  /* ====== EASTER EGG TAB ====== */
+  .secret-box {
+    border: 2px solid #0f0;
+    background: #000;
+    color: #0f0;
+    font-family: 'M PLUS 1 Code', monospace;
+    font-size: 12px;
+    padding: 16px;
+    line-height: 1.8;
+  }
+  .secret-box h2 { color: #ff0; font-size: 16px; margin-bottom: 10px; }
+  .secret-box .blink { animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .secret-box a { color: #0ff; }
+  .secret-box .cyan { color: #0ff; }
+  .secret-box .yellow { color: #ff0; }
+  .secret-box .red { color: #f00; }
+  .secret-box .white { color: #fff; }
+
+  /* ====== ABOUT TAB ====== */
+  .about-box {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  .about-box h3 {
+    color: var(--accent);
+    font-family: 'DotGothic16', monospace;
+    font-size: 15px;
+    margin-bottom: 8px;
+    border-bottom: 1px dashed var(--border);
+    padding-bottom: 4px;
+  }
+  .profile-grid {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+    background: #ffe0e0;
+    border: 2px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: #c00;
+  }
+  .profile-info { font-size: 12px; line-height: 1.9; }
+  .profile-info .field { color: #888; }
+  .profile-info .val { color: #333; font-weight: bold; }
+
+  .interest-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .chip {
+    background: #e8f0ff;
+    border: 1px solid #aabbdd;
+    color: #334488;
+    font-size: 10px;
+    padding: 2px 7px;
+    font-family: monospace;
+  }
+  .chip.red { background: #ffe8e8; border-color: #ddaabb; color: #882233; }
+  .chip.green { background: #e8ffe8; border-color: #aaddaa; color: #224422; }
+
+  /* ====== FOOTER ====== */
+  .site-footer {
+    background: var(--footer-bg);
+    border-top: 2px solid var(--border);
+    text-align: center;
+    padding: 8px;
+    font-size: 10px;
+    color: #888;
+    font-family: 'M PLUS 1 Code', monospace;
+    margin-top: 16px;
+  }
+  .site-footer a { color: var(--link); }
+
+  /* ====== MISC ====== */
+  .notice-bar {
+    background: #ffffc0;
+    border: 1px solid #cccc00;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: #555;
+    margin-bottom: 8px;
+  }
+  .notice-bar strong { color: var(--accent); }
+
+  .under-construction {
+    text-align: center;
+    padding: 20px;
+    color: #999;
+    font-family: 'DotGothic16', monospace;
+    font-size: 16px;
+  }
+
+  .hit-counter {
+    font-family: 'M PLUS 1 Code', monospace;
+    font-size: 18px;
+    background: #000;
+    color: #ff0;
+    padding: 2px 8px;
+    letter-spacing: 4px;
+    display: inline-block;
+  }
+
+  @media (max-width: 600px) {
+    .main-wrap { flex-direction: column; }
+    .left-col { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- MARQUEE TOP -->
+<div class="marquee-bar">
+  <span class="marquee-inner">
+    ★ welcome to miyamii.net ★ :: STEM festival 2025 :: cashew network protocol demo :: seabird ISA :: PELAGE project :: sign the guestbook! ★ 
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    ようこそ miyamii.net へ ★ distributed p2p network node :: custom processor architecture :: fursuit design software :: ask me anything! ★
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    [ visitors today: <span id="marquee-count">??</span> ] :: last updated: today :: best viewed in any browser ★
+  </span>
+</div>
+
+<!-- SITE HEADER -->
+<div class="site-header">
+  <div>
+    <div class="site-title">miyamii<span>.net</span></div>
+    <div class="site-subtitle">// personal tech lab &amp; passion project showcase</div>
+  </div>
+  <div class="header-stats">
+    <div>total posts: <span id="total-post-count">3</span></div>
+    <div>online: <span id="online-count">1</span></div>
+    <div>since: <span>2025</span></div>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs">
+  <button class="tab-btn active" onclick="switchTab('guestbook', this)">📋 /guestbook/</button>
+  <button class="tab-btn" onclick="switchTab('cashew', this)">🌐 /cashew/</button>
+  <button class="tab-btn" onclick="switchTab('seabird', this)">🔧 /seabird/</button>
+  <button class="tab-btn" onclick="switchTab('about', this)">🐟 /about/</button>
+  <button class="tab-btn special" onclick="switchTab('pelage', this)">🐇 /pelage/ [NEW]</button>
+  <button class="tab-btn special" id="secret-tab-btn" onclick="switchTab('secret', this)" style="display:none">💀 /dev/null/</button>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="main-wrap">
+
+  <!-- SIDEBAR -->
+  <div class="left-col">
+    <div class="sidebar-box">
+      <div class="sidebar-title">[[ LINKS ]]</div>
+      <div class="sidebar-content">
+        <a href="#" onclick="switchTab('cashew');return false;">Cashew Network</a>
+        <a href="#" onclick="switchTab('seabird');return false;">SeaBird ISA</a>
+        <a href="#" onclick="switchTab('pelage');return false;">PELAGE Project</a>
+        <a href="#" onclick="switchTab('guestbook');return false;">Sign Guestbook!</a>
+        <hr class="pixel-hr">
+        <a href="https://github.com" target="_blank">GitHub ↗</a>
+      </div>
+    </div>
+
+    <div class="sidebar-box">
+      <div class="sidebar-title">[[ TECH STACK ]]</div>
+      <div class="sidebar-content">
+        <div style="line-height:2">
+          <span class="sidebar-badge">SystemVerilog</span>
+          <span class="sidebar-badge blue">Verilator</span>
+          <span class="sidebar-badge green">C++</span>
+          <span class="sidebar-badge">Rust</span>
+          <span class="sidebar-badge blue">Perl</span>
+          <span class="sidebar-badge green">KiCad</span>
+          <span class="sidebar-badge">ASM</span>
+          <span class="sidebar-badge blue">Haskell</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-box">
+      <div class="sidebar-title">[[ HIT COUNTER ]]</div>
+      <div class="sidebar-content" style="text-align:center; padding: 8px 4px;">
+        <div class="hit-counter" id="hit-counter">000042</div>
+        <div style="font-size:10px; color:#888; margin-top:4px;">visitors since 2025</div>
+      </div>
+    </div>
+
+    <div class="sidebar-box">
+      <div class="sidebar-title">[[ MOOD ]]</div>
+      <div class="kaomoji-box">
+        (｀・ω・´)<br>
+        building stuff<br>
+        <span style="font-size:10px;color:#999;">★ currently: coding</span>
+      </div>
+    </div>
+
+    <div class="sidebar-box">
+      <div class="sidebar-title">[[ STATUS ]]</div>
+      <div class="sidebar-content" style="font-size:10px; line-height:2;">
+        <span id="cashew-status-dot" style="color:green">●</span> Cashew: <span id="cashew-status-text">LIVE</span><br>
+        <span style="color:orange">●</span> Clione: WIP<br>
+        <span style="color:orange">●</span> PELAGE: WIP<br>
+        <span style="color:red">●</span> Sleep: OFFLINE
+      </div>
+    </div>
+
+    <div class="sidebar-box">
+      <div class="sidebar-title">[[ TIP ]]</div>
+      <div class="sidebar-content" style="font-size:10px; color:#555; line-height:1.8;">
+        try typing<br>
+        <code style="background:#eee;padding:1px 3px;font-size:10px;">↑↑↓↓←→←→</code><br>
+        on the keyboard<br>
+        (╭☞´∀｀)╭☞
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER CONTENT -->
+  <div class="center-col">
+
+    <!-- GUESTBOOK TAB -->
+    <div id="tab-guestbook" class="tab-content active">
+      <div class="board-header">
+        <div><strong>/guestbook/ — miyamii.net</strong> :: leave a message! say hi! talk tech!</div>
+        <div style="font-size:11px;color:#888">[ <span id="post-count-display">3</span> posts ]</div>
+      </div>
+
+      <div class="notice-bar">
+        <strong>★ STEM Festival 2025 ★</strong> — You're looking at a live demo of miyamii.net! 
+        This page showcases the <strong>Cashew Network Protocol</strong> and other projects. 
+        Sign the guestbook and say hi! (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧
+      </div>
+
+      <!-- POST FORM -->
+      <div class="post-form">
+        <h3>[ Post a message ]</h3>
+        <div class="form-row">
+          <label>Name</label>
+          <input type="text" id="post-name" placeholder="Anonymous" maxlength="30">
+        </div>
+        <div class="form-row">
+          <label>Subject</label>
+          <input type="text" id="post-subject" placeholder="STEM Festival visitor" maxlength="50">
+        </div>
+        <div class="form-row" style="align-items:flex-start">
+          <label style="padding-top:3px">Comment</label>
+          <textarea id="post-body" placeholder="Write something! Ask about Cashew Network, SeaBird ISA, or just say hi~"></textarea>
+        </div>
+        <div class="form-row">
+          <label></label>
+          <button class="submit-btn" onclick="submitPost()">[ Post Reply ]</button>
+          <span style="font-size:10px;color:#999;margin-left:8px;">no account needed!</span>
+        </div>
+      </div>
+
+      <!-- SEEDED POSTS -->
+      <div id="posts-container">
+
+        <div class="thread">
+          <div class="post">
+            <div class="post-header">
+              <span class="post-num">&gt;&gt;1</span>
+              <span class="post-name">miyamii</span>
+              <span class="post-trip">!OP/miyamii##</span>
+              <span class="post-date">2025/xx/xx(Fri) 00:00:00</span>
+              <span class="post-id">ID:OP0001</span>
+            </div>
+            <div class="post-body">
+              Welcome to miyamii.net!! ヽ(・∀・)ﾉ<br><br>
+              I'm an incoming EE student at UT Dallas and this is my personal project showcase site.
+              Today I'm showing off <strong>Cashew Network</strong> — a custom P2P distributed network protocol I built from scratch.<br><br>
+              <span class="quote">&gt; ask me anything about the tech</span><br>
+              <span class="quote">&gt; or just sign the guestbook and say hi!</span><br><br>
+              Other projects on display: SeaBird ISA / Clione processor architecture, and PELAGE (fursuit design software don't ask lol)<br><br>
+              <em>sage: no</em>
+            </div>
+          </div>
+        </div>
+
+        <div class="thread">
+          <div class="post reply">
+            <div class="post-header">
+              <span class="post-num">&gt;&gt;2</span>
+              <span class="post-name">Anonymous</span>
+              <span class="post-date">2025/xx/xx(Fri) 00:01:12</span>
+              <span class="post-id">ID:SEED01</span>
+            </div>
+            <div class="post-body">
+              <span class="quote">&gt;&gt;1</span><br>
+              wait you built your OWN network protocol?? as a high schooler?? that's insane 
+            </div>
+          </div>
+        </div>
+
+        <div class="thread">
+          <div class="post reply">
+            <div class="post-header">
+              <span class="post-num">&gt;&gt;3</span>
+              <span class="post-name">miyamii</span>
+              <span class="post-trip">!OP/miyamii##</span>
+              <span class="post-date">2025/xx/xx(Fri) 00:02:45</span>
+              <span class="post-id">ID:OP0001</span>
+            </div>
+            <div class="post-body">
+              <span class="quote">&gt;&gt;2</span><br>
+              haha yeah!! it's called Cashew Network — P2P node binary in C++ with a Perl demo server.
+              check the /cashew/ tab for the full spec (｀・ω・´)<br><br>
+              also building a custom processor ISA (SeaBird) and like three other things simultaneously. 
+              sleep is a myth
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CASHEW NETWORK TAB -->
+    <div id="tab-cashew" class="tab-content">
+      <div class="project-section">
+        <div class="project-header">
+          ★ CASHEW NETWORK PROTOCOL
+          <span class="tag">v0.1-alpha</span>
+        </div>
+        <div class="project-body">
+          <p>Cashew Network is a custom peer-to-peer distributed network protocol and node implementation. 
+          The goal is a lightweight, extensible P2P infrastructure built from scratch without relying on existing frameworks like libp2p.</p>
+
+          <div class="ascii-box">
+    ╔══════════════════════════════════╗
+    ║      CASHEW NETWORK TOPOLOGY     ║
+    ╠══════════════════════════════════╣
+    ║                                  ║
+    ║   [Node A] ←──────→ [Node B]    ║
+    ║      ↑                  ↑        ║
+    ║      └──────→ [Node C] ─┘        ║
+    ║                  ↑               ║
+    ║             [Node D] ...         ║
+    ║                                  ║
+    ║   each node = peer + router      ║
+    ╚══════════════════════════════════╝</div>
+
+          <h4>// Architecture</h4>
+          <p>The node binary is written in <code>C++</code> and handles peer discovery, message routing, and protocol negotiation.
+          A <code>Perl</code> demo server (<code>server.pl</code>) serves as a bootstrap/rendezvous point for new nodes joining the network.</p>
+
+          <table class="spec-table">
+            <tr><th>Component</th><th>Language</th><th>Status</th></tr>
+            <tr><td>Node binary</td><td>C++</td><td>✅ Working</td></tr>
+            <tr><td>Demo server</td><td>Perl (server.pl)</td><td>✅ Working</td></tr>
+            <tr><td>Peer discovery</td><td>—</td><td>🔧 WIP</td></tr>
+            <tr><td>DHT routing</td><td>—</td><td>📋 Planned</td></tr>
+            <tr><td>Encryption layer</td><td>—</td><td>📋 Planned</td></tr>
+          </table>
+
+          <h4>// Why Cashew?</h4>
+          <p>Because cashews are technically drupes, not nuts. Subverting expectations. Just like a high schooler building a custom network protocol. 
+          Also I just like the name. (ᵔᴥᵔ)</p>
+
+          <h4>// Message Format</h4>
+          <div class="ascii-box">
+  [ CASHEW PACKET STRUCTURE ]
+  
+  ┌─────────┬──────────┬──────────┬──────────────┐
+  │ MAGIC   │ VERSION  │ MSG_TYPE │ PAYLOAD_LEN  │
+  │ 4 bytes │ 1 byte   │ 1 byte   │ 4 bytes      │
+  ├─────────┴──────────┴──────────┴──────────────┤
+  │ PAYLOAD (variable)                            │
+  └───────────────────────────────────────────────┘</div>
+
+          <h4>// Goals</h4>
+          <ul style="margin-left:20px; line-height:2; font-size:12px;">
+            <li>Fully decentralized — no single point of failure</li>
+            <li>Low overhead, suitable for embedded / low-power nodes</li>
+            <li>Eventually: run on custom SeaBird hardware</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEABIRD TAB -->
+    <div id="tab-seabird" class="tab-content">
+      <div class="project-section">
+        <div class="project-header">
+          ★ SEABIRD ISA + CLIONE PROCESSOR
+          <span class="tag">research-grade</span>
+        </div>
+        <div class="project-body">
+          <p>SeaBird is a custom hybrid CISC/RISC instruction set architecture (ISA). It powers a family of three custom processor designs named after sea creatures from YonKaGor's animations.</p>
+
+          <table class="spec-table">
+            <tr><th>Processor</th><th>Target</th><th>ISA</th><th>Node</th></tr>
+            <tr><td>🐠 Clownfish</td><td>Performance</td><td>RISC-V</td><td>130nm</td></tr>
+            <tr><td>🐟 Tetra</td><td>First SeaBird</td><td>SeaBird</td><td>TBD</td></tr>
+            <tr><td>❄️ Clione</td><td>Throughput</td><td>SeaBird</td><td>Wide superscalar</td></tr>
+          </table>
+
+          <h4>// Clione Architecture Highlights</h4>
+          <div class="ascii-box">
+  [ CLIONE CHIP LAYOUT ]
+  
+  ┌─────────────────────────────────────┐
+  │           CLIONE DIE                │
+  │                                     │
+  │  ┌──────────────┐  ┌─────────────┐ │
+  │  │  MAIN CORES  │  │ TRANSLATION │ │
+  │  │  (SeaBird)   │  │  CHIPLET    │ │
+  │  │              │  │  x86/ARM/   │ │
+  │  │  Wide super- │  │  RISC-V     │ │
+  │  │  scalar exec │  │  → SeaBird  │ │
+  │  └──────┬───────┘  └──────┬──────┘ │
+  │         └────────┬─────────┘        │
+  │         ┌────────┴────────┐         │
+  │         │ CACHE-COHERENT  │         │
+  │         │   INTERCONNECT  │         │
+  │         │ (Infinity-style)│         │
+  │         └─────────────────┘         │
+  └─────────────────────────────────────┘</div>
+
+          <h4>// Key Features</h4>
+          <ul style="margin-left:20px; line-height:2; font-size:12px;">
+            <li><strong>FET (Fast Execution Technology)</strong> — per-unit dynamic clock boosting, self-characterizes at boot time</li>
+            <li><strong>Dynamic Binary Translation</strong> — run x86, ARM, and RISC-V code natively via translation chiplet</li>
+            <li><strong>Cache-coherent chiplet interconnect</strong> — modeled on AMD Infinity Fabric</li>
+            <li><strong>RISC-V native compat mode</strong> built into SeaBird encoding</li>
+          </ul>
+
+          <h4>// Toolchain</h4>
+          <p>All verification done with <code>Verilator</code> + <code>SystemVerilog</code> (commercial EDA tools cost $$$ lol).
+          Bootloader written in custom <code>seabird_boot.asm</code> — handles reset vector, GDT/IDT, paging, kernel handoff.</p>
+
+          <p style="color:#888;font-size:11px;margin-top:8px;">
+            ★ Named after sea creatures from YonKaGor's animations. Yes this is a lore thing. No I will not elaborate further. (´▽｀)
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABOUT TAB -->
+    <div id="tab-about" class="tab-content">
+      <div class="about-box">
+        <h3>[ about :: miyamii ]</h3>
+        <div class="profile-grid">
+          <div class="profile-avatar">🐟</div>
+          <div class="profile-info">
+            <span class="field">handle: </span><span class="val">miyamii</span><br>
+            <span class="field">status: </span><span class="val">incoming UTD EE student</span><br>
+            <span class="field">major: </span><span class="val">Electrical Engineering</span><br>
+            <span class="field">focus: </span><span class="val">digital ICs / processor arch</span><br>
+            <span class="field">location: </span><span class="val">Texas, USA</span><br>
+            <span class="field">gen: </span><span class="val">first-gen college student</span><br>
+          </div>
+        </div>
+        <div class="interest-chips" style="margin-top:10px;">
+          <span class="chip">processor design</span>
+          <span class="chip">distributed systems</span>
+          <span class="chip">HDL/RTL</span>
+          <span class="chip red">Counter-Strike</span>
+          <span class="chip red">Battlefield 1</span>
+          <span class="chip red">Gran Turismo 4</span>
+          <span class="chip red">Okami</span>
+          <span class="chip green">worldbuilding</span>
+          <span class="chip green">creative writing</span>
+          <span class="chip">fursuit community</span>
+          <span class="chip">YonKaGor</span>
+          <span class="chip green">KiCad</span>
+        </div>
+      </div>
+      <div class="about-box">
+        <h3>[ active projects ]</h3>
+        <table class="spec-table">
+          <tr><th>Project</th><th>What is it</th><th>Status</th></tr>
+          <tr><td>Cashew Network</td><td>Custom P2P network protocol</td><td>🔧 alpha</td></tr>
+          <tr><td>SeaBird ISA</td><td>Custom hybrid CISC/RISC ISA</td><td>🔧 WIP</td></tr>
+          <tr><td>Clione</td><td>Wide superscalar processor</td><td>📋 designing</td></tr>
+          <tr><td>PELAGE</td><td>Fursuit design software suite</td><td>🔧 WIP</td></tr>
+          <tr><td>this website</td><td>2ch-style personal page</td><td>✅ u r here</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- PELAGE TAB -->
+    <div id="tab-pelage" class="tab-content">
+      <div class="project-section">
+        <div class="project-header">
+          ★ PELAGE :: Programmatic Environment for Lagomorphic and Anthropomorphic Garment Engineering
+          <span class="tag">intentionally over-engineered</span>
+        </div>
+        <div class="project-body">
+          <p>
+            PELAGE is a fursuit design software suite. It is, deliberately, the most over-engineered piece of software 
+            ever written for the purpose of designing animal costumes. This is a feature, not a bug. (｀・ω・´)
+          </p>
+
+          <h4>// Why Does This Exist</h4>
+          <p>Because if you're going to build fursuit design software, you should do it with 
+          formal verification, thermal safety modeling, physics simulation, and a 13-language polyglot stack. 
+          Obviously. The question is why everyone else hasn't done this.</p>
+
+          <h4>// Language Stack (yes, all of these)</h4>
+          <table class="spec-table">
+            <tr><th>Language</th><th>Purpose</th></tr>
+            <tr><td><code>C</code></td><td>Core runtime, hardware interfacing</td></tr>
+            <tr><td><code>ASM</code></td><td>Hot path optimization</td></tr>
+            <tr><td><code>Rust</code></td><td>Memory-safe systems layer</td></tr>
+            <tr><td><code>Haskell</code></td><td>Formal verification, property checking</td></tr>
+            <tr><td><code>COBOL</code></td><td>Materials inventory management (it fits)</td></tr>
+            <tr><td><code>Fortran</code></td><td>Numerical physics simulation</td></tr>
+            <tr><td><code>Pascal</code></td><td>UI components</td></tr>
+            <tr><td><code>Smalltalk</code></td><td>Object model, pattern library</td></tr>
+            <tr><td><code>Ada</code></td><td>Safety-critical thermal modeling</td></tr>
+            <tr><td><code>ALGOL 68</code></td><td>Algorithmic research layer</td></tr>
+            <tr><td><code>Lisp</code></td><td>Pattern generation DSL</td></tr>
+            <tr><td><code>Prolog</code></td><td>Constraint solving (fit logic)</td></tr>
+            <tr><td><code>Standard ML</code></td><td>Type-level proofs</td></tr>
+          </table>
+
+          <h4>// Features (planned)</h4>
+          <ul style="margin-left:20px; line-height:2; font-size:12px;">
+            <li>Physics-based fur simulation</li>
+            <li>Thermal safety modeling (Ada-verified)</li>
+            <li>Formal verification of seam integrity (Haskell)</li>
+            <li>Automatic pattern generation from 3D mesh</li>
+            <li>COBOL materials database (deadpan serious)</li>
+          </ul>
+
+          <p style="color:#888;font-size:11px;margin-top:10px;">
+            ★ PELAGE stands for what it stands for and I'm very proud of the backronym. (ᵔᴥᵔ)
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECRET / EASTER EGG TAB (hidden initially) -->
+    <div id="tab-secret" class="tab-content">
+      <div class="secret-box">
+        <h2 class="blink">[ /dev/null :: you found it ]</h2>
+        <p>
+          <span class="cyan">$</span> <span class="white">whoami</span><br>
+          <span class="yellow">miyamii</span><br><br>
+
+          <span class="cyan">$</span> <span class="white">cat /etc/motd</span><br>
+          <span class="white">
+          congrats on finding the secret tab. here's some lore:<br><br>
+          </span>
+
+          <span class="yellow">★ kelnari universe</span><br>
+          i've been building an original fictional universe since i was a kid.<br>
+          billions of years of in-universe history. alternate-timeline Earth.<br>
+          anthropomorphic species (the Kelnari), a superstate called Romaniscia,<br>
+          a 75-year conflict called the Great War, original deities, the whole deal.<br><br>
+
+          <span class="yellow">★ processor names</span><br>
+          Clownfish, Tetra, Clione — all named after sea creatures from<br>
+          <span class="cyan">YonKaGor</span>'s animations. yes this is canon lore. yes it matters.<br><br>
+
+          <span class="yellow">★ the konami code</span><br>
+          <span class="cyan">↑↑↓↓←→←→BA</span> — classic. you know what you did. (ᵔᴥᵔ)<br><br>
+
+          <span class="red">$</span> <span class="white">exit</span><br>
+          <span class="blink">_</span>
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="site-footer">
+  miyamii.net :: est. 2025 :: all projects by miyamii :: 
+  <a href="#">back to top ↑</a> :: 
+  made with too much caffeine and not enough sleep ★<br>
+  best viewed at any resolution :: javascript required for posting
+</div>
+
+<script>
+  const guestbookApi = '/miyamii/cgi-bin/guestbook.pl';
+  const localPostsKey = 'miyamii_posts';
+  const localHitsKey = 'miyamii_hits';
+
+  let posts = [];
+  let postCounter = 3;
+
+  function switchTab(name, targetButton) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    if (targetButton) {
+      targetButton.classList.add('active');
+      return;
+    }
+    const fallback = document.querySelector(`.tab-btn[onclick*="'${name}'"]`);
+    if (fallback) {
+      fallback.classList.add('active');
+    }
+  }
+
+  function escapeHtml(input) {
+    return String(input)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\n/g, '<br>');
+  }
+
+  function formatLocalDate(now) {
+    return now.getFullYear() + '/' +
+      String(now.getMonth() + 1).padStart(2, '0') + '/' +
+      String(now.getDate()).padStart(2, '0') + '(' +
+      ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][now.getDay()] + ') ' +
+      String(now.getHours()).padStart(2, '0') + ':' +
+      String(now.getMinutes()).padStart(2, '0') + ':' +
+      String(now.getSeconds()).padStart(2, '0');
+  }
+
+  function makePostHTML(p) {
+    const body = escapeHtml(p.body || '');
+    const greentext = body.replace(/^(&gt;[^&].*)/gm, '<span class="greentext">$1</span>');
+    return `
+      <div class="thread">
+        <div class="post reply">
+          <div class="post-header">
+            <span class="post-num">&gt;&gt;${p.num}</span>
+            <span class="post-name">${escapeHtml(p.name || 'Anonymous')}</span>
+            <span class="post-date">${escapeHtml(p.date || '')}</span>
+            <span class="post-id">ID:${escapeHtml(p.id || 'LOCAL')}</span>
+          </div>
+          <div class="post-body">
+            ${p.subject ? '<strong>' + escapeHtml(p.subject) + '</strong><br>' : ''}
+            ${greentext}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function renderPosts() {
+    const container = document.getElementById('posts-container');
+    container.querySelectorAll('.thread.dynamic-post').forEach(el => el.remove());
+
+    posts.forEach(p => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'dynamic-post';
+      wrapper.innerHTML = makePostHTML(p);
+      const thread = wrapper.firstElementChild;
+      if (thread) {
+        thread.classList.add('dynamic-post');
+        container.appendChild(thread);
+      }
+    });
+  }
+
+  function updateCounts() {
+    const total = 3 + posts.length;
+    document.getElementById('post-count-display').textContent = total;
+    document.getElementById('total-post-count').textContent = total;
+  }
+
+  function setHitCount(value) {
+    const hitCount = Number(value) || 0;
+    document.getElementById('hit-counter').textContent = String(hitCount).padStart(6, '0');
+    document.getElementById('marquee-count').textContent = String(hitCount);
+  }
+
+  async function loadGuestbook() {
+    try {
+      const resp = await fetch(guestbookApi + '?action=list', { headers: { 'Accept': 'application/json' } });
+      if (!resp.ok) {
+        throw new Error('API unavailable');
+      }
+      const payload = await resp.json();
+      posts = Array.isArray(payload.posts) ? payload.posts : [];
+      localStorage.setItem(localPostsKey, JSON.stringify(posts));
+      postCounter = 3 + posts.length;
+      setHitCount(payload.visits || 42);
+      return;
+    } catch (_) {
+      posts = JSON.parse(localStorage.getItem(localPostsKey) || '[]');
+      postCounter = 3 + posts.length;
+
+      let hits = parseInt(localStorage.getItem(localHitsKey) || '42', 10);
+      hits += 1;
+      localStorage.setItem(localHitsKey, String(hits));
+      setHitCount(hits);
+    }
+  }
+
+  async function refreshCashewStatus() {
+    try {
+      const resp = await fetch('/api/status', { headers: { 'Accept': 'application/json' } });
+      if (!resp.ok) {
+        throw new Error('status endpoint unavailable');
+      }
+
+      const payload = await resp.json();
+      const healthy = payload.status === 'ok' || payload.status === 'healthy' || payload.service === 'cashew-gateway';
+      document.getElementById('cashew-status-text').textContent = healthy ? 'LIVE' : 'DEGRADED';
+      document.getElementById('cashew-status-dot').style.color = healthy ? 'green' : 'orange';
+      document.getElementById('online-count').textContent = healthy ? '1' : '0';
+    } catch (_) {
+      document.getElementById('cashew-status-text').textContent = 'OFFLINE';
+      document.getElementById('cashew-status-dot').style.color = 'red';
+      document.getElementById('online-count').textContent = '0';
+    }
+  }
+
+  async function submitPost() {
+    const name = document.getElementById('post-name').value.trim() || 'Anonymous';
+    const subject = document.getElementById('post-subject').value.trim();
+    const body = document.getElementById('post-body').value.trim();
+    if (!body) {
+      alert('please write something! (´；ω；`)');
+      return;
+    }
+
+    try {
+      const resp = await fetch(guestbookApi, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ name, subject, body })
+      });
+
+      if (!resp.ok) {
+        throw new Error('post failed');
+      }
+
+      const payload = await resp.json();
+      if (payload && payload.post) {
+        posts.push(payload.post);
+        localStorage.setItem(localPostsKey, JSON.stringify(posts));
+      }
+      if (payload && payload.visits) {
+        setHitCount(payload.visits);
+      }
+    } catch (_) {
+      postCounter += 1;
+      const now = new Date();
+      const fallbackPost = {
+        num: postCounter,
+        name,
+        subject,
+        body,
+        date: formatLocalDate(now),
+        id: Math.random().toString(36).slice(2, 8).toUpperCase()
+      };
+      posts.push(fallbackPost);
+      localStorage.setItem(localPostsKey, JSON.stringify(posts));
+    }
+
+    renderPosts();
+    updateCounts();
+
+    document.getElementById('post-name').value = '';
+    document.getElementById('post-subject').value = '';
+    document.getElementById('post-body').value = '';
+
+    const container = document.getElementById('posts-container');
+    if (container.lastElementChild) {
+      container.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+  async function initializePage() {
+    await loadGuestbook();
+    renderPosts();
+    updateCounts();
+    await refreshCashewStatus();
+  }
+
+  initializePage();
+
+  const konami = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+  let konamiIdx = 0;
+  document.addEventListener('keydown', (e) => {
+    if (e.key === konami[konamiIdx]) {
+      konamiIdx += 1;
+      if (konamiIdx === konami.length) {
+        konamiIdx = 0;
+        const secretBtn = document.getElementById('secret-tab-btn');
+        secretBtn.style.display = '';
+        switchTab('secret', secretBtn);
+      }
+    } else {
+      konamiIdx = 0;
+    }
+  });
+</script>
+</body>
+</html>

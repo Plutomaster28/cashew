@@ -1,8 +1,10 @@
 #include "security/attack_prevention.hpp"
 #include "crypto/blake3.hpp"
+#include "crypto/ed25519.hpp"
 #include "utils/logger.hpp"
 #include <algorithm>
 #include <sstream>
+#include <iomanip>
 
 namespace cashew::security {
 
@@ -108,7 +110,7 @@ SybilDefense::SybilDefense()
 }
 
 bool SybilDefense::validate_new_identity(
-    const NodeID& /* node_id */,
+    const NodeID& node_id,
     const Hash256& pow_proof
 ) {
     // Verify PoW difficulty
@@ -117,10 +119,15 @@ bool SybilDefense::validate_new_identity(
         return false;
     }
     
-    // Check if node_id derived from PoW proof
-    std::vector<uint8_t> proof_vec(pow_proof.begin(), pow_proof.end());
-    auto derived_hash = crypto::Blake3::hash(proof_vec);
-    (void)derived_hash; // TODO: Verify node_id matches derived hash
+    // For production difficulty levels, require node identity binding to the proof.
+    if (min_pow_difficulty_ > 0) {
+        std::vector<uint8_t> proof_vec(pow_proof.begin(), pow_proof.end());
+        auto derived_hash = crypto::Blake3::hash(proof_vec);
+        if (derived_hash != node_id.id) {
+            CASHEW_LOG_WARN("Node identity does not match provided PoW proof");
+            return false;
+        }
+    }
     
     // Accept if proof is valid
     CASHEW_LOG_DEBUG("Validated new identity with PoW proof");
@@ -165,18 +172,62 @@ float SybilDefense::calculate_sybil_score(
 }
 
 std::vector<std::set<NodeID>> SybilDefense::detect_sybil_groups(
-    const std::vector<NodeID>& /* nodes */
+    const std::vector<NodeID>& nodes
 ) const {
-    // Simple clustering based on activity patterns
-    // In production, use more sophisticated graph analysis
-    
+    // Simple clustering based on activity-pattern similarity.
     std::vector<std::set<NodeID>> groups;
-    
-    // TODO: Implement graph-based Sybil detection
-    // - Analyze connection patterns
-    // - Detect suspicious clusters
-    // - Use random walk-based algorithms
-    
+
+    std::set<NodeID> consumed;
+    for (const auto& node : nodes) {
+        if (consumed.find(node) != consumed.end()) {
+            continue;
+        }
+
+        auto it = activity_log_.find(node);
+        if (it == activity_log_.end() || it->second.empty()) {
+            continue;
+        }
+
+        std::set<NodeID> cluster;
+        cluster.insert(node);
+        consumed.insert(node);
+
+        for (const auto& candidate : nodes) {
+            if (candidate == node || consumed.find(candidate) != consumed.end()) {
+                continue;
+            }
+
+            auto cand_it = activity_log_.find(candidate);
+            if (cand_it == activity_log_.end() || cand_it->second.empty()) {
+                continue;
+            }
+
+            const auto& a = it->second;
+            const auto& b = cand_it->second;
+            const size_t overlap = std::min(a.size(), b.size());
+            if (overlap == 0) {
+                continue;
+            }
+
+            size_t same = 0;
+            for (size_t i = 0; i < overlap; ++i) {
+                if (a[a.size() - 1 - i] == b[b.size() - 1 - i]) {
+                    ++same;
+                }
+            }
+
+            const float similarity = static_cast<float>(same) / static_cast<float>(overlap);
+            if (overlap >= 3 && similarity >= 0.8f) {
+                cluster.insert(candidate);
+                consumed.insert(candidate);
+            }
+        }
+
+        if (cluster.size() >= 2) {
+            groups.push_back(std::move(cluster));
+        }
+    }
+
     return groups;
 }
 
@@ -389,14 +440,12 @@ bool ForkDetector::verify_signature_consistency(
     
     // Try to verify with all known keys
     for (const auto& record : it->second) {
-        // TODO: Actual signature verification with Ed25519
-        // For now, assume valid if we have the key
-        (void)record;
-        (void)message;
-        (void)signature;
-        return true;
+        if (crypto::Ed25519::verify(message, signature, record.public_key)) {
+            return true;
+        }
     }
-    
+
+    CASHEW_LOG_WARN("Signature consistency verification failed for node");
     return false;
 }
 

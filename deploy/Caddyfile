@@ -1,0 +1,31 @@
+{
+    auto_https disable_redirects
+}
+
+# Replace with your public domain after DNS points to this host.
+example.org {
+    encode zstd gzip
+
+    # Preserve real client metadata at the edge.
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    @api path /api/* /health
+    handle @api {
+        reverse_proxy 127.0.0.1:8080
+    }
+
+    @ws path /ws*
+    handle @ws {
+        reverse_proxy 127.0.0.1:8080
+    }
+
+    # Optional browser-friendly frontend bridge (for example Perl CGI gateway).
+    handle {
+        reverse_proxy 127.0.0.1:8081
+    }
+}

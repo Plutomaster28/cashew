@@ -2,6 +2,7 @@
 #include "crypto/ed25519.hpp"
 #include "utils/logger.hpp"
 #include <cstring>
+#include <filesystem>
 
 namespace cashew::security {
 
@@ -152,21 +153,22 @@ bool SoftwareKeyStorage::verify_attestation(const bytes& /*attestation*/) {
     return false;
 }
 
-// TPMKeyStorage implementation (stub)
+// TPMKeyStorage implementation
 
 TPMKeyStorage::TPMKeyStorage()
     : tpm_available_(false)
     , initialized_(false)
 {
-    // In production: Check for TPM device
-    // Linux: /dev/tpm0 or /dev/tpmrm0
-    // Windows: TBS API
+#ifdef CASHEW_PLATFORM_LINUX
+    tpm_available_ = std::filesystem::exists("/dev/tpm0") ||
+                     std::filesystem::exists("/dev/tpmrm0");
+#else
+    tpm_available_ = false;
+#endif
 }
 
 bool TPMKeyStorage::is_available() const {
-    // Stub: Always return false
-    // In production: Detect TPM 2.0 device
-    return false;
+    return tpm_available_;
 }
 
 HardwareKeyCapabilities TPMKeyStorage::get_capabilities() const {
@@ -194,15 +196,10 @@ bool TPMKeyStorage::initialize(const std::string& /*pin*/) {
         CASHEW_LOG_WARN("TPM not available on this system");
         return false;
     }
-    
-    // Stub implementation
-    // In production:
-    // 1. Open TPM device
-    // 2. Start auth session
-    // 3. Set up hierarchy (owner/endorsement/platform)
-    
+
+    // Backend integration is feature-gated; device presence alone is insufficient.
     initialized_ = false;
-    CASHEW_LOG_INFO("TPM support not compiled in (stub)");
+    CASHEW_LOG_INFO("TPM detected, but TPM command backend is not enabled in this build");
     return false;
 }
 
@@ -211,7 +208,7 @@ std::optional<HardwareKeyHandle> TPMKeyStorage::generate_key(const std::string& 
         return std::nullopt;
     }
     
-    // Stub: In production, use TPM2_Create to generate key
+    // Requires TPM command backend (e.g., TPM2_Create).
     return std::nullopt;
 }
 
@@ -269,7 +266,7 @@ std::unique_ptr<HardwareKeyStorage> HardwareKeyStorageFactory::create_best_avail
         }
     }
     
-    // TODO: Add Secure Enclave, Windows NGC, YubiKey support
+    // Additional hardware backends are optional and may be added per-platform.
     
     // Fallback to software
     CASHEW_LOG_INFO("Using software key storage (no hardware security module detected)");
@@ -285,23 +282,19 @@ std::unique_ptr<HardwareKeyStorage> HardwareKeyStorageFactory::create(HardwareKe
             return std::make_unique<TPMKeyStorage>();
             
         case HardwareKeyType::SECURE_ENCLAVE:
-            // TODO: Implement SecureEnclaveKeyStorage for macOS/iOS
-            CASHEW_LOG_WARN("Secure Enclave support not implemented");
+            CASHEW_LOG_WARN("Secure Enclave support is not enabled in this build");
             return nullptr;
             
         case HardwareKeyType::WINDOWS_NGC:
-            // TODO: Implement WindowsNGCKeyStorage
-            CASHEW_LOG_WARN("Windows NGC support not implemented");
+            CASHEW_LOG_WARN("Windows NGC support is not enabled in this build");
             return nullptr;
             
         case HardwareKeyType::YUBIKEY:
-            // TODO: Implement YubiKeyStorage
-            CASHEW_LOG_WARN("YubiKey support not implemented");
+            CASHEW_LOG_WARN("YubiKey support is not enabled in this build");
             return nullptr;
             
         case HardwareKeyType::GENERIC_PKCS11:
-            // TODO: Implement PKCS11KeyStorage
-            CASHEW_LOG_WARN("PKCS#11 support not implemented");
+            CASHEW_LOG_WARN("PKCS#11 support is not enabled in this build");
             return nullptr;
             
         default:
@@ -317,18 +310,17 @@ std::vector<HardwareKeyType> HardwareKeyStorageFactory::detect_available_hardwar
     
     // Check for TPM
     #ifdef CASHEW_PLATFORM_LINUX
-    // Check for /dev/tpm0 or /dev/tpmrm0
-    // Stub: not implemented
+    if (std::filesystem::exists("/dev/tpm0") || std::filesystem::exists("/dev/tpmrm0")) {
+        available.push_back(HardwareKeyType::TPM_2_0);
+    }
     #endif
     
     #ifdef CASHEW_PLATFORM_WINDOWS
-    // Check TBS API
-    // Stub: not implemented
+    // TBS API probing can be added when Windows TPM backend is enabled.
     #endif
     
     #ifdef CASHEW_PLATFORM_MACOS
-    // Check for Secure Enclave (only on Apple Silicon and T2 Macs)
-    // Stub: not implemented
+    // Secure Enclave probing can be added when macOS backend is enabled.
     #endif
     
     return available;

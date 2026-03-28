@@ -58,6 +58,7 @@ struct NetworkInvitation {
     NetworkID network_id;
     NodeID inviter_id;
     NodeID invitee_id;
+    PublicKey inviter_public_key;
     MemberRole proposed_role;
     uint64_t expires_timestamp;
     Signature signature;  // Signed by inviter
@@ -137,6 +138,8 @@ public:
     NetworkInvitation create_invitation(
         const NodeID& inviter_id,
         const NodeID& invitee_id,
+        const PublicKey& inviter_public_key,
+        const SecretKey& inviter_secret_key,
         MemberRole role,
         std::chrono::seconds valid_duration = std::chrono::hours(24)
     );

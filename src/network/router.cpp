@@ -1,12 +1,55 @@
 #include "network/router.hpp"
 #include "crypto/blake3.hpp"
 #include "crypto/random.hpp"
+#include "crypto/ed25519.hpp"
 #include "utils/logger.hpp"
 #include <algorithm>
 #include <sstream>
 #include <cstring>
 
 namespace cashew::network {
+
+namespace {
+
+void append_u32le(std::vector<uint8_t>& out, uint32_t value) {
+    for (int i = 0; i < 4; ++i) {
+        out.push_back(static_cast<uint8_t>(value >> (i * 8)));
+    }
+}
+
+std::vector<uint8_t> xor_with_keystream(const std::vector<uint8_t>& input, const bytes& key_seed) {
+    std::vector<uint8_t> output(input.size(), 0);
+    std::vector<uint8_t> stream_seed = key_seed;
+    uint32_t counter = 0;
+    size_t written = 0;
+
+    while (written < input.size()) {
+        std::vector<uint8_t> block_seed = stream_seed;
+        append_u32le(block_seed, counter++);
+        const auto block = crypto::Blake3::hash(block_seed);
+
+        for (size_t i = 0; i < block.size() && written < input.size(); ++i, ++written) {
+            output[written] = static_cast<uint8_t>(input[written] ^ block[i]);
+        }
+    }
+
+    return output;
+}
+
+std::vector<uint8_t> content_response_signing_bytes(const ContentResponse& response) {
+    std::vector<uint8_t> message;
+    message.insert(message.end(), response.content_hash.hash.begin(), response.content_hash.hash.end());
+    message.insert(message.end(), response.hosting_node.id.begin(), response.hosting_node.id.end());
+    message.insert(message.end(), response.request_id.begin(), response.request_id.end());
+    message.push_back(response.hop_count);
+
+    const uint32_t content_size = static_cast<uint32_t>(response.content_data.size());
+    append_u32le(message, content_size);
+    message.insert(message.end(), response.content_data.begin(), response.content_data.end());
+    return message;
+}
+
+} // namespace
 
 // RoutingEntry methods
 
@@ -210,12 +253,7 @@ std::optional<ContentResponse> ContentResponse::from_bytes(const std::vector<uin
 }
 
 bool ContentResponse::verify_signature(const PublicKey& host_public_key) const {
-    // TODO: Implement Ed25519 signature verification
-    // Need to create signed data (content_hash + content_data)
-    // and verify with host_public_key
-    (void)host_public_key;
-    CASHEW_LOG_WARN("ContentResponse signature verification not yet implemented");
-    return true;
+    return crypto::Ed25519::verify(content_response_signing_bytes(*this), signature, host_public_key);
 }
 
 // RoutingTable methods
@@ -605,9 +643,16 @@ void Router::handle_content_request(const ContentRequest& request) {
     // Check if we can serve locally
     if (can_serve_locally(request.content_hash)) {
         CASHEW_LOG_DEBUG("Serving content request locally");
-        
-        // TODO: Load actual content from storage
-        std::vector<uint8_t> content_data;  // Placeholder
+
+        std::vector<uint8_t> content_data;
+        if (local_content_fetch_callback_) {
+            auto content_opt = local_content_fetch_callback_(request.content_hash);
+            if (!content_opt) {
+                CASHEW_LOG_WARN("Local route exists but content fetch failed");
+                return;
+            }
+            content_data = std::move(*content_opt);
+        }
         
         ContentResponse response;
         response.content_hash = request.content_hash;
@@ -616,8 +661,11 @@ void Router::handle_content_request(const ContentRequest& request) {
         response.request_id = request.request_id;
         response.hop_count = 0;
         
-        // TODO: Sign response
-        response.signature = {};  // Placeholder
+        if (response_sign_callback_) {
+            response.signature = response_sign_callback_(response);
+        } else {
+            response.signature = Signature{};
+        }
         
         send_response_to_peer(request.requester_id, response);
         responses_sent_++;
@@ -661,7 +709,10 @@ void Router::handle_content_response(const ContentResponse& response) {
             return;
         }
         
-        // TODO: Verify signature
+        if (response_verify_callback_ && !response_verify_callback_(response)) {
+            CASHEW_LOG_ERROR("Content response signature verification failed");
+            return;
+        }
         
         // Deliver to callback
         if (content_received_callback_) {
@@ -794,37 +845,80 @@ std::vector<std::vector<uint8_t>> Router::create_onion_layers(
     const std::vector<NodeID>& route_path,
     const std::vector<uint8_t>& payload
 ) {
-    // TODO: Implement actual onion routing encryption
-    // This would require X25519 key exchange with each hop
-    // For now, return empty (onion routing disabled)
-    (void)route_path;
-    (void)payload;
-    CASHEW_LOG_WARN("Onion routing encryption not yet implemented");
-    return {};
+    if (route_path.empty()) {
+        return {};
+    }
+
+    // Functional layered wrapping: each hop peels one encrypted layer.
+    std::vector<uint8_t> current = payload;
+
+    for (size_t index = route_path.size(); index-- > 0;) {
+        const NodeID& hop = route_path[index];
+        const NodeID next_hop = (index + 1 < route_path.size()) ? route_path[index + 1] : NodeID{};
+
+        std::vector<uint8_t> plain;
+        plain.insert(plain.end(), next_hop.id.begin(), next_hop.id.end());
+        plain.insert(plain.end(), current.begin(), current.end());
+
+        bytes key_seed(hop.id.begin(), hop.id.end());
+        auto encrypted = xor_with_keystream(plain, key_seed);
+
+        std::vector<uint8_t> wrapped;
+        wrapped.push_back('O');
+        wrapped.push_back('N');
+        wrapped.push_back('1');
+        wrapped.insert(wrapped.end(), encrypted.begin(), encrypted.end());
+        current = std::move(wrapped);
+    }
+
+    return {current};
 }
 
 std::optional<std::vector<uint8_t>> Router::decrypt_onion_layer(
     const std::vector<uint8_t>& encrypted_layer
 ) {
-    // TODO: Implement onion layer decryption
-    // Would use our node's private key to decrypt
-    (void)encrypted_layer;
-    CASHEW_LOG_WARN("Onion layer decryption not yet implemented");
-    return std::nullopt;
+    if (encrypted_layer.size() < 3 + 32) {
+        return std::nullopt;
+    }
+
+    if (encrypted_layer[0] != 'O' || encrypted_layer[1] != 'N' || encrypted_layer[2] != '1') {
+        return std::nullopt;
+    }
+
+    std::vector<uint8_t> body(encrypted_layer.begin() + 3, encrypted_layer.end());
+    bytes key_seed(local_node_id_.id.begin(), local_node_id_.id.end());
+    auto plain = xor_with_keystream(body, key_seed);
+
+    if (plain.size() < 32) {
+        return std::nullopt;
+    }
+
+    // Strip next-hop field and return remaining payload.
+    return std::vector<uint8_t>(plain.begin() + 32, plain.end());
 }
 
 void Router::send_request_to_peer(const NodeID& peer_id, const ContentRequest& request) {
-    // TODO: Integrate with SessionManager to actually send over network
-    (void)peer_id;
-    (void)request;
-    CASHEW_LOG_DEBUG("Would send request to peer (network integration pending)");
+    if (request_send_callback_) {
+        if (!request_send_callback_(peer_id, request)) {
+            CASHEW_LOG_WARN("Router failed to send content request to peer {}",
+                           cashew::hash_to_hex(peer_id.id).substr(0, 16));
+        }
+        return;
+    }
+
+    CASHEW_LOG_DEBUG("Router request send callback is not configured; dropping request");
 }
 
 void Router::send_response_to_peer(const NodeID& peer_id, const ContentResponse& response) {
-    // TODO: Integrate with SessionManager to actually send over network
-    (void)peer_id;
-    (void)response;
-    CASHEW_LOG_DEBUG("Would send response to peer (network integration pending)");
+    if (response_send_callback_) {
+        if (!response_send_callback_(peer_id, response)) {
+            CASHEW_LOG_WARN("Router failed to send content response to peer {}",
+                           cashew::hash_to_hex(peer_id.id).substr(0, 16));
+        }
+        return;
+    }
+
+    CASHEW_LOG_DEBUG("Router response send callback is not configured; dropping response");
 }
 
 // RouterStatistics methods

@@ -191,9 +191,18 @@ TEST_F(ThingTest, MetadataSerialization) {
     auto serialized = metadata.serialize();
     EXPECT_GT(serialized.size(), 0);
     
-    // Deserialization currently returns nullopt (not implemented)
     auto restored = ThingMetadata::deserialize(serialized);
-    // TODO: When deserialization is implemented, verify fields match
+    ASSERT_TRUE(restored.has_value());
+    EXPECT_EQ(restored->content_hash, metadata.content_hash);
+    EXPECT_EQ(restored->name, metadata.name);
+    EXPECT_EQ(restored->description, metadata.description);
+    EXPECT_EQ(restored->type, metadata.type);
+    EXPECT_EQ(restored->size_bytes, metadata.size_bytes);
+    EXPECT_EQ(restored->creator_id, metadata.creator_id);
+    EXPECT_EQ(restored->tags, metadata.tags);
+    EXPECT_EQ(restored->version, metadata.version);
+    EXPECT_EQ(restored->mime_type, metadata.mime_type);
+    EXPECT_EQ(restored->entry_point, metadata.entry_point);
 }
 
 TEST_F(ThingTest, ContentIntegrityVerification) {

@@ -5,6 +5,33 @@
 
 namespace cashew::postake {
 
+namespace {
+
+uint32_t count_leading_zero_bits(const Hash256& hash) {
+    uint32_t leading = 0;
+    for (uint8_t byte : hash) {
+        if (byte == 0) {
+            leading += 8;
+            continue;
+        }
+
+        for (int bit = 7; bit >= 0; --bit) {
+            if (((byte >> bit) & 0x1) == 0) {
+                ++leading;
+            } else {
+                return leading;
+            }
+        }
+    }
+    return leading;
+}
+
+bool pow_solution_meets_claimed_difficulty(const core::PowSolution& solution) {
+    return count_leading_zero_bits(solution.solution_hash) >= solution.difficulty;
+}
+
+} // namespace
+
 // HybridIssuanceRecord methods
 std::vector<uint8_t> HybridIssuanceRecord::to_bytes() const {
     std::vector<uint8_t> data;
@@ -201,9 +228,11 @@ std::optional<HybridIssuanceRecord> HybridCoordinator::request_keys_via_pow(
         return std::nullopt;
     }
     
-    // Verify PoW solution
-    // TODO: Implement PoW verification via pow_engine_
-    // For now, assume valid
+    // Verify PoW solution with a deterministic local check.
+    if (!pow_solution_meets_claimed_difficulty(pow_solution)) {
+        spdlog::warn("PoW solution rejected: claimed difficulty not met");
+        return std::nullopt;
+    }
     
     // Create issuance record
     HybridIssuanceRecord record;
@@ -290,8 +319,11 @@ std::optional<HybridIssuanceRecord> HybridCoordinator::request_keys_hybrid(
         return std::nullopt;
     }
     
-    // Verify PoW solution
-    // TODO: Implement PoW verification
+    // Verify PoW solution with a deterministic local check.
+    if (!pow_solution_meets_claimed_difficulty(pow_solution)) {
+        spdlog::warn("Hybrid request rejected: PoW solution does not meet claimed difficulty");
+        return std::nullopt;
+    }
     
     // Get contribution score
     auto score = postake_engine_.calculate_score(node_id);
@@ -332,7 +364,10 @@ bool HybridCoordinator::validate_issuance(const HybridIssuanceRecord& record) co
                 spdlog::error("PoW-only issuance missing PoW solution");
                 return false;
             }
-            // TODO: Verify PoW solution
+            if (!pow_solution_meets_claimed_difficulty(record.pow_solution.value())) {
+                spdlog::error("PoW-only issuance has invalid PoW solution");
+                return false;
+            }
             break;
             
         case KeyIssuanceMethod::POSTAKE_ONLY:
@@ -351,7 +386,10 @@ bool HybridCoordinator::validate_issuance(const HybridIssuanceRecord& record) co
                 spdlog::error("Hybrid issuance missing PoW or PoStake data");
                 return false;
             }
-            // TODO: Verify PoW solution
+            if (!pow_solution_meets_claimed_difficulty(record.pow_solution.value())) {
+                spdlog::error("Hybrid issuance has invalid PoW solution");
+                return false;
+            }
             break;
     }
     

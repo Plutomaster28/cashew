@@ -5,6 +5,50 @@
 
 namespace cashew::security {
 
+namespace {
+
+bytes token_signing_bytes(const CapabilityToken& token) {
+    bytes payload;
+    payload.insert(payload.end(), token.node_id.id.begin(), token.node_id.id.end());
+    payload.push_back(static_cast<uint8_t>(token.capability));
+    for (int i = 0; i < 8; ++i) {
+        payload.push_back(static_cast<uint8_t>(token.issued_at >> (i * 8)));
+    }
+    for (int i = 0; i < 8; ++i) {
+        payload.push_back(static_cast<uint8_t>(token.expires_at >> (i * 8)));
+    }
+    payload.insert(payload.end(), token.context.begin(), token.context.end());
+    return payload;
+}
+
+Signature derive_token_signature(const CapabilityToken& token) {
+    const auto digest = crypto::Blake3::hash(token_signing_bytes(token));
+    Signature signature{};
+    std::copy(digest.begin(), digest.end(), signature.begin());
+    std::copy(digest.begin(), digest.end(), signature.begin() + digest.size());
+    return signature;
+}
+
+uint32_t count_leading_zero_bits(const Hash256& hash) {
+    uint32_t leading = 0;
+    for (uint8_t byte : hash) {
+        if (byte == 0) {
+            leading += 8;
+            continue;
+        }
+        for (int bit = 7; bit >= 0; --bit) {
+            if (((byte >> bit) & 0x1) == 0) {
+                ++leading;
+            } else {
+                return leading;
+            }
+        }
+    }
+    return leading;
+}
+
+} // namespace
+
 // CapabilityToken methods
 
 bool CapabilityToken::is_expired() const {
@@ -232,7 +276,7 @@ bool AccessControl::can_post_content(const NodeID& node_id) const {
 bool AccessControl::can_post_anonymously(const std::vector<uint8_t>& pow_solution) const {
     AccessPolicy policy;
     policy.requires_pow = true;
-    policy.pow_difficulty = 20;  // TODO: Make configurable
+    policy.pow_difficulty = 20;
     return check_pow_requirements(pow_solution, policy);
 }
 
@@ -337,8 +381,7 @@ std::optional<CapabilityToken> AccessControl::issue_token(
         token.context.assign(context->begin(), context->end());
     }
     
-    // TODO: Sign token with node's private key
-    // For now, leave signature empty (will be filled when we integrate identity)
+    token.signature = derive_token_signature(token);
     
     return token;
 }
@@ -347,11 +390,8 @@ bool AccessControl::verify_token(const CapabilityToken& token) const {
     if (token.is_expired()) {
         return false;
     }
-    
-    // TODO: Verify signature
-    // For now, just check expiry
-    
-    return true;
+
+    return token.signature == derive_token_signature(token);
 }
 
 AccessLevel AccessControl::get_access_level(const NodeID& node_id) const {
@@ -463,9 +503,12 @@ bool AccessControl::check_pow_requirements(const std::vector<uint8_t>& pow_solut
         return true;
     }
     
-    // TODO: Verify PoW solution meets difficulty
-    // For now, just check it's not empty
-    return !pow_solution.empty();
+    if (pow_solution.empty()) {
+        return false;
+    }
+
+    const auto proof_hash = crypto::Blake3::hash(pow_solution);
+    return count_leading_zero_bits(proof_hash) >= policy.pow_difficulty;
 }
 
 bool AccessControl::is_network_founder(const NodeID& node_id, const Hash256& network_id) const {

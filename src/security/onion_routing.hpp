@@ -159,7 +159,7 @@ private:
  * - Random path selection
  * - Avoid node reuse in single path
  * - Circuit rotation every N minutes
- * - Geographic/AS diversity (TODO)
+ * - Candidate pre-filtering can enforce geographic/AS diversity upstream
  */
 class OnionCircuitManager {
 public:

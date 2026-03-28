@@ -1,5 +1,6 @@
 #include "network/ledger_sync.hpp"
 #include "crypto/blake3.hpp"
+#include "crypto/random.hpp"
 #include "utils/logger.hpp"
 #include <algorithm>
 
@@ -166,7 +167,7 @@ void LedgerGossipBridge::broadcast_checkpoint(uint64_t epoch) {
                    epoch, crypto::Blake3::hash_to_hex(msg.ledger_hash).substr(0, 16));
 }
 
-void LedgerGossipBridge::request_sync(const NodeID& /* peer_id */, uint64_t start_epoch, uint64_t end_epoch) {
+void LedgerGossipBridge::request_sync(const NodeID& peer_id, uint64_t start_epoch, uint64_t end_epoch) {
     LedgerSyncMessage msg;
     msg.type = LedgerSyncMessage::Type::SYNC_REQUEST;
     msg.start_epoch = start_epoch;
@@ -190,14 +191,13 @@ void LedgerGossipBridge::request_sync(const NodeID& /* peer_id */, uint64_t star
     gossip_msg.timestamp = current_timestamp();
     gossip_msg.hop_count = 0;
     
-    // TODO: Send to specific peer (need peer-specific sending in GossipProtocol)
-    gossip_.broadcast_message(gossip_msg);
+    gossip_.send_direct_message(peer_id, gossip_msg);
     
     sync_requests_++;
     CASHEW_LOG_DEBUG("Requested sync from epoch {} to {}", start_epoch, end_epoch);
 }
 
-void LedgerGossipBridge::handle_sync_request(const NodeID& /* peer_id */, uint64_t start_epoch, uint64_t end_epoch) {
+void LedgerGossipBridge::handle_sync_request(const NodeID& peer_id, uint64_t start_epoch, uint64_t end_epoch) {
     // Get events in range (filter all events by epoch)
     auto all_events = ledger_.get_all_events();
     std::vector<ledger::LedgerEvent> events;
@@ -223,8 +223,7 @@ void LedgerGossipBridge::handle_sync_request(const NodeID& /* peer_id */, uint64
     gossip_msg.timestamp = current_timestamp();
     gossip_msg.hop_count = 0;
     
-    // TODO: Send to specific peer
-    gossip_.broadcast_message(gossip_msg);
+    gossip_.send_direct_message(peer_id, gossip_msg);
     
     CASHEW_LOG_DEBUG("Sent sync response: {} events (epoch {} to {})", 
                     events.size(), start_epoch, end_epoch);
@@ -294,8 +293,8 @@ void LedgerGossipBridge::sync_with_network() {
         }
         
         if (!candidates.empty()) {
-            // Request from first candidate (TODO: better peer selection)
-            request_sync(candidates[0], current_epoch + 1, max_peer_epoch);
+            const uint32_t index = crypto::Random::uniform(static_cast<uint32_t>(candidates.size()));
+            request_sync(candidates[index], current_epoch + 1, max_peer_epoch);
         }
     }
 }
@@ -308,7 +307,9 @@ void LedgerGossipBridge::validate_consistency() {
     for (const auto& [peer_id, state] : peer_sync_states_) {
         if (state.last_synced_epoch == current_epoch && state.last_known_hash != our_hash) {
             CASHEW_LOG_WARN("Ledger hash mismatch with peer at epoch {}", current_epoch);
-            // TODO: Conflict resolution
+            if (current_epoch > 0) {
+                request_sync(peer_id, current_epoch, current_epoch);
+            }
         }
     }
 }
@@ -389,9 +390,19 @@ void LedgerGossipBridge::process_received_event(const ledger::LedgerEvent& event
 }
 
 bool LedgerGossipBridge::validate_event_chain(const ledger::LedgerEvent& event) const {
-    // If this is the first event or for a future epoch, accept it
+    const uint64_t now = current_timestamp();
+    static constexpr uint64_t MAX_FUTURE_SKEW_SECONDS = 5 * 60;
+    if (event.timestamp > now + MAX_FUTURE_SKEW_SECONDS) {
+        return false;
+    }
+
+    if (event.source_node.id == NodeID().id) {
+        return false;
+    }
+
+    // If this is for a future epoch, allow it but still enforce timestamp sanity.
     if (event.epoch > ledger_.current_epoch()) {
-        return true;  // TODO: More sophisticated validation
+        return true;
     }
     
     // Verify chain continuity using public method

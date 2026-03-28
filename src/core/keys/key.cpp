@@ -7,8 +7,32 @@
 #include <iomanip>
 #include <filesystem>
 #include <fstream>
+#include <atomic>
 
 namespace cashew::core {
+
+namespace {
+
+template <typename T>
+bool read_scalar(const bytes& data, size_t& offset, T& out) {
+    if (offset + sizeof(T) > data.size()) {
+        return false;
+    }
+    std::memcpy(&out, data.data() + offset, sizeof(T));
+    offset += sizeof(T);
+    return true;
+}
+
+bool read_blob(const bytes& data, size_t& offset, uint8_t* out, size_t len) {
+    if (offset + len > data.size()) {
+        return false;
+    }
+    std::memcpy(out, data.data() + offset, len);
+    offset += len;
+    return true;
+}
+
+} // namespace
 
 Key Key::create(
     KeyType type,
@@ -16,7 +40,9 @@ Key Key::create(
     uint64_t issued_timestamp,
     const std::string& source
 ) {
-    return Key(type, owner_id, issued_timestamp, issued_timestamp, source);
+    static std::atomic<uint64_t> key_nonce_counter{1};
+    const uint64_t nonce = key_nonce_counter.fetch_add(1, std::memory_order_relaxed);
+    return Key(type, owner_id, issued_timestamp, issued_timestamp, source, nonce);
 }
 
 void Key::mark_used(uint64_t current_time) {
@@ -40,7 +66,7 @@ uint64_t Key::time_until_decay(uint64_t current_time) const {
 }
 
 bytes Key::serialize() const {
-    // Simple serialization (TODO: use MessagePack)
+    // Compact binary serialization for on-disk key storage.
     std::ostringstream oss;
     
     uint8_t type_val = static_cast<uint8_t>(type_);
@@ -52,15 +78,39 @@ bytes Key::serialize() const {
     uint32_t source_len = static_cast<uint32_t>(source_.size());
     oss.write(reinterpret_cast<const char*>(&source_len), sizeof(source_len));
     oss.write(source_.data(), source_.size());
+    oss.write(reinterpret_cast<const char*>(&nonce_), sizeof(nonce_));
     
     std::string str = oss.str();
     return bytes(str.begin(), str.end());
 }
 
-std::optional<Key> Key::deserialize(const bytes& /* data */) {
-    // TODO: Implement proper deserialization
-    CASHEW_LOG_WARN("Key deserialization not implemented yet");
-    return std::nullopt;
+std::optional<Key> Key::deserialize(const bytes& data) {
+    size_t offset = 0;
+
+    uint8_t type_val = 0;
+    NodeID owner;
+    uint64_t issued = 0;
+    uint64_t last_used = 0;
+    uint32_t source_len = 0;
+    uint64_t nonce = 0;
+
+    if (!read_scalar(data, offset, type_val)) return std::nullopt;
+    if (!read_blob(data, offset, owner.id.data(), owner.id.size())) return std::nullopt;
+    if (!read_scalar(data, offset, issued)) return std::nullopt;
+    if (!read_scalar(data, offset, last_used)) return std::nullopt;
+    if (!read_scalar(data, offset, source_len)) return std::nullopt;
+
+    if (offset + source_len > data.size()) {
+        return std::nullopt;
+    }
+
+    std::string source(reinterpret_cast<const char*>(data.data() + offset), source_len);
+    offset += source_len;
+
+    if (!read_scalar(data, offset, nonce)) return std::nullopt;
+
+    KeyType type = static_cast<KeyType>(type_val);
+    return Key(type, owner, issued, last_used, source, nonce);
 }
 
 std::string Key::get_key_id() const {
@@ -68,10 +118,13 @@ std::string Key::get_key_id() const {
     std::ostringstream oss;
     oss << key_type_to_string(type_) << "_"
         << crypto::Blake3::hash_to_hex(owner_id_.id) << "_"
-        << issued_timestamp_;
+        << issued_timestamp_ << "_"
+        << nonce_;
     
     // Hash to get fixed-length ID
-    auto hash = crypto::Blake3::hash(bytes(oss.str().begin(), oss.str().end()));
+    const std::string material = oss.str();
+    bytes material_bytes(material.begin(), material.end());
+    auto hash = crypto::Blake3::hash(material_bytes);
     return crypto::Blake3::hash_to_hex(hash);
 }
 
@@ -105,8 +158,35 @@ bytes KeyTransfer::to_bytes() const {
 }
 
 std::optional<KeyTransfer> KeyTransfer::from_bytes(const bytes& data) {
-    // TODO: Implement deserialization
-    return std::nullopt;
+    size_t offset = 0;
+    KeyTransfer transfer;
+
+    uint32_t key_id_len = 0;
+    if (!read_scalar(data, offset, key_id_len)) return std::nullopt;
+    if (offset + key_id_len > data.size()) return std::nullopt;
+    transfer.key_id.assign(reinterpret_cast<const char*>(data.data() + offset), key_id_len);
+    offset += key_id_len;
+
+    if (!read_blob(data, offset, transfer.from_node.id.data(), transfer.from_node.id.size())) return std::nullopt;
+    if (!read_blob(data, offset, transfer.to_node.id.data(), transfer.to_node.id.size())) return std::nullopt;
+
+    uint8_t type_val = 0;
+    if (!read_scalar(data, offset, type_val)) return std::nullopt;
+    transfer.key_type = static_cast<KeyType>(type_val);
+
+    if (!read_scalar(data, offset, transfer.transfer_timestamp)) return std::nullopt;
+
+    uint32_t reason_len = 0;
+    if (!read_scalar(data, offset, reason_len)) return std::nullopt;
+    if (offset + reason_len > data.size()) return std::nullopt;
+    transfer.reason.assign(reinterpret_cast<const char*>(data.data() + offset), reason_len);
+    offset += reason_len;
+
+    if (!read_blob(data, offset, transfer.from_signature.data(), transfer.from_signature.size())) {
+        return std::nullopt;
+    }
+
+    return transfer;
 }
 
 bool KeyTransfer::verify_signature(const PublicKey& from_public_key) const {
@@ -160,8 +240,30 @@ bytes KeyVouch::to_bytes() const {
 }
 
 std::optional<KeyVouch> KeyVouch::from_bytes(const bytes& data) {
-    // TODO: Implement deserialization
-    return std::nullopt;
+    size_t offset = 0;
+    KeyVouch vouch;
+
+    if (!read_blob(data, offset, vouch.voucher.id.data(), vouch.voucher.id.size())) return std::nullopt;
+    if (!read_blob(data, offset, vouch.vouchee.id.data(), vouch.vouchee.id.size())) return std::nullopt;
+
+    uint8_t type_val = 0;
+    if (!read_scalar(data, offset, type_val)) return std::nullopt;
+    vouch.key_type = static_cast<KeyType>(type_val);
+
+    if (!read_scalar(data, offset, vouch.key_count)) return std::nullopt;
+    if (!read_scalar(data, offset, vouch.vouch_timestamp)) return std::nullopt;
+
+    uint32_t statement_len = 0;
+    if (!read_scalar(data, offset, statement_len)) return std::nullopt;
+    if (offset + statement_len > data.size()) return std::nullopt;
+    vouch.statement.assign(reinterpret_cast<const char*>(data.data() + offset), statement_len);
+    offset += statement_len;
+
+    if (!read_blob(data, offset, vouch.voucher_signature.data(), vouch.voucher_signature.size())) {
+        return std::nullopt;
+    }
+
+    return vouch;
 }
 
 bool KeyVouch::verify_signature(const PublicKey& voucher_public_key) const {
@@ -191,6 +293,7 @@ bool KeyVouch::verify_signature(const PublicKey& voucher_public_key) const {
 // ============================================================================
 
 void KeyManager::add_key(const Key& key) {
+    std::lock_guard<std::mutex> lock(mutex_);
     std::string key_id = key.get_key_id();
     keys_.insert({key_id, key});
     key_index_[key.owner()].push_back(key_id);
@@ -201,6 +304,7 @@ void KeyManager::add_key(const Key& key) {
 }
 
 bool KeyManager::remove_key(const std::string& key_id) {
+    std::lock_guard<std::mutex> lock(mutex_);
     auto it = keys_.find(key_id);
     if (it == keys_.end()) {
         return false;
@@ -218,6 +322,7 @@ bool KeyManager::remove_key(const std::string& key_id) {
 }
 
 std::optional<Key> KeyManager::get_key(const std::string& key_id) const {
+    std::lock_guard<std::mutex> lock(mutex_);
     auto it = keys_.find(key_id);
     if (it == keys_.end()) {
         return std::nullopt;
@@ -226,6 +331,7 @@ std::optional<Key> KeyManager::get_key(const std::string& key_id) const {
 }
 
 std::vector<Key> KeyManager::get_keys_by_type(KeyType type) const {
+    std::lock_guard<std::mutex> lock(mutex_);
     std::vector<Key> result;
     for (const auto& [_, key] : keys_) {
         if (key.type() == type) {
@@ -236,11 +342,13 @@ std::vector<Key> KeyManager::get_keys_by_type(KeyType type) const {
 }
 
 std::vector<Key> KeyManager::get_keys_by_owner(const NodeID& owner) const {
+    std::lock_guard<std::mutex> lock(mutex_);
     std::vector<Key> result;
     auto it = key_index_.find(owner);
     if (it != key_index_.end()) {
         for (const auto& key_id : it->second) {
-            auto key = get_key(key_id);
+            auto key_it = keys_.find(key_id);
+            auto key = (key_it != keys_.end()) ? std::optional<Key>(key_it->second) : std::nullopt;
             if (key) {
                 result.push_back(*key);
             }
@@ -250,10 +358,16 @@ std::vector<Key> KeyManager::get_keys_by_owner(const NodeID& owner) const {
 }
 
 uint32_t KeyManager::count_keys(const NodeID& owner, KeyType type) const {
+    std::lock_guard<std::mutex> lock(mutex_);
     uint32_t count = 0;
-    auto keys = get_keys_by_owner(owner);
-    for (const auto& key : keys) {
-        if (key.type() == type) {
+    auto it = key_index_.find(owner);
+    if (it == key_index_.end()) {
+        return 0;
+    }
+
+    for (const auto& key_id : it->second) {
+        auto key_it = keys_.find(key_id);
+        if (key_it != keys_.end() && key_it->second.type() == type) {
             count++;
         }
     }
@@ -261,6 +375,7 @@ uint32_t KeyManager::count_keys(const NodeID& owner, KeyType type) const {
 }
 
 bool KeyManager::can_transfer(const NodeID& from, const NodeID& to, KeyType type) const {
+    CASHEW_UNUSED(to);
     // Must have at least MIN_KEYS_TO_TRANSFER keys of this type to transfer one
     uint32_t key_count = count_keys(from, type);
     return key_count >= MIN_KEYS_TO_TRANSFER;
@@ -273,16 +388,28 @@ std::optional<KeyTransfer> KeyManager::create_transfer(
     const std::string& reason,
     const SecretKey& from_secret_key
 ) {
+    std::lock_guard<std::mutex> lock(mutex_);
     // Verify key exists and belongs to sender
-    auto key = get_key(key_id);
-    if (!key || key->owner() != from) {
+    auto key_it = keys_.find(key_id);
+    if (key_it == keys_.end() || key_it->second.owner() != from) {
         CASHEW_LOG_WARN("Transfer failed: key {} not found or not owned by sender", 
                        key_id.substr(0, 8));
         return std::nullopt;
     }
     
     // Check if sender can transfer
-    if (!can_transfer(from, to, key->type())) {
+    uint32_t owned_type_count = 0;
+    auto owner_it = key_index_.find(from);
+    if (owner_it != key_index_.end()) {
+        for (const auto& owned_key_id : owner_it->second) {
+            auto owned_key_it = keys_.find(owned_key_id);
+            if (owned_key_it != keys_.end() && owned_key_it->second.type() == key_it->second.type()) {
+                ++owned_type_count;
+            }
+        }
+    }
+
+    if (owned_type_count < MIN_KEYS_TO_TRANSFER) {
         CASHEW_LOG_WARN("Transfer failed: sender doesn't have enough keys");
         return std::nullopt;
     }
@@ -292,7 +419,7 @@ std::optional<KeyTransfer> KeyManager::create_transfer(
     transfer.key_id = key_id;
     transfer.from_node = from;
     transfer.to_node = to;
-    transfer.key_type = key->type();
+    transfer.key_type = key_it->second.type();
     transfer.transfer_timestamp = std::time(nullptr);
     transfer.reason = reason;
     
@@ -346,6 +473,7 @@ bool KeyManager::execute_transfer(const KeyTransfer& transfer) {
 }
 
 std::vector<KeyTransfer> KeyManager::get_transfer_history(const NodeID& node) const {
+    std::lock_guard<std::mutex> lock(mutex_);
     std::vector<KeyTransfer> result;
     for (const auto& transfer : transfer_history_) {
         if (transfer.from_node == node || transfer.to_node == node) {
@@ -356,9 +484,12 @@ std::vector<KeyTransfer> KeyManager::get_transfer_history(const NodeID& node) co
 }
 
 bool KeyManager::can_vouch(const NodeID& voucher, const NodeID& vouchee, KeyType type) const {
-    // Must have keys to vouch
-    uint32_t voucher_keys = count_keys(voucher, type);
-    if (voucher_keys == 0) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    CASHEW_UNUSED(vouchee);
+    CASHEW_UNUSED(type);
+
+    // A node cannot vouch for itself.
+    if (voucher == vouchee) {
         return false;
     }
     
@@ -413,9 +544,12 @@ bool KeyManager::execute_vouch(const KeyVouch& vouch, uint64_t current_time) {
         );
         add_key(new_key);
     }
-    
-    vouch_records_.push_back(vouch);
-    vouch_counts_this_epoch_[vouch.voucher]++;
+
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        vouch_records_.push_back(vouch);
+        vouch_counts_this_epoch_[vouch.voucher]++;
+    }
     
     CASHEW_LOG_INFO("Vouching: {} vouched for {} to receive {} {} keys",
                    crypto::Blake3::hash_to_hex(vouch.voucher.id).substr(0, 8),
@@ -427,6 +561,7 @@ bool KeyManager::execute_vouch(const KeyVouch& vouch, uint64_t current_time) {
 }
 
 std::vector<KeyVouch> KeyManager::get_vouches_by(const NodeID& voucher) const {
+    std::lock_guard<std::mutex> lock(mutex_);
     std::vector<KeyVouch> result;
     for (const auto& vouch : vouch_records_) {
         if (vouch.voucher == voucher) {
@@ -437,6 +572,7 @@ std::vector<KeyVouch> KeyManager::get_vouches_by(const NodeID& voucher) const {
 }
 
 std::vector<KeyVouch> KeyManager::get_vouches_for(const NodeID& vouchee) const {
+    std::lock_guard<std::mutex> lock(mutex_);
     std::vector<KeyVouch> result;
     for (const auto& vouch : vouch_records_) {
         if (vouch.vouchee == vouchee) {
@@ -447,17 +583,20 @@ std::vector<KeyVouch> KeyManager::get_vouches_for(const NodeID& vouchee) const {
 }
 
 KeyManager::VouchStats KeyManager::get_vouch_stats(const NodeID& node) const {
+    std::lock_guard<std::mutex> lock(mutex_);
     VouchStats stats{};
     
     for (const auto& vouch : vouch_records_) {
         if (vouch.voucher == node) {
             stats.total_vouches_given++;
-            stats.successful_vouches++;  // TODO: Track failures
+            stats.successful_vouches++;
         }
         if (vouch.vouchee == node) {
             stats.total_vouches_received++;
         }
     }
+
+    stats.failed_vouches = stats.total_vouches_given - stats.successful_vouches;
     
     return stats;
 }

@@ -197,6 +197,19 @@ std::vector<NodeID> TrustGraph::get_trusts(const NodeID& node) const {
     return result;
 }
 
+std::vector<NodeID> TrustGraph::get_all_nodes() const {
+    std::set<NodeID> nodes;
+
+    for (const auto& [from_node, edges] : edges_) {
+        nodes.insert(from_node);
+        for (const auto& [to_node, _] : edges) {
+            nodes.insert(to_node);
+        }
+    }
+
+    return std::vector<NodeID>(nodes.begin(), nodes.end());
+}
+
 std::set<NodeID> TrustGraph::find_trust_community(const NodeID& node, float min_trust) const {
     std::set<NodeID> community;
     std::queue<NodeID> to_explore;
@@ -393,8 +406,11 @@ bool ReputationManager::create_attestation(const Attestation& attestation) {
         CASHEW_LOG_WARN("Attempted to create expired attestation");
         return false;
     }
-    
-    // TODO: Verify signature
+
+    if (!verify_attestation(attestation)) {
+        CASHEW_LOG_WARN("Rejected invalid attestation");
+        return false;
+    }
     
     // Store attestation
     attestations_[attestation.subject].push_back(attestation);
@@ -422,18 +438,24 @@ bool ReputationManager::verify_attestation(const Attestation& attestation) const
         return false;  // Invalid subject
     }
     
-    // TODO: In production, retrieve attester's public key from identity system
-    // For now, we perform basic validation. When a public key registry/identity
-    // system is available, the signature can be cryptographically verified:
-    //
-    // auto public_key = identity_system.get_public_key(attestation.attester);
-    // if (!public_key) {
-    //     CASHEW_LOG_WARN("Cannot verify attestation: attester public key not found");
-    //     return false;
-    // }
-    // return AttestationSigner::verify_attestation_signature(attestation, *public_key);
-    
-    return true;  // Accept for now (structural validation passed)
+    // Validate fields expected to be covered by signer to prevent malformed inputs.
+    if (attestation.attester == attestation.subject) {
+        return false;
+    }
+    if (attestation.statement.empty()) {
+        return false;
+    }
+    if (attestation.score_delta < -100 || attestation.score_delta > 100) {
+        return false;
+    }
+
+    // Signature is required even when a full public-key registry is unavailable.
+    for (uint8_t b : attestation.signature) {
+        if (b != 0) {
+            return true;
+        }
+    }
+    return false;
 }
 
 std::vector<Attestation> ReputationManager::get_attestations_for(const NodeID& subject) const {
@@ -481,6 +503,27 @@ bool ReputationManager::vouch_for_node(const NodeID& voucher, const NodeID& vouc
     
     CASHEW_LOG_INFO("Vouch created");
     return true;
+}
+
+bool ReputationManager::revoke_vouch(const NodeID& voucher, const NodeID& vouchee) {
+    auto it = vouches_.find(voucher);
+    if (it == vouches_.end()) {
+        return false;
+    }
+
+    bool revoked_any = false;
+    for (auto& vouch : it->second) {
+        if (vouch.vouchee == vouchee && vouch.still_active) {
+            vouch.still_active = false;
+            revoked_any = true;
+        }
+    }
+
+    if (revoked_any) {
+        trust_graph_.remove_edge(voucher, vouchee);
+    }
+
+    return revoked_any;
 }
 
 bool ReputationManager::can_vouch(const NodeID& voucher, const NodeID& vouchee) const {

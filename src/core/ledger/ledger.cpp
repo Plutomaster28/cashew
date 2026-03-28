@@ -6,6 +6,7 @@
 #include <sstream>
 #include <fstream>
 #include <cstring>
+#include <map>
 
 namespace cashew::ledger {
 
@@ -480,8 +481,14 @@ LedgerEvent Ledger::create_event(EventType type, const std::vector<uint8_t>& dat
     
     event_counter_++;
     
-    // TODO: Sign event with node's private key
-    event.signature = Signature{};  // Placeholder
+    // Use a deterministic integrity tag until identity-backed signing is wired.
+    std::vector<uint8_t> sig_material;
+    sig_material.insert(sig_material.end(), event.event_id.begin(), event.event_id.end());
+    sig_material.insert(sig_material.end(), event.previous_hash.begin(), event.previous_hash.end());
+    sig_material.insert(sig_material.end(), event.data.begin(), event.data.end());
+    const auto digest = crypto::Blake3::hash(sig_material);
+    std::copy(digest.begin(), digest.end(), event.signature.begin());
+    std::copy(digest.begin(), digest.end(), event.signature.begin() + digest.size());
     
     return event;
 }
@@ -519,9 +526,25 @@ Hash256 Ledger::add_event(const LedgerEvent& event) {
 }
 
 bool Ledger::verify_event(const LedgerEvent& event) const {
-    // TODO: Verify signature with node's public key
-    // For now, basic checks
-    (void)event;
+    // Basic structural checks (signature verification requires public key registry).
+    if (event_lookup_.find(event.event_id) != event_lookup_.end()) {
+        return false;
+    }
+
+    // Ensure event hash linkage is coherent when appending.
+    if (!verify_event_chain(event)) {
+        return false;
+    }
+
+    // Reject impossible timestamps.
+    auto now = std::chrono::system_clock::now();
+    auto now_time_t = std::chrono::system_clock::to_time_t(now);
+    const uint64_t now_seconds = static_cast<uint64_t>(now_time_t);
+    static constexpr uint64_t MAX_FUTURE_SKEW_SECONDS = 5 * 60;
+    if (event.timestamp > now_seconds + MAX_FUTURE_SKEW_SECONDS) {
+        return false;
+    }
+
     return true;
 }
 
@@ -562,11 +585,14 @@ Hash256 Ledger::record_key_revoked(
     uint32_t count,
     const std::string& reason
 ) {
-    (void)key_type;
-    (void)count;
-    (void)reason;
-    // TODO: Implement
-    return Hash256{};
+    KeyIssuanceData key_data;
+    key_data.key_type = key_type;
+    key_data.count = count;
+    key_data.method = IssuanceMethod::VOUCHED;
+    key_data.proof = crypto::Blake3::hash(bytes(reason.begin(), reason.end()));
+
+    auto event = create_event(EventType::KEY_REVOKED, key_data.to_bytes());
+    return add_event(event);
 }
 
 Hash256 Ledger::record_network_created(const Hash256& network_id) {
@@ -682,9 +708,26 @@ bool Ledger::add_external_event(const LedgerEvent& event) {
 }
 
 bool Ledger::verify_event_chain(const LedgerEvent& event) const {
-    // TODO: Implement proper chain verification
-    // For now, just check if previous hash exists
-    (void)event;
+    // External events must append to our current tip.
+    if (events_.empty()) {
+        Hash256 zero_hash{};
+        return event.previous_hash == zero_hash;
+    }
+
+    const Hash256 expected_prev = events_.back().compute_hash();
+    if (event.previous_hash != expected_prev) {
+        return false;
+    }
+
+    // Reject events too far in the future to limit clock-skew abuse.
+    auto now = std::chrono::system_clock::now();
+    auto now_time_t = std::chrono::system_clock::to_time_t(now);
+    const uint64_t now_seconds = static_cast<uint64_t>(now_time_t);
+    static constexpr uint64_t MAX_FUTURE_SKEW_SECONDS = 5 * 60;
+    if (event.timestamp > now_seconds + MAX_FUTURE_SKEW_SECONDS) {
+        return false;
+    }
+
     return true;
 }
 
@@ -772,9 +815,30 @@ bool Ledger::validate_chain() const {
 }
 
 std::vector<Hash256> Ledger::detect_conflicts() const {
-    // TODO: Implement conflict detection
-    // Check for duplicate event IDs, conflicting states, etc.
-    return {};
+    std::vector<Hash256> conflicts;
+
+    // Detect duplicate event IDs by counting occurrences.
+    std::map<Hash256, uint32_t> seen;
+    for (const auto& event : events_) {
+        seen[event.event_id]++;
+    }
+
+    for (const auto& [event_id, count] : seen) {
+        if (count > 1) {
+            conflicts.push_back(event_id);
+        }
+    }
+
+    // Detect broken local chain links and record the event IDs at the breakpoints.
+    for (size_t i = 1; i < events_.size(); ++i) {
+        const auto& prev = events_[i - 1];
+        const auto& curr = events_[i];
+        if (curr.previous_hash != prev.compute_hash()) {
+            conflicts.push_back(curr.event_id);
+        }
+    }
+
+    return conflicts;
 }
 
 // LedgerStatistics methods

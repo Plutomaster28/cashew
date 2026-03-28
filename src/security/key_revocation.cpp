@@ -107,8 +107,36 @@ std::optional<KeyRevocation> KeyRevocation::from_bytes(const bytes& data) {
             return std::nullopt;
         }
         
-        // TODO: Parse RotationCertificate from bytes
-        // For now, skip the cert data
+        bytes cert_data(data.begin() + offset, data.begin() + offset + cert_len);
+
+        // RotationCertificate::to_bytes encodes old/new pubkeys + timestamp + reason.
+        // It does not include old_key_signature, so parse what is available.
+        if (cert_data.size() >= 72) {
+            core::RotationCertificate cert;
+            size_t cert_offset = 0;
+
+            std::copy(cert_data.begin() + cert_offset,
+                      cert_data.begin() + cert_offset + 32,
+                      cert.old_public_key.begin());
+            cert_offset += 32;
+
+            std::copy(cert_data.begin() + cert_offset,
+                      cert_data.begin() + cert_offset + 32,
+                      cert.new_public_key.begin());
+            cert_offset += 32;
+
+            cert.rotation_timestamp = 0;
+            for (int i = 0; i < 8; i++) {
+                cert.rotation_timestamp |= static_cast<uint64_t>(cert_data[cert_offset++]) << (i * 8);
+            }
+
+            if (cert_offset < cert_data.size()) {
+                cert.reason.assign(cert_data.begin() + cert_offset, cert_data.end());
+            }
+
+            rev.rotation_cert = cert;
+        }
+
         offset += cert_len;
     }
     

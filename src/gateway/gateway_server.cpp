@@ -19,6 +19,10 @@
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
+#include <filesystem>
+#include <fstream>
+#include <cctype>
+#include <vector>
 
 namespace cashew {
 namespace gateway {
@@ -90,6 +94,62 @@ bool path_matches_pattern(const std::string& path, const std::string& pattern) {
     }
     
     return path == pattern;
+}
+
+std::string to_lower_ascii(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return value;
+}
+
+std::string mime_from_path(const std::filesystem::path& path) {
+    const std::string ext = to_lower_ascii(path.extension().string());
+    if (ext == ".html" || ext == ".htm") return "text/html; charset=utf-8";
+    if (ext == ".css") return "text/css; charset=utf-8";
+    if (ext == ".js") return "application/javascript; charset=utf-8";
+    if (ext == ".json") return "application/json; charset=utf-8";
+    if (ext == ".txt") return "text/plain; charset=utf-8";
+    if (ext == ".svg") return "image/svg+xml";
+    if (ext == ".png") return "image/png";
+    if (ext == ".jpg" || ext == ".jpeg") return "image/jpeg";
+    if (ext == ".gif") return "image/gif";
+    if (ext == ".webp") return "image/webp";
+    if (ext == ".ico") return "image/x-icon";
+    if (ext == ".wasm") return "application/wasm";
+    return "application/octet-stream";
+}
+
+std::optional<std::filesystem::path> resolve_web_root(const std::string& configured_root) {
+    std::error_code ec;
+    std::filesystem::path configured(configured_root);
+
+    std::vector<std::filesystem::path> candidates;
+    candidates.push_back(configured);
+    candidates.push_back(std::filesystem::current_path(ec) / configured);
+    if (configured.filename() != "test-site") {
+        candidates.push_back(std::filesystem::current_path(ec) / "test-site");
+    }
+
+    // Common launch locations: repo root, build/, build/src/
+    auto cwd = std::filesystem::current_path(ec);
+    if (!ec) {
+        candidates.push_back(cwd / "../test-site");
+        candidates.push_back(cwd / "../../test-site");
+        candidates.push_back(cwd / "../../../test-site");
+    }
+
+    for (const auto& candidate : candidates) {
+        ec.clear();
+        auto canonical = std::filesystem::weakly_canonical(candidate, ec);
+        if (ec || canonical.empty()) {
+            continue;
+        }
+        if (std::filesystem::exists(canonical) && std::filesystem::is_directory(canonical)) {
+            return canonical;
+        }
+    }
+
+    return std::nullopt;
 }
 
 } // anonymous namespace
@@ -214,83 +274,55 @@ void GatewayServer::process_requests() {
 
 void GatewayServer::setup_http_routes() {
     auto& server = http_server_->server;
-    
-    // GET / - root/home page
-    server.Get("/", [this](const httplib::Request& req, httplib::Response& res) {
+
+    auto forward_request = [this](HttpMethod method, const httplib::Request& req, httplib::Response& res) {
         HttpRequest cashew_req;
-        cashew_req.method = HttpMethod::GET;
-        cashew_req.path = "/";
+        cashew_req.method = method;
+        cashew_req.path = req.path;
         cashew_req.client_ip = req.remote_addr;
-        
+        cashew_req.body.assign(req.body.begin(), req.body.end());
+
+        for (const auto& [key, value] : req.headers) {
+            cashew_req.headers[key] = value;
+        }
+
+        for (const auto& [key, value] : req.params) {
+            cashew_req.query_params[key] = value;
+        }
+
         auto cashew_res = handle_request(cashew_req);
-        
         res.status = static_cast<int>(cashew_res.status);
         for (const auto& [key, value] : cashew_res.headers) {
             res.set_header(key, value);
         }
-        std::string body_str(cashew_res.body.begin(), cashew_res.body.end());
-        res.set_content(body_str, "text/html");
-    });
-    
-    // GET /api/status - server status
-    server.Get("/api/status", [this](const httplib::Request& req, httplib::Response& res) {
-        HttpRequest cashew_req;
-        cashew_req.method = HttpMethod::GET;
-        cashew_req.path = "/api/status";
-        cashew_req.client_ip = req.remote_addr;
-        
-        auto cashew_res = handle_request(cashew_req);
-        
-        res.status = static_cast<int>(cashew_res.status);
-        for (const auto& [key, value] : cashew_res.headers) {
-            res.set_header(key, value);
-        }
-        std::string body_str(cashew_res.body.begin(), cashew_res.body.end());
-        res.set_content(body_str, "application/json");
-    });
-    
-    // GET /api/networks - list networks
-    server.Get("/api/networks", [this](const httplib::Request& req, httplib::Response& res) {
-        HttpRequest cashew_req;
-        cashew_req.method = HttpMethod::GET;
-        cashew_req.path = "/api/networks";
-        cashew_req.client_ip = req.remote_addr;
-        
-        auto cashew_res = handle_request(cashew_req);
-        
-        res.status = static_cast<int>(cashew_res.status);
-        for (const auto& [key, value] : cashew_res.headers) {
-            res.set_header(key, value);
-        }
-        std::string body_str(cashew_res.body.begin(), cashew_res.body.end());
-        res.set_content(body_str, "application/json");
-    });
-    
-    // GET /api/thing/:hash - get content by hash
-    server.Get(R"(/api/thing/([a-f0-9]{64}))", [this](const httplib::Request& req, httplib::Response& res) {
-        std::string hash = req.matches[1];
-        
-        HttpRequest cashew_req;
-        cashew_req.method = HttpMethod::GET;
-        cashew_req.path = "/api/thing/" + hash;
-        cashew_req.client_ip = req.remote_addr;
-        
-        auto cashew_res = handle_request(cashew_req);
-        
-        res.status = static_cast<int>(cashew_res.status);
-        for (const auto& [key, value] : cashew_res.headers) {
-            res.set_header(key, value);
-        }
-        
-        // Determine content type from headers or default
+
         std::string content_type = "application/octet-stream";
-        auto it = cashew_res.headers.find("Content-Type");
-        if (it != cashew_res.headers.end()) {
+        if (auto it = cashew_res.headers.find("Content-Type"); it != cashew_res.headers.end()) {
             content_type = it->second;
         }
-        
+
         std::string body_str(cashew_res.body.begin(), cashew_res.body.end());
         res.set_content(body_str, content_type);
+    };
+    
+    server.Get(R"(.*)", [forward_request](const httplib::Request& req, httplib::Response& res) {
+        forward_request(HttpMethod::GET, req, res);
+    });
+
+    server.Post(R"(.*)", [forward_request](const httplib::Request& req, httplib::Response& res) {
+        forward_request(HttpMethod::POST, req, res);
+    });
+
+    server.Put(R"(.*)", [forward_request](const httplib::Request& req, httplib::Response& res) {
+        forward_request(HttpMethod::PUT, req, res);
+    });
+
+    server.Delete(R"(.*)", [forward_request](const httplib::Request& req, httplib::Response& res) {
+        forward_request(HttpMethod::DELETE, req, res);
+    });
+
+    server.Options(R"(.*)", [forward_request](const httplib::Request& req, httplib::Response& res) {
+        forward_request(HttpMethod::OPTIONS, req, res);
     });
     
     // Catch-all for 404
@@ -321,6 +353,22 @@ HttpResponse GatewayServer::handle_request(const HttpRequest& request) {
     // Find handler
     auto handler_opt = find_handler(request.method, request.path);
     if (!handler_opt) {
+        if (request.method == HttpMethod::GET && request.path.rfind("/api/", 0) != 0) {
+            HttpRequest static_req = request;
+            if (static_req.path.rfind("/static/", 0) != 0) {
+                if (!static_req.path.empty() && static_req.path.front() == '/') {
+                    static_req.path = "/static" + static_req.path;
+                } else {
+                    static_req.path = "/static/" + static_req.path;
+                }
+            }
+
+            auto response = handle_static_file(static_req, session);
+            apply_cors_headers(response);
+            stats_.bytes_sent += response.body.size();
+            return response;
+        }
+
         HttpResponse response;
         response.status = HttpStatus::NOT_FOUND;
         response.set_json_body(R"({"error": "Not found"})");
@@ -513,7 +561,7 @@ void GatewayServer::register_default_handlers() {
         });
     
     // Thing content
-    register_handler(HttpMethod::GET, "/api/things/*",
+    register_handler(HttpMethod::GET, "/api/thing/*",
         [this](const HttpRequest& req, GatewaySession& session) {
             return handle_thing_content(req, session);
         });
@@ -531,7 +579,19 @@ void GatewayServer::register_default_handlers() {
         });
 }
 
-HttpResponse GatewayServer::handle_root(const HttpRequest& /* req */, GatewaySession& /* session */) {
+HttpResponse GatewayServer::handle_root(const HttpRequest& /* req */, GatewaySession& session) {
+    const auto resolved_root = resolve_web_root(config_.web_root);
+    if (!resolved_root) {
+        CASHEW_LOG_WARN("Static web root not found: {}", config_.web_root);
+    }
+    const auto index_path = (resolved_root ? *resolved_root : std::filesystem::path(config_.web_root)) / "index.html";
+    if (std::filesystem::exists(index_path) && std::filesystem::is_regular_file(index_path)) {
+        HttpRequest static_req;
+        static_req.method = HttpMethod::GET;
+        static_req.path = "/static/index.html";
+        return handle_static_file(static_req, session);
+    }
+
     HttpResponse response;
     response.set_html_body(R"(
 <!DOCTYPE html>
@@ -548,7 +608,7 @@ HttpResponse GatewayServer::handle_root(const HttpRequest& /* req */, GatewaySes
     </style>
 </head>
 <body>
-    <h1>🥜 Cashew Network Gateway</h1>
+    <h1>Cashew Network Gateway</h1>
     <p class="status">Status: Online</p>
     <p>Welcome to the Cashew decentralized network! This gateway provides browser access to the P2P network.</p>
     <h2>API Endpoints</h2>
@@ -556,7 +616,7 @@ HttpResponse GatewayServer::handle_root(const HttpRequest& /* req */, GatewaySes
         <li><a href="/health">/health</a> - Server health check</li>
         <li><a href="/api/status">/api/status</a> - Network status</li>
         <li><a href="/api/networks">/api/networks</a> - List available networks</li>
-        <li>/api/things/:hash - Retrieve content by hash</li>
+        <li>/api/thing/:hash - Retrieve content by hash</li>
         <li>/api/auth - Authenticate with key (POST)</li>
     </ul>
     <p><small>Powered by Cashew Network v1.0</small></p>
@@ -857,7 +917,13 @@ HttpResponse GatewayServer::handle_thing_content(const HttpRequest& req, Gateway
     HttpResponse response;
     response.status = HttpStatus::OK;
     response.body = std::move(render_result->data);
-    response.headers["Content-Type"] = render_result->metadata.mime_type;
+    std::string resolved_mime = render_result->metadata.mime_type;
+    if (storage_) {
+        if (auto stored_mime = storage_->get_metadata("mime_" + hash_str); stored_mime && !stored_mime->empty()) {
+            resolved_mime.assign(stored_mime->begin(), stored_mime->end());
+        }
+    }
+    response.headers["Content-Type"] = resolved_mime;
     response.headers["Content-Length"] = std::to_string(response.body.size());
     
     // Add cache headers
@@ -972,12 +1038,112 @@ HttpResponse GatewayServer::handle_authenticate(const HttpRequest& req, GatewayS
 }
 
 HttpResponse GatewayServer::handle_static_file(const HttpRequest& req, GatewaySession& /* session */) {
-    // TODO: Serve static files from web_root
-    (void)req;
-    
+    const auto root_canonical_opt = resolve_web_root(config_.web_root);
+    if (!root_canonical_opt) {
+        HttpResponse response;
+        response.status = HttpStatus::INTERNAL_ERROR;
+        response.set_json_body(R"({"error": "Invalid web root configuration"})");
+        return response;
+    }
+    std::error_code ec;
+    const std::filesystem::path root_canonical = *root_canonical_opt;
+
+    std::string relative = req.path;
+    if (relative.rfind("/static/", 0) == 0) {
+        relative = relative.substr(8);
+    }
+
+    if (relative.empty() || relative == "/") {
+        relative = "index.html";
+    }
+
+    while (!relative.empty() && relative.front() == '/') {
+        relative.erase(relative.begin());
+    }
+
+    std::filesystem::path requested = root_canonical / std::filesystem::path(relative);
+    std::filesystem::path resolved = std::filesystem::weakly_canonical(requested, ec);
+    if (ec || resolved.empty()) {
+        HttpResponse response;
+        response.status = HttpStatus::NOT_FOUND;
+        response.set_json_body(R"({"error": "File not found"})");
+        return response;
+    }
+
+    const auto relative_to_root = resolved.lexically_relative(root_canonical);
+    if (relative_to_root.empty() || relative_to_root.string().rfind("..", 0) == 0) {
+        HttpResponse response;
+        response.status = HttpStatus::FORBIDDEN;
+        response.set_json_body(R"({"error": "Path outside web root"})");
+        return response;
+    }
+
+    if (std::filesystem::is_directory(resolved)) {
+        if (!config_.enable_directory_listing) {
+            auto index_path = resolved / "index.html";
+            if (std::filesystem::exists(index_path) && std::filesystem::is_regular_file(index_path)) {
+                resolved = index_path;
+            } else {
+                HttpResponse response;
+                response.status = HttpStatus::NOT_FOUND;
+                response.set_json_body(R"({"error": "Directory listing disabled"})");
+                return response;
+            }
+        } else {
+            std::ostringstream html;
+            html << "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Index of /static/"
+                 << relative << "</title></head><body>";
+            html << "<h1>Index of /static/" << relative << "</h1><ul>";
+            for (const auto& entry : std::filesystem::directory_iterator(resolved)) {
+                html << "<li>" << entry.path().filename().string() << "</li>";
+            }
+            html << "</ul></body></html>";
+
+            HttpResponse response;
+            response.status = HttpStatus::OK;
+            response.set_html_body(html.str());
+            return response;
+        }
+    }
+
+    if (!std::filesystem::exists(resolved) || !std::filesystem::is_regular_file(resolved)) {
+        HttpResponse response;
+        response.status = HttpStatus::NOT_FOUND;
+        response.set_json_body(R"({"error": "File not found"})");
+        return response;
+    }
+
+    std::ifstream file(resolved, std::ios::binary | std::ios::ate);
+    if (!file) {
+        HttpResponse response;
+        response.status = HttpStatus::INTERNAL_ERROR;
+        response.set_json_body(R"({"error": "Failed to open file"})");
+        return response;
+    }
+
+    const auto size = file.tellg();
+    if (size < 0) {
+        HttpResponse response;
+        response.status = HttpStatus::INTERNAL_ERROR;
+        response.set_json_body(R"({"error": "Invalid file size"})");
+        return response;
+    }
+
+    file.seekg(0, std::ios::beg);
+    std::vector<uint8_t> data(static_cast<size_t>(size));
+    file.read(reinterpret_cast<char*>(data.data()), static_cast<std::streamsize>(data.size()));
+    if (!file) {
+        HttpResponse response;
+        response.status = HttpStatus::INTERNAL_ERROR;
+        response.set_json_body(R"({"error": "Failed to read file"})");
+        return response;
+    }
+
     HttpResponse response;
-    response.status = HttpStatus::NOT_FOUND;
-    response.set_json_body(R"({"error": "File not found"})");
+    response.status = HttpStatus::OK;
+    response.set_binary_body(data, mime_from_path(resolved));
+    response.headers["Content-Length"] = std::to_string(data.size());
+    response.headers["Cache-Control"] = "public, max-age=300";
     return response;
 }
 

@@ -385,7 +385,7 @@ NATType NATTraversal::detect_nat_type() {
         return NATType::UNKNOWN;
     }
     
-    // For now, assume FULL_CONE if we can discover address
+    // Use a conservative default classification when public mapping is discoverable.
     // A complete implementation would:
     // 1. Test if we can receive from different IP (FULL_CONE vs RESTRICTED_CONE)
     // 2. Test if we can receive from different port (RESTRICTED_CONE vs PORT_RESTRICTED)

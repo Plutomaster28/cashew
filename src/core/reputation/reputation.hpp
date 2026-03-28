@@ -138,6 +138,7 @@ public:
     
     std::vector<NodeID> get_trusted_by(const NodeID& node) const;
     std::vector<NodeID> get_trusts(const NodeID& node) const;
+    std::vector<NodeID> get_all_nodes() const;
     
     // Community detection
     std::set<NodeID> find_trust_community(const NodeID& node, float min_trust = 0.5f) const;
@@ -187,6 +188,7 @@ public:
     
     // Vouching system
     bool vouch_for_node(const NodeID& voucher, const NodeID& vouchee);
+    bool revoke_vouch(const NodeID& voucher, const NodeID& vouchee);
     bool can_vouch(const NodeID& voucher, const NodeID& vouchee) const;
     std::vector<VouchRecord> get_vouches_by(const NodeID& voucher) const;
     std::vector<VouchRecord> get_vouches_for(const NodeID& vouchee) const;

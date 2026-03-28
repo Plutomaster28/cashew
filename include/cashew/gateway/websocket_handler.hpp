@@ -68,6 +68,11 @@ public:
      * Send ping frame
      */
     void send_ping();
+
+    /**
+     * Send pong frame
+     */
+    void send_pong();
     
     /**
      * Close connection

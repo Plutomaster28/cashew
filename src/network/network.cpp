@@ -2,8 +2,44 @@
 #include "utils/logger.hpp"
 #include "crypto/blake3.hpp"
 #include "crypto/random.hpp"
+#include "crypto/ed25519.hpp"
 #include <algorithm>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
+
+namespace {
+
+template <typename T>
+void append_scalar(std::vector<uint8_t>& out, T value) {
+    auto* ptr = reinterpret_cast<const uint8_t*>(&value);
+    out.insert(out.end(), ptr, ptr + sizeof(T));
+}
+
+template <typename T>
+bool read_scalar(const std::vector<uint8_t>& data, size_t& offset, T& value) {
+    if (offset + sizeof(T) > data.size()) {
+        return false;
+    }
+    std::memcpy(&value, data.data() + offset, sizeof(T));
+    offset += sizeof(T);
+    return true;
+}
+
+bool read_fixed(const std::vector<uint8_t>& data, size_t& offset, uint8_t* dest, size_t len) {
+    if (offset + len > data.size()) {
+        return false;
+    }
+    std::memcpy(dest, data.data() + offset, len);
+    offset += len;
+    return true;
+}
+
+std::string network_file_name(const cashew::network::NetworkID& id) {
+    return cashew::crypto::Blake3::hash_to_hex(id.id) + ".bin";
+}
+
+} // namespace
 
 namespace cashew::network {
 
@@ -11,7 +47,7 @@ namespace cashew::network {
 
 std::vector<uint8_t> NetworkInvitation::to_bytes() const {
     std::vector<uint8_t> data;
-    data.reserve(32 + 32 + 32 + 1 + 8);
+    data.reserve(32 + 32 + 32 + 32 + 1 + 8);
     
     // Network ID
     data.insert(data.end(), network_id.id.begin(), network_id.id.end());
@@ -21,6 +57,9 @@ std::vector<uint8_t> NetworkInvitation::to_bytes() const {
     
     // Invitee ID
     data.insert(data.end(), invitee_id.id.begin(), invitee_id.id.end());
+
+    // Inviter public key
+    data.insert(data.end(), inviter_public_key.begin(), inviter_public_key.end());
     
     // Role
     data.push_back(static_cast<uint8_t>(proposed_role));
@@ -112,6 +151,8 @@ size_t Network::active_replica_count() const {
 NetworkInvitation Network::create_invitation(
     const NodeID& inviter_id,
     const NodeID& invitee_id,
+    const PublicKey& inviter_public_key,
+    const SecretKey& inviter_secret_key,
     MemberRole role,
     std::chrono::seconds valid_duration) {
     
@@ -119,6 +160,7 @@ NetworkInvitation Network::create_invitation(
     invitation.network_id = network_id_;
     invitation.inviter_id = inviter_id;
     invitation.invitee_id = invitee_id;
+    invitation.inviter_public_key = inviter_public_key;
     invitation.proposed_role = role;
     
     auto now = std::chrono::system_clock::now();
@@ -126,9 +168,7 @@ NetworkInvitation Network::create_invitation(
     invitation.expires_timestamp = 
         std::chrono::duration_cast<std::chrono::seconds>(expiration.time_since_epoch()).count();
     
-    // TODO: Sign invitation with inviter's key
-    // For now, just create a placeholder signature
-    invitation.signature = Signature{};
+    invitation.signature = crypto::Ed25519::sign(invitation.to_bytes(), inviter_secret_key);
     
     // Add to pending invitations
     PendingInvitation pending;
@@ -158,10 +198,22 @@ bool Network::verify_invitation(const NetworkInvitation& invitation) const {
     if (now_seconds > invitation.expires_timestamp) {
         return false;
     }
-    
-    // TODO: Verify signature with inviter's public key
-    
-    return true;
+
+    // Inviter must be a network member and key must match what we have on record.
+    auto inviter_member = get_member(invitation.inviter_id);
+    if (!inviter_member.has_value()) {
+        return false;
+    }
+
+    if (inviter_member->public_key != invitation.inviter_public_key) {
+        return false;
+    }
+
+    return crypto::Ed25519::verify(
+        invitation.to_bytes(),
+        invitation.signature,
+        invitation.inviter_public_key
+    );
 }
 
 bool Network::accept_invitation(const NetworkInvitation& invitation) {
@@ -170,7 +222,7 @@ bool Network::accept_invitation(const NetworkInvitation& invitation) {
         return false;
     }
     
-    // Create new member
+    // Create new member (invitee public key is unknown until explicit registration).
     NetworkMember member(invitation.invitee_id, PublicKey{}, invitation.proposed_role);
     
     auto now = std::chrono::system_clock::now();
@@ -323,15 +375,132 @@ bool Network::should_dissolve() const {
 }
 
 std::vector<uint8_t> Network::serialize() const {
-    // TODO: Implement full serialization
-    // For now, just return empty vector
-    return std::vector<uint8_t>();
+    static constexpr uint32_t kFormatVersion = 1;
+
+    std::vector<uint8_t> out;
+    out.reserve(256 + members_.size() * 96 + pending_invitations_.size() * 200);
+
+    // Header: CSNW + version
+    out.push_back('C');
+    out.push_back('S');
+    out.push_back('N');
+    out.push_back('W');
+    append_scalar(out, kFormatVersion);
+
+    out.insert(out.end(), network_id_.id.begin(), network_id_.id.end());
+    out.insert(out.end(), thing_hash_.hash.begin(), thing_hash_.hash.end());
+
+    append_scalar(out, static_cast<uint32_t>(quorum_.min_replicas));
+    append_scalar(out, static_cast<uint32_t>(quorum_.target_replicas));
+    append_scalar(out, static_cast<uint32_t>(quorum_.max_replicas));
+    append_scalar(out, created_timestamp_);
+
+    append_scalar(out, static_cast<uint32_t>(members_.size()));
+    for (const auto& member : members_) {
+        out.insert(out.end(), member.node_id.id.begin(), member.node_id.id.end());
+        out.insert(out.end(), member.public_key.begin(), member.public_key.end());
+        append_scalar(out, static_cast<uint8_t>(member.role));
+        append_scalar(out, member.joined_timestamp);
+        append_scalar(out, member.last_seen_timestamp);
+        append_scalar(out, static_cast<uint8_t>(member.has_complete_replica ? 1 : 0));
+        append_scalar(out, member.reliability_score);
+    }
+
+    append_scalar(out, static_cast<uint32_t>(pending_invitations_.size()));
+    for (const auto& pending : pending_invitations_) {
+        const auto& inv = pending.invitation;
+        out.insert(out.end(), inv.network_id.id.begin(), inv.network_id.id.end());
+        out.insert(out.end(), inv.inviter_id.id.begin(), inv.inviter_id.id.end());
+        out.insert(out.end(), inv.invitee_id.id.begin(), inv.invitee_id.id.end());
+        out.insert(out.end(), inv.inviter_public_key.begin(), inv.inviter_public_key.end());
+        append_scalar(out, static_cast<uint8_t>(inv.proposed_role));
+        append_scalar(out, inv.expires_timestamp);
+        out.insert(out.end(), inv.signature.begin(), inv.signature.end());
+        append_scalar(out, pending.created_timestamp);
+    }
+
+    return out;
 }
 
 std::optional<Network> Network::deserialize(const std::vector<uint8_t>& data) {
-    (void)data;
-    // TODO: Implement full deserialization
-    return std::nullopt;
+    if (data.size() < 8 + 32 + 32) {
+        return std::nullopt;
+    }
+
+    size_t offset = 0;
+    if (data[offset++] != 'C' || data[offset++] != 'S' || data[offset++] != 'N' || data[offset++] != 'W') {
+        return std::nullopt;
+    }
+
+    uint32_t version = 0;
+    if (!read_scalar(data, offset, version) || version != 1) {
+        return std::nullopt;
+    }
+
+    NetworkID id;
+    ContentHash thing;
+    if (!read_fixed(data, offset, id.id.data(), id.id.size())) return std::nullopt;
+    if (!read_fixed(data, offset, thing.hash.data(), thing.hash.size())) return std::nullopt;
+
+    Network network(id, thing);
+
+    uint32_t min_replicas = 0;
+    uint32_t target_replicas = 0;
+    uint32_t max_replicas = 0;
+    if (!read_scalar(data, offset, min_replicas)) return std::nullopt;
+    if (!read_scalar(data, offset, target_replicas)) return std::nullopt;
+    if (!read_scalar(data, offset, max_replicas)) return std::nullopt;
+
+    NetworkQuorum quorum;
+    quorum.min_replicas = min_replicas;
+    quorum.target_replicas = target_replicas;
+    quorum.max_replicas = max_replicas;
+    network.set_quorum(quorum);
+
+    if (!read_scalar(data, offset, network.created_timestamp_)) return std::nullopt;
+
+    uint32_t member_count = 0;
+    if (!read_scalar(data, offset, member_count)) return std::nullopt;
+
+    for (uint32_t i = 0; i < member_count; ++i) {
+        NetworkMember member;
+        uint8_t role = 0;
+        uint8_t has_replica = 0;
+
+        if (!read_fixed(data, offset, member.node_id.id.data(), member.node_id.id.size())) return std::nullopt;
+        if (!read_fixed(data, offset, member.public_key.data(), member.public_key.size())) return std::nullopt;
+        if (!read_scalar(data, offset, role)) return std::nullopt;
+        if (!read_scalar(data, offset, member.joined_timestamp)) return std::nullopt;
+        if (!read_scalar(data, offset, member.last_seen_timestamp)) return std::nullopt;
+        if (!read_scalar(data, offset, has_replica)) return std::nullopt;
+        if (!read_scalar(data, offset, member.reliability_score)) return std::nullopt;
+
+        member.role = static_cast<MemberRole>(role);
+        member.has_complete_replica = (has_replica != 0);
+        network.members_.push_back(member);
+    }
+
+    uint32_t pending_count = 0;
+    if (!read_scalar(data, offset, pending_count)) return std::nullopt;
+
+    for (uint32_t i = 0; i < pending_count; ++i) {
+        PendingInvitation pending;
+        uint8_t role = 0;
+
+        if (!read_fixed(data, offset, pending.invitation.network_id.id.data(), pending.invitation.network_id.id.size())) return std::nullopt;
+        if (!read_fixed(data, offset, pending.invitation.inviter_id.id.data(), pending.invitation.inviter_id.id.size())) return std::nullopt;
+        if (!read_fixed(data, offset, pending.invitation.invitee_id.id.data(), pending.invitation.invitee_id.id.size())) return std::nullopt;
+        if (!read_fixed(data, offset, pending.invitation.inviter_public_key.data(), pending.invitation.inviter_public_key.size())) return std::nullopt;
+        if (!read_scalar(data, offset, role)) return std::nullopt;
+        if (!read_scalar(data, offset, pending.invitation.expires_timestamp)) return std::nullopt;
+        if (!read_fixed(data, offset, pending.invitation.signature.data(), pending.invitation.signature.size())) return std::nullopt;
+        if (!read_scalar(data, offset, pending.created_timestamp)) return std::nullopt;
+
+        pending.invitation.proposed_role = static_cast<MemberRole>(role);
+        network.pending_invitations_.push_back(std::move(pending));
+    }
+
+    return network;
 }
 
 bool Network::is_member_active(const NetworkMember& member) const {
@@ -461,15 +630,77 @@ size_t NetworkRegistry::total_network_count() const {
 }
 
 bool NetworkRegistry::save_to_disk(const std::string& directory) {
-    (void)directory;
-    // TODO: Implement persistence
-    return false;
+    std::error_code ec;
+    std::filesystem::create_directories(directory, ec);
+    if (ec) {
+        CASHEW_LOG_ERROR("Failed to create network directory {}: {}", directory, ec.message());
+        return false;
+    }
+
+    bool all_ok = true;
+    for (const auto& network : networks_) {
+        const auto file_path = std::filesystem::path(directory) / network_file_name(network.get_id());
+        const auto payload = network.serialize();
+
+        std::ofstream out(file_path, std::ios::binary | std::ios::trunc);
+        if (!out) {
+            CASHEW_LOG_ERROR("Failed to open network file for write: {}", file_path.string());
+            all_ok = false;
+            continue;
+        }
+
+        out.write(reinterpret_cast<const char*>(payload.data()), static_cast<std::streamsize>(payload.size()));
+        if (!out.good()) {
+            CASHEW_LOG_ERROR("Failed to write network file: {}", file_path.string());
+            all_ok = false;
+        }
+    }
+
+    return all_ok;
 }
 
 bool NetworkRegistry::load_from_disk(const std::string& directory) {
-    (void)directory;
-    // TODO: Implement persistence
-    return false;
+    if (!std::filesystem::exists(directory)) {
+        return true;
+    }
+
+    std::vector<Network> loaded;
+
+    for (const auto& entry : std::filesystem::directory_iterator(directory)) {
+        if (!entry.is_regular_file() || entry.path().extension() != ".bin") {
+            continue;
+        }
+
+        std::ifstream in(entry.path(), std::ios::binary | std::ios::ate);
+        if (!in) {
+            CASHEW_LOG_WARN("Skipping unreadable network file: {}", entry.path().string());
+            continue;
+        }
+
+        const auto size = in.tellg();
+        if (size <= 0) {
+            continue;
+        }
+
+        in.seekg(0, std::ios::beg);
+        std::vector<uint8_t> bytes(static_cast<size_t>(size));
+        in.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+        if (!in.good()) {
+            CASHEW_LOG_WARN("Skipping partially read network file: {}", entry.path().string());
+            continue;
+        }
+
+        auto network = Network::deserialize(bytes);
+        if (!network.has_value()) {
+            CASHEW_LOG_WARN("Skipping invalid network file: {}", entry.path().string());
+            continue;
+        }
+
+        loaded.push_back(std::move(*network));
+    }
+
+    networks_ = std::move(loaded);
+    return true;
 }
 
 // ============================================================================
