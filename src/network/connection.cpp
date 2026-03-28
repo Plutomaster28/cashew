@@ -480,7 +480,12 @@ void TCPConnection::set_keepalive(bool enable, uint32_t idle_seconds) {
 #ifndef CASHEW_PLATFORM_WINDOWS
     if (enable) {
         int idle = static_cast<int>(idle_seconds);
+#if defined(CASHEW_PLATFORM_MACOS)
+        // macOS uses TCP_KEEPALIVE for idle keepalive time.
+        setsockopt(socket_fd_, IPPROTO_TCP, TCP_KEEPALIVE, &idle, sizeof(idle));
+#else
         setsockopt(socket_fd_, IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(idle));
+#endif
     }
 #endif
 }
